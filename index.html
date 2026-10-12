@@ -126,6 +126,7 @@ body {
   max-width: 9em;
 }
 .mates div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mates.many { font-size: .62em; line-height: 1.35; max-width: 11em; }
 .pws { position: absolute; left: 1.1em; top: 7.4em; width: 12em; display: flex; flex-direction: column; gap: .45em; text-shadow: 0 1px 6px rgba(0, 0, 0, .6); }
 .pw b { display: block; white-space: nowrap; font: 700 .8em/1.2 var(--body); letter-spacing: .06em; }
 .pw i { display: block; height: .3em; margin-top: .3em; border-radius: 1em; background: rgba(255, 255, 255, .22); overflow: hidden; }
@@ -359,7 +360,7 @@ input[type="text"] {
 }
 input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center; }
 .codebig { font: 800 2.4em/1 var(--display); letter-spacing: .2em; color: var(--gold); margin: 0; }
-.plist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .35em; }
+.plist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .35em; max-height: 13.5em; overflow-y: auto; }
 .plist li { display: flex; align-items: center; gap: .55em; font-size: .88em; padding: .4em .6em; border-radius: .6em; background: rgba(255, 255, 255, .07); }
 .plist i { width: .75em; height: .75em; border-radius: 50%; flex: none; }
 .plist span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -370,6 +371,65 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
   .tapnote { animation: none; }
   .oops.on { animation: none; opacity: 1; }
 }
+
+/* medals and the server ranking */
+#medalsP, #boardP { justify-content: flex-start; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; padding: 1em; gap: .55em; -webkit-user-select: none; }
+.sidehead { display: flex; align-items: baseline; justify-content: space-between; gap: .6em; padding-right: 2.8em; }
+.sidehead h2 { font-size: 1.45em; }
+.mtiers { display: grid; grid-template-columns: repeat(6, 1fr); gap: .3em; }
+.mchip { display: flex; flex-direction: column; align-items: center; gap: .1em; padding: .35em .1em; border-radius: .5em; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .1); }
+.mchip b { font: 800 .8em/1 var(--display); }
+.mchip span { font: 700 .5em/1 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.mgh { margin: .5em 0 0; font: 800 .9em/1.2 var(--display); color: var(--gold); letter-spacing: .04em; }
+.mgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .45em; }
+.mcard { position: relative; display: flex; flex-direction: column; align-items: center; gap: .15em; padding: .5em .3em .45em; text-align: center; border-radius: .7em; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .1); }
+.mcard.locked { opacity: .78; }
+.mcard svg { width: 4.3em; height: 5.1em; overflow: visible; }
+.mname { font: 800 .74em/1.15 var(--display); }
+.mtier { font: 700 .55em/1 var(--body); letter-spacing: .14em; text-transform: uppercase; }
+.mdesc { font-size: .62em; line-height: 1.25; color: var(--muted); }
+.mbar { width: 82%; height: .3em; margin-top: .15em; border-radius: 1em; background: rgba(255, 255, 255, .18); overflow: hidden; }
+.mbar i { display: block; height: 100%; background: var(--gold); }
+.mpg { font: 700 .58em/1 var(--body); color: var(--muted); font-variant-numeric: tabular-nums; }
+.mnew { position: absolute; top: .3em; right: .3em; font: 800 .55em/1 var(--body); letter-spacing: .08em; text-transform: uppercase; background: var(--gold); color: var(--ink-on-gold); border-radius: 1em; padding: .25em .5em; }
+.mdl.lk { filter: grayscale(1) brightness(.62); }
+.mdl.t-platinum { filter: drop-shadow(0 0 4px rgba(127, 227, 255, .45)); }
+.mdl.t-obsidian { filter: drop-shadow(0 0 5px rgba(161, 107, 255, .7)); }
+.mdl.t-diamond { filter: drop-shadow(0 0 6px rgba(255, 255, 255, .8)); }
+.mdl.lk.t-platinum, .mdl.lk.t-obsidian, .mdl.lk.t-diamond { filter: grayscale(1) brightness(.62); }
+.spk { opacity: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .shn { animation: shn 3.4s ease-in-out infinite; }
+  @keyframes shn { 0%, 55% { transform: translateX(0); } 100% { transform: translateX(140px); } }
+  .mdl.t-obsidian:not(.lk) { animation: obs 2.8s ease-in-out infinite; }
+  @keyframes obs { 50% { filter: drop-shadow(0 0 9px rgba(255, 106, 61, .85)); } }
+  .mdl.t-diamond:not(.lk) { animation: dia 6s linear infinite; }
+  @keyframes dia { to { filter: drop-shadow(0 0 7px rgba(255, 255, 255, .9)) hue-rotate(360deg); } }
+  .spk { animation: spk 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  .spk.b { animation-delay: .8s; } .spk.c { animation-delay: 1.5s; }
+  @keyframes spk { 0%, 70%, 100% { opacity: 0; transform: scale(.4); } 85% { opacity: 1; transform: scale(1.15); } }
+}
+.mtoast { position: absolute; left: .8em; right: .8em; bottom: 3.7em; z-index: 7; display: flex; align-items: center; gap: .7em; padding: .45em .8em .45em .5em; border-radius: .9em; background: rgba(12, 16, 28, .92); border: 1px solid rgba(246, 201, 120, .55); box-shadow: 0 8px 24px rgba(0, 0, 0, .5); opacity: 0; transform: translateY(1.2em); transition: opacity .35s ease, transform .35s ease; pointer-events: none; }
+.mtoast.on { opacity: 1; transform: none; }
+.mtI svg { width: 2.7em; height: 3.2em; display: block; overflow: visible; }
+.mtT { display: flex; flex-direction: column; min-width: 0; }
+.mtT small { font: 700 .62em/1.2 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+.mtT small u { text-decoration: none; }
+.mtT b { font: 800 .95em/1.2 var(--display); }
+.mtT span { font-size: .68em; color: var(--muted); line-height: 1.25; }
+.btabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: .35em; }
+.btabs button { font: 700 .72em/1.2 var(--body); padding: .55em .3em; border-radius: .6em; color: var(--text); background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .14); cursor: pointer; }
+.btabs button[aria-pressed="true"] { background: rgba(246, 201, 120, .18); border-color: var(--gold); color: var(--gold); }
+.blist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .3em; }
+.blist li { display: grid; grid-template-columns: 1.9em 1fr auto; align-items: center; gap: .55em; padding: .4em .6em; border-radius: .6em; background: rgba(255, 255, 255, .07); }
+.blist li.me { background: rgba(246, 201, 120, .16); border: 1px solid rgba(246, 201, 120, .5); }
+.blist b { font: 800 .95em/1 var(--display); color: var(--gold); text-align: center; font-variant-numeric: tabular-nums; }
+.blist span { min-width: 0; display: flex; flex-direction: column; }
+.blist em { font-style: normal; font-weight: 700; font-size: .8em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.blist small { font-size: .62em; color: var(--muted); }
+.blist i { font: 800 .85em/1 var(--display); font-style: normal; font-variant-numeric: tabular-nums; }
+.linkrow { display: grid; grid-template-columns: 1fr 1fr; gap: .5em; }
+.linkrow .btn { padding: .55em .5em; font-size: .85em; }
 </style>
 </head><body>
 
@@ -408,12 +468,16 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
         <p class="birdinfo" id="birdInfo" aria-live="polite"></p>
       </div>
       <button class="btn primary" id="go" type="button">Take flight</button>
-      <button class="btn" id="toLobby" type="button" hidden>Fly together (2 to 4 players)</button>
+      <button class="btn" id="toLobby" type="button" hidden>Fly together (2 to 10 players)</button>
       <p class="stats" id="stats"></p>
+      <div class="linkrow">
+        <button class="btn" id="openMedals" type="button">Medals</button>
+        <button class="btn" id="openBoard" type="button">Team ranking</button>
+      </div>
     </section>
 
     <section class="panel" id="lobby" hidden>
-      <p class="eyebrow">Team flight &middot; up to 4</p>
+      <p class="eyebrow">Team flight &middot; up to 10</p>
       <h2>Fly together</h2>
       <p class="lede">Everyone flies the same sky. If you fall, you come back at the next day as long as one of you is still flying. If everyone falls, the week starts over.</p>
       <div id="lSetup" class="field">
@@ -438,6 +502,7 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
       </div>
       <p class="stats" id="lbest"></p>
       <p class="stats" id="lmsg" role="status"></p>
+      <button class="btn" id="lBoard" type="button">Team ranking</button>
       <button class="btn quiet" id="lback" type="button">Back</button>
     </section>
 
@@ -488,6 +553,21 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
         <button class="btn" id="swap2" type="button">Change bird</button>
       </div>
     </section>
+
+    <section class="panel" id="medalsP" hidden>
+      <div class="sidehead"><div><p class="eyebrow">Medals</p><h2 id="mCount">0 of 50</h2></div><button class="btn quiet" id="mClose" type="button">Close</button></div>
+      <div class="mtiers" id="mTiers"></div>
+      <div id="mbody"></div>
+    </section>
+
+    <section class="panel" id="boardP" hidden>
+      <div class="sidehead"><div><p class="eyebrow">Server ranking</p><h2>Best team flights</h2></div><button class="btn quiet" id="bClose" type="button">Close</button></div>
+      <p class="lede">Teams are ranked by the furthest day they reached, then by the fastest time. Each room size has its own board.</p>
+      <div class="btabs" id="btabs"></div>
+      <p class="stats" id="bmsg" role="status"></p>
+      <ol class="blist" id="blist"></ol>
+    </section>
+    <div class="mtoast" id="mtoast" aria-live="polite"></div>
   </div>
 </div>
 
@@ -508,7 +588,7 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
   const KA_EVERY = 2000;      // keepalive and gossip
   const DEAD_AFTER = 10000;   // silence before a teammate is treated as gone
   const GRACE = 1500;         // a closed link may be replaced by a duplicate; wait before announcing "left"
-  const MAX_REMOTES = 7;
+  const MAX_REMOTES = 9;   // nine others plus you: ten players
   const OPEN_TIMEOUT = 12000;
   const MAX_PRES = 4096;
 
@@ -857,7 +937,7 @@ const isLocked = k => k === 'golden' ? wins < 1 : !!UNLOCKS[k] && !unl[k];
 function lockText(k) { return k === 'golden' ? 'Reach the first rest stop to unlock.' : 'Locked: ' + UNLOCKS[k].text + ' (' + UNLOCKS[k].prog() + ')'; }
 function grantUnlock(k) {
   if (!UNLOCKS[k] || unl[k]) return;
-  unl[k] = true; store.set('unl', unl); unlockQ.push(k);
+  unl[k] = true; store.set('unl', unl); unlockQ.push(k); setTimeout(() => checkMedals(), 0);
   setCap('New bird unlocked: ' + BIRDS[k].name + '!', 3600);
   [659, 784, 988, 1319].forEach((f, i) => tone(f, 0.25, 'triangle', 0.06, i * 0.09));
 }
@@ -1119,18 +1199,35 @@ if (!Array.isArray(wbest)) wbest = [];
 let lives = LIVES, iT = 0, hurtT = 0, hurtKind = '', oopsTimer = 0, lastOops = '', cq = [], lastSpace = 0, panelAt = 0;
 let dpr = 1, lastTs = 0, inited = false;
 let mp = null, roomNs = null;
-const clouds = [], rain = [], stars = [];
+const clouds = [], rain = [], stars = [], shoot = [];
 
 function newBird() { return { x: BIRD_X, y: H * 0.42, vy: 0, rot: 0, flapT: 0, phase: 0, sprig: false }; }
 for (let i = 0; i < 7; i++) clouds.push({ x: rand(0, W), y: rand(40, 330), s: rand(0.8, 1.7), sp: rand(5, 14), a: rand(0.55, 0.9) });
-for (let i = 0; i < 80; i++) rain.push({ x: rand(0, W + 80), y: rand(0, H), v: rand(520, 760), l: rand(10, 18) });
+for (let i = 0; i < 140; i++) rain.push({ x: rand(0, W + 80), y: rand(0, H), v: rand(520, 760), l: rand(10, 18) });
 for (let i = 0; i < 48; i++) stars.push({ x: rand(0, W), y: rand(0, WATER - 120), r: rand(0.6, 1.5), tw: rand(0, 6) });
+
+// ---- weekly scenery: sky colours (night/day pairs for the top, middle and horizon of the sky), water, rain and a rim light for the obstacles
+const SCN = [null,
+  { name: 'Storm clouds',                 sky: ['#101727', '#6aa7d8', '#26324a', '#b9d6ea', '#43526a', '#fadfae'], water: ['#1b3446', '#2d7a96', '#16293a', '#276a85'], rainN: 80,  rainFloor: 0,    slant: 0.16, rw: 1.2, rim: 0 },
+  { name: 'Forty days of rain',           sky: ['#0b1322', '#527fa3', '#1a2740', '#8fb0c8', '#2c3a52', '#d6c9a8'], water: ['#17303f', '#2a7289', '#112331', '#245f78'], rainN: 140, rainFloor: 0.45, slant: 0.34, rw: 1.4, rim: 0.12 },
+  { name: 'A rough sea',                  sky: ['#0e1e1d', '#5f9a8d', '#1d3a36', '#a8cfc0', '#34524a', '#e3d7a4'], water: ['#17352e', '#2d7a69', '#102a24', '#286557'], rainN: 100, rainFloor: 0.3,  slant: 0.22, rw: 1.2, rim: 0.14 },
+  { name: 'The mountains go under',       sky: ['#140f2b', '#7a64b4', '#2b2250', '#b9a6d8', '#4a3a68', '#f0c8b8'], water: ['#1c2447', '#3a5e91', '#151b38', '#314f80'], rainN: 60,  rainFloor: 0.2,  slant: 0.12, rw: 1.1, rim: 0.18 },
+  { name: 'The storm at full strength',   sky: ['#07060e', '#2b2a46', '#12111f', '#4b405f', '#291b26', '#7c5242'], water: ['#141c2e', '#27506c', '#0e1523', '#203f56'], rainN: 140, rainFloor: 0.7,  slant: 0.4,  rw: 1.5, rim: 0.38 },
+  { name: 'The skies begin to clear',     sky: ['#18223a', '#6fb5e0', '#324468', '#cfe6f2', '#5a5a70', '#ffe3a0'], water: ['#1b3446', '#2f84a0', '#16293a', '#2a7390'], rainN: 40,  rainFloor: 0,    slant: 0.1,  rw: 1.1, rim: 0.05 }];
+const scn = () => SCN[clamp(week, 1, NWEEKS)];
+const stt = () => (reduceMotion ? 0 : t);   // scenery movement stands still when the player asked for reduced motion
+let rbSaid = false;
 
 const prog = () => clamp(elapsed / total, 0, 1);
 const dif = () => prog() + (week - 1) * 0.5;        // 0 at week 1 start, 3.5 at the end of week 6
 const dl = () => clamp(dif() - 1, 0, 2.5);
 const dayScale = () => Math.max(0.45, Math.pow(0.88, week - 1));
-const baseSpeed = () => lerp(125, 165, Math.min(1, sdif())) + 18 * sdl();
+// Each week adds 15% of Week 1's difficulty (Week 6 is about 1.75x Week 1), shared out between scroll speed, tighter spacing and lightning.
+// Inside a week the ramp is the same shape as Week 1, so every week starts a little easier than the last one ended.
+const wkM = wk => 1 + 0.15 * ((wk === undefined ? week : wk) - 1);
+const spdAt = (p, wk) => lerp(125, 165, p) * Math.pow(wkM(wk), 0.4);
+const spacingAt = (p, wk) => lerp(250, 200, p) / Math.pow(wkM(wk), 0.35);
+const baseSpeed = () => spdAt(mp ? shProgAt(wDist) : prog(), week);
 // In team play every phone has to build the same sky, so what gets spawned and how fast the world scrolls follow the DISTANCE flown
 // (which the host keeps everybody in step on), not each phone's own clock. A table of distance against time tells us how far along the week that is.
 let dtab = null;
@@ -1138,8 +1235,7 @@ function buildDtab() {
   dtab = [0]; let d = 0;
   const n = Math.ceil(total / 0.5);
   for (let i = 0; i < n; i++) {
-    const df = Math.min(1, (i * 0.5) / total) + (week - 1) * 0.5;
-    d += (lerp(125, 165, Math.min(1, df)) + 18 * clamp(df - 1, 0, 2.5)) * 0.5;
+    d += spdAt(Math.min(1, (i * 0.5) / total), week) * 0.5;
     dtab.push(d);
   }
 }
@@ -1275,11 +1371,11 @@ const THEMES = {
   d6:   { bpm: 126, root: 55, sc: MAJ, prog: [0, 4, 5, 3], bass: 2, arp: 3, drum: 3, lead: 3, wave: 'triangle' }
 };
 // Every week has its own sound, so the tension keeps climbing and the ear never gets used to it.
-// root: shift in semitones, sc: scale, bpm: tempo factor, x: extra layers (pulse, stab, gallop, pad, arp16, oct)
+// root: shift in semitones, sc: scale, bpm: tempo factor, x: extra layers (pulse, hook, stab, gallop, pad, arp16, oct)
 const PHR = [0, 1, 3, 5, 7, 8, 10], HMN = [0, 2, 3, 5, 7, 8, 11], DBL = [0, 1, 4, 5, 7, 8, 11], LOC = [0, 1, 3, 5, 6, 8, 10], LYD = [0, 2, 4, 6, 7, 9, 11];
 const WEEKM = [
   { root: 0,  sc: null, prog: null,         wave: null,       bpm: 1.00, x: [] },                                     // week 1: the calm one
-  { root: -1, sc: PHR,  prog: [0, 5, 3, 4],  wave: 'square',   bpm: 1.07, x: ['pulse'] },                              // week 2: a low heartbeat
+  { root: -1, sc: PHR,  prog: [0, 5, 3, 4],  wave: 'square',   bpm: 1.07, x: ['pulse', 'hook'] },                      // week 2: a heartbeat and an ominous hook
   { root: -4, sc: HMN,  prog: [0, 3, 4, 0],  wave: 'sawtooth', bpm: 1.13, x: ['stab'] },                               // week 3: stabbing chords
   { root: 5,  sc: LOC,  prog: [0, 1, 5, 4],  wave: 'sawtooth', bpm: 1.19, x: ['pulse', 'gallop'] },                    // week 4: galloping dread
   { root: -2, sc: DBL,  prog: [0, 1, 0, 5],  wave: 'square',   bpm: 1.25, x: ['stab', 'pad', 'gallop'] },             // week 5: the storm at full strength
@@ -1326,8 +1422,17 @@ function mv(freq, t0, dur, type, vol, send) {
   if (send) g.connect(music.fx);
   o.start(t0); o.stop(t0 + Math.max(0.05, dur) + 0.03);
 }
-function mdrum(kind, t0) {
+// a heartbeat a phone speaker can really play: the body sits around 200 Hz (not 50) and a short click an octave up carries it
+function mthump(freq, t0, vol) {
+  const o = actx.createOscillator(), g = actx.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(freq * 1.6, t0); o.frequency.exponentialRampToValueAtTime(freq, t0 + 0.09);
+  g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22);
+  o.connect(g); g.connect(music.lp); o.start(t0); o.stop(t0 + 0.26);
+  mv(freq * 2, t0, 0.07, 'triangle', vol * 0.55, false);
+}
+function mdrum(kind, t0, mid) {
   if (kind === 'k') {
+    if (mid) mv(170, t0, 0.1, 'triangle', 0.16, false);   // from Week 2 on the kick also has a mid-range knock, so it is heard without a woofer
     const o = actx.createOscillator(), g = actx.createGain();
     o.type = 'sine'; o.frequency.setValueAtTime(150, t0); o.frequency.exponentialRampToValueAtTime(45, t0 + 0.13);
     g.gain.setValueAtTime(0.5, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.16);
@@ -1381,18 +1486,25 @@ function musicStep(step, t0, th, sd) {
   const xs = th.x || [];
   if (xs.length) {
     const ch = n => mtoF(note(ct(n)));
-    if (xs.indexOf('pulse') >= 0 && s % 2 === 0) mv(mtoF(th.root - 12), t0, sd * 1.5, 'square', s % 4 === 0 ? 0.05 : 0.03, false);
-    if (xs.indexOf('stab') >= 0 && (s === 4 || s === 12 || (th.lead > 1 && s === 14))) { for (let i = 0; i < 3; i++) mv(ch(i), t0, sd * 1.6, 'sawtooth', 0.02, true); }
+    if (xs.indexOf('pulse') >= 0) {   // lub-dub, lub-dub
+      if (s === 0 || s === 8) mthump(mtoF(th.root), t0, 0.24);
+      if (s === 2 || s === 10) mthump(mtoF(th.root + 5), t0, 0.15);
+    }
+    if (xs.indexOf('hook') >= 0) {   // a short, sour phrase on the flat second of the scale; it sits high enough for a phone speaker
+      const HK = { 2: 7, 3: 8, 6: 7, 11: 4 };
+      if (HK[s] !== undefined && (bar % 2 === 0 || s !== 11)) mv(mtoF(note(HK[s])), t0, sd * (s === 3 ? 2.2 : 1.6), 'square', 0.055, true);
+    }
+    if (xs.indexOf('stab') >= 0 && (s === 4 || s === 12 || (th.lead > 1 && s === 14))) { for (let i = 0; i < 3; i++) { mv(ch(i), t0, sd * 1.6, 'sawtooth', 0.04, true); mv(ch(i) * 2, t0, sd * 1.2, 'triangle', 0.035, true); } }
     if (xs.indexOf('pad') >= 0 && s === 0) { for (let i = 0; i < 3; i++) mpad(ch(i), t0, sd * 15, 0.05); }
     if (xs.indexOf('arp16') >= 0 && s % 2 === 1 && th.arp >= 2) mv(mtoF(note(ct(ARP_SEQ[(s + bar) % ARP_SEQ.length]) + 7)), t0, sd * 0.9, 'triangle', 0.03, true);
     if (xs.indexOf('oct') >= 0 && th.lead > 0 && LEAD_STEPS[th.lead].indexOf(s) >= 0) {
       const pick = [0, 1, 2][Math.floor(prand(bar * 31 + s * 7 + th.root) * 3)];
       mv(mtoF(note(14 + ct(pick))), t0, sd * 2.5, 'sine', 0.035, true);
     }
-    if (xs.indexOf('gallop') >= 0 && th.drum >= 1 && (s === 3 || s === 7 || s === 11 || s === 15)) mdrum('k', t0);
+    if (xs.indexOf('gallop') >= 0 && th.drum >= 1 && (s === 3 || s === 7 || s === 11 || s === 15)) { mdrum('k', t0, true); mthump(mtoF(th.root), t0, 0.08); }
   }
   const dm = Math.max(0, th.drum - (nS > 0.6 ? 1 : 0)), D = DRUMS[dm];
-  if (D.k.indexOf(s) >= 0) mdrum('k', t0);
+  if (D.k.indexOf(s) >= 0) mdrum('k', t0, xs.length > 0);
   if (D.s.indexOf(s) >= 0) mdrum('s', t0);
   if (D.h.indexOf(s) >= 0) mdrum('h', t0);
 }
@@ -1494,6 +1606,7 @@ function updateStats() { $('#stats').textContent = 'Best: ' + fmtDay(best) + '  
 function setPanels(which) {
   menu.hidden = which !== 'menu'; lobbyP.hidden = which !== 'lobby'; over.hidden = which !== 'over';
   restP.hidden = which !== 'rest'; winP.hidden = which !== 'win';
+  $('#medalsP').hidden = which !== 'medals'; $('#boardP').hidden = which !== 'board';
 }
 function setCap(text, ms) {
   clearTimeout(capTimer);
@@ -1569,7 +1682,8 @@ function newWeekClock() {
   total = dayPre[NDAYS]; buildDtab();
   dayIdx = 0; dayT = 0; elapsed = 0; weekT0 = runTime; weekSaved = 0; hudSaved = -1;
   hazards = []; strikes = []; orbs = []; pws = []; chain = { type: '', n: 0 }; weekPicks = 0;
-  wDist = 0; encCum = 0; spawnDist = 0; lastSpace = 0; lastEnc = ''; encPassed = 0; orbDue = false; strikeT = 8; prevC = null; hid = 0; bag = []; lastPw = '';
+  wDist = 0; encCum = 0; spawnDist = 0; lastSpace = 0; lastEnc = ''; encPassed = 0; orbDue = false; strikeT = 8; prevC = null; hid = 0; bag = []; lastPw = ''; rbSaid = false;
+  wkLost = false; wkRev = false; wkBolts = 0; wkKinds = {};
   lives = LIVES; iT = 0; hurtT = 0; panelAt = 0; hideOops();
   cq = week === 1 ? planClouds() : [];
   updateLivesHud();
@@ -1672,7 +1786,7 @@ function showMenu() {
 }
 function beginReady(keepWeek) {
   ensureAudio(); cloudTip = false;
-  if (keepWeek === true) runTime = weekT0; else { week = 1; runTime = 0; cp = null; cpUsed = false; cpFalls = 0; cpBust = false; }
+  if (keepWeek === true) runTime = weekT0; else { week = 1; runTime = 0; cp = null; cpUsed = false; cpFalls = 0; cpBust = false; runLost = false; runCreat = 0; }
   seed = newSeed();
   resetWeek();
   const resume = keepWeek === true && !mp && cp && !cpBust;
@@ -1689,6 +1803,8 @@ function startRun() {
   setCap(cp ? 'Week ' + week + ', Day ' + (dayIdx + 1) + ' \u00b7 ' + cpLeft() + (cpLeft() === 1 ? ' retry' : ' retries') + ' left' : week > 1 ? 'Week ' + week + ', Day 1' : 'Day 1', 1800);
   musicForce(); updateCpHud();
   if (mp) { mpSet({ s: 'alive', l: lives }); }
+  if (mp) mp.runT0 = t;
+  mev('fly');
 }
 
 /* ---------- hazards ---------- */
@@ -1735,8 +1851,8 @@ const FISH_SKINS = ['#e8a643', '#7cc3d9', '#d96b6b'];
 
 function pushRock(x, lead) { hazards.push({ type: 'rock', x: x, w: wrand(48, 64), y: WATER - wrand(80, 250), id: hid++, lead: lead }); }
 function pushHang(x, lead) { hazards.push({ type: 'hang', x: x, w: 58, bottom: wrand(90, 270), id: hid++, lead: lead }); }
-function pushGate(x, d) {
-  const gap = lerp(205, 172, Math.min(1, d)) - 6 * clamp(d - 1, 0, 2.5);
+function pushGate(x, ep) {
+  const gap = lerp(205, 172, ep) - 13 * (wkM() - 1);
   const minC = gap / 2 + 60, maxC = WATER - gap / 2 - 50;
   let c = wrand(minC, maxC);
   if (prevC != null) c = clamp(c, prevC - 170, prevC + 170);
@@ -1826,15 +1942,15 @@ function tickTeamPw(dt) {
   if (changed) updatePwHud(); else tickPwHud();
 }
 function spawnEncounter() {
-  const d = edif(), x = W + 60 + Math.min(0, spawnDist), sp = baseSpeed() * speedMult();   // carry the bit of distance flown past the spawn point, so frame timing cannot shift the spacing
-  const spacing = lerp(250, 200, Math.min(1, d)) - 12 * edl() + wrand(-18, 22);
+  const d = edif(), ep = mp ? shProgAt(encCum) : prog(), x = W + 60 + Math.min(0, spawnDist), sp = baseSpeed() * speedMult();   // carry the bit of distance flown past the spawn point, so frame timing cannot shift the spacing
+  const spacing = spacingAt(ep, week) + wrand(-18, 22);
   encCum += spacing;
   spawnDist = Math.min(0, spawnDist) + spacing; lastSpace = spacing;
   const kind = chooseEnc(d);
   lastEnc = kind;
   if (kind === 'rock') pushRock(x, true);
   else if (kind === 'hang') pushHang(x, true);
-  else if (kind === 'gate') pushGate(x, d);
+  else if (kind === 'gate') pushGate(x, ep);
   else if (kind === 'cloud') pushCloud(x);
   else if (kind === 'wave') pushWave(x);
   else pushCreature(kind, x, sp);
@@ -1844,15 +1960,15 @@ function spawnEncounter() {
   }
 }
 function spawnStrike() {
-  const d = edif(), p = Math.min(1.5, d);
-  strikeT = srand(7, 11) * (1 - 0.4 * p);
-  const n = (d > 0.6 && sR() < 0.35 + 0.1 * Math.min(2, d - 0.6)) ? 2 : 1;
+  const d = edif(), p = mp ? shProgAt(encCum) : prog(), M = wkM();
+  strikeT = srand(7, 11) * (1 - 0.4 * p) / Math.pow(M, 0.25);
+  const n = (d > 0.6 && sR() < 0.3 + 0.35 * (M - 1) + 0.1 * p) ? 2 : 1;
   const ys = [];
   for (let i = 0; i < n; i++) {
     let y, guard = 0;
     do { y = srand(125, 395); guard++; } while (ys.some(v => Math.abs(v - y) < 120) && guard < 20);
     ys.push(y);
-    strikes.push({ x: BIRD_X + srand(-48, 60), y: y, t: 0, warn: lerp(1.5, 1.2, Math.min(1, d)), state: 'warn', pts: null, blink: -1 });
+    strikes.push({ x: BIRD_X + srand(-48, 60), y: y, t: 0, warn: lerp(1.5, 1.2, p), state: 'warn', pts: null, blink: -1 });
   }
 }
 function makeBolt(x, y) {
@@ -1867,7 +1983,9 @@ function activate(type) {
   // back-to-back pickups of the same pill build YOUR chain; a hit or a different pill breaks it
   let mega = false;
   if (chain.type === type) chain.n++; else { chain.type = type; chain.n = 1; }
+  mev('pill', type); mev('chain', chain.n);
   if (chain.n >= MEGA[type].need) { mega = true; chain.type = ''; chain.n = 0; }
+  if (mega) mev('mega', type);
   if (!mp) {
     weekPicks++;
     ach.picks = Math.max(ach.picks || 0, weekPicks);
@@ -1886,8 +2004,8 @@ function activate(type) {
     pwMakeRoom();   // all three slots busy: the one about to run out makes room
     pws.push({ type: type, t: dur, dur: dur, mega: mega, team: team });
   }
-  if (mp && mega) { mp.mg = (mp.mg | 0) + 1; mpSet({ mg: mp.mg, mt: type }); }   // tell the others
-  else if (team) { mp.tw = (mp.tw | 0) + 1; mp.twAt = t; mpSet({ tw: mp.tw }); }
+  if (mp && mega) { mp.mg = (mp.mg | 0) + 1; mpSet({ mg: mp.mg, mt: type }); mev('tmega'); }   // tell the others
+  else if (team) { mp.tw = (mp.tw | 0) + 1; mp.twAt = t; mpSet({ tw: mp.tw }); mev('ttail'); }
   updatePwHud();
   if (mega) { megaBurst(type, ''); return; }
   const chainTxt = chain.n > 1 ? '  Chain ' + chain.n + ' of ' + MEGA[type].need + '.' : '';
@@ -1923,6 +2041,7 @@ function breakChain() {
   updatePwHud();
 }
 function onNewDay() {
+  if (state === 'play' && lives > 0) mev('day1');
   setCap('Day ' + (dayIdx + 1), 2000);
   tone(523, 0.25, 'sine', 0.05); tone(784, 0.3, 'sine', 0.05, 0.12);
   musicForce();
@@ -1959,6 +2078,7 @@ function updateLivesHud() { Array.prototype.forEach.call(livesEl.children, (h, i
 // a hit costs a life; only the last one ends the flight
 function takeHit(kind) {
   breakChain();
+  wkLost = true; runLost = true;
   lives = Math.max(0, lives - 1);
   updateLivesHud();
   // the last hit keeps its words up about two seconds longer, and the options screen waits for them
@@ -2121,13 +2241,15 @@ function showOver() {
 /* ---------- rest stop, and the ending at the ark ---------- */
 // where each bird sits: on the olive branch for a weekly rest, on Noah's outstretched arm at the very end
 function perchSpot(slot, gx) {
-  const u = [0.12, 0.38, 0.64, 0.9][slot % 4], peak = WATER - 135;
-  return [lerp(gx - 6, gx - 96, u), lerp(peak - 20, peak - 40, u) - 13];
+  const n = mp && mp.list ? mp.list.length : 1, peak = WATER - 135;
+  const u = n <= 4 ? [0.12, 0.38, 0.64, 0.9][slot % 4] : 0.06 + 0.88 * (slot % n) / (n - 1);
+  return [lerp(gx - 6, gx - 96, u), lerp(peak - 20, peak - 40, u) - 13 - (n > 4 ? (slot % 2) * 15 : 0)];
 }
 function armSpot(slot, gx) {
   const nx = gx + 92, y0 = WATER - 36;
-  if (slot % 4 === 3) return [nx + 1, y0 - 56];
-  const u = [1, 0.6, 0.26][slot % 4];
+  if (slot >= 4) return [nx - 34 + ((slot - 4) % 6) * 13, y0 - 76 - ((slot - 4) % 2) * 15];
+  if (slot === 3) return [nx + 1, y0 - 56];
+  const u = [1, 0.6, 0.26][slot];
   return [lerp(nx - 4, nx - 44, u), lerp(y0 - 28, y0 - 34, u) - 14];
 }
 const mySlot = () => (mp && mp.slot >= 0 ? mp.slot : 0);
@@ -2182,6 +2304,8 @@ function startFinale() {
     cp = null; cpUsed = false; cpFalls = 0; cpBust = false; updateCpHud();
     checkUnlocks();
   }
+  mev('clear', { isEnd: isEnd, frac: clamp(1 - (runTime - weekT0) / Math.max(1, total), 0, 1) });
+  if (mp) rankSubmit(isEnd ? NWEEKS * NDAYS : week * NDAYS, runTime);
   state = 'finale';
   hazards = []; strikes = []; orbs = []; pws = []; chain = { type: '', n: 0 }; updatePwHud();
   burn = 0; stunT = 0; causeKind = ''; landed = false; hint.hidden = true;
@@ -2285,7 +2409,7 @@ function beginDepart() {
   dep = { t: 0, sx: bird.x, sy: bird.y };
   state = 'depart';
   setPanels(''); hud.hidden = false; hint.hidden = true;
-  setCap('Week ' + week + ' of ' + NWEEKS, 1800);
+  setCap('Week ' + week + ' of ' + NWEEKS + ' \u00b7 ' + scn().name, 2600);
   tone(523, 0.2, 'triangle', 0.06); tone(784, 0.3, 'triangle', 0.06, 0.12);
   if (mp) { mpSet({ s: 'alive', l: lives }); mp.cd = null; }
   updateCpHud();
@@ -2307,7 +2431,8 @@ function updateDepart(dt) {
   }
 }
 
-/* ---------- team play (up to 4, over the shared room) ---------- */
+/* ---------- team play (up to 10, over the shared room) ---------- */
+const MAX_TEAM = 10;
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const cleanName = s => String(s == null ? '' : s).replace(/[^\w .'-]/g, '').trim().slice(0, 12);
 const myName = () => cleanName($('#pname').value) || 'Player';
@@ -2372,9 +2497,9 @@ async function mpJoinRoom(code, creating) {
   }
   $('#mkRoom').disabled = false; $('#joinRoom').disabled = false;
   if (!r) { lmsg('Could not reach that room. Check the code and try again.'); return; }
-  mp = { room: r, code: code, creating: creating, jn: Date.now(), unsub: [], cd: null, lastRid: 0, entered: false, isHost: false, slot: -1, list: [], vis: {}, sendT: 0, clkT: 0, sent: {}, joinedAt: Date.now(), tw: 0, twSeen: {}, twAt: undefined, mg: 0, mgSeen: {} };
+  mp = { room: r, code: code, creating: creating, jn: Date.now(), unsub: [], cd: null, lastRid: 0, entered: false, isHost: false, slot: -1, list: [], vis: {}, sendT: 0, clkT: 0, sent: {}, joinedAt: Date.now(), tw: 0, twSeen: {}, sSeen: {}, rkSeen: {}, peakN: 0, rk: 0, twAt: undefined, mg: 0, mgSeen: {} };
   mp.unsub.push(r.onPeers(mpOnPeers, () => {}));
-  mpSet({ mp: 1, n: myName(), c: charKey, s: 'lobby', jn: mp.jn, h: creating ? 1 : 0, ph: creating ? 'lobby' : null, rid: 0, wk: 1, seed: 0, l: LIVES, tw: 0, mg: 0, mt: '', tb: teamBest, tt: teamBestT });
+  mpSet({ mp: 1, n: myName(), c: charKey, s: 'lobby', jn: mp.jn, h: creating ? 1 : 0, ph: creating ? 'lobby' : null, rid: 0, wk: 1, seed: 0, l: LIVES, tw: 0, mg: 0, mt: '', rk: 0, tb: teamBest, tt: teamBestT });
   lmsg('');
   renderLobby();
 }
@@ -2421,12 +2546,14 @@ function mpRenderHud() {
   if (!mp) { matesEl.hidden = true; return; }
   matesEl.hidden = false;
   matesEl.innerHTML = '';
+  const many = mp.list.length > 5;
+  matesEl.classList.toggle('many', many);
   mp.list.forEach(m => {
     if (m.me) return;
     const alive = m.p.s === 'alive' || m.p.s === 'rest';
     const d = document.createElement('div');
     const lv = Math.max(0, Math.min(LIVES, m.p.l | 0));
-    d.textContent = (alive ? '\u25cf ' : '\u25cb ') + (cleanName(m.p.n) || 'Player') + (alive && m.p.l != null ? ' ' + '\u2665'.repeat(lv) : '');
+    d.textContent = (alive ? '\u25cf ' : '\u25cb ') + (many ? (cleanName(m.p.n) || 'Player').slice(0, 7) : (cleanName(m.p.n) || 'Player')) + (alive && m.p.l != null ? ' ' + (many ? lv + '\u2665' : '\u2665'.repeat(lv)) : '');
     d.style.opacity = alive ? '1' : '0.5';
     d.style.color = BIRDS[m.p.c] ? BIRDS[m.p.c].body : '#fff';
     matesEl.appendChild(d);
@@ -2438,7 +2565,7 @@ function mpOnPeers() {
   adoptRoomRecord();
   const me = mp.list.findIndex(m => m.me);
   mp.slot = me;
-  if (me >= 4) { mpLeave('That room is full (4 players).'); return; }
+  if (me >= MAX_TEAM) { mpLeave('That room is full (' + MAX_TEAM + ' players).'); return; }
   if (me < 0) return;
   // host = oldest player who holds the host flag; if nobody does after a short wait, the oldest player takes it
   let H = mpHost();
@@ -2503,7 +2630,7 @@ function revive() {
   pws.push({ type: 'halo', t: 2.5, dur: 2.5, mega: false });
   updatePwHud();
   setCap('Back in the air. Stay up there.', 2400);
-  lives = 1; iT = 0; panelAt = 0; updateLivesHud();
+  lives = 1; iT = 0; panelAt = 0; updateLivesHud(); wkRev = true; mev('rescued');
   mpSet({ s: 'alive', l: lives }); mpRenderHud();
   tone(523, 0.15, 'triangle', 0.06); tone(784, 0.2, 'triangle', 0.06, 0.1); tone(1047, 0.3, 'triangle', 0.06, 0.2);
   for (let i = 0; i < 18; i++) { const a = rand(0, TAU); particle({ x: bird.x, y: bird.y, vx: Math.cos(a) * rand(40, 120), vy: Math.sin(a) * rand(40, 120), size: rand(1.6, 3), color: '#f1c94a', life: rand(0.5, 0.9) }); }
@@ -2528,6 +2655,7 @@ function showTeam() {
   state = 'dead';
   const day = Math.min(NDAYS, dayIdx + 1), td = totalDays();
   const rec = recordTeam(td, 0);
+  rankSubmit(td, runTime);
   let vi; do { vi = Math.floor(Math.random() * VERSES.length); } while (vi === lastVerse);
   lastVerse = vi;
   $('#overEye').textContent = rec ? 'Team down \u00b7 New team record!' : 'Team down';
@@ -2555,6 +2683,7 @@ function mpTick(dt) {
   if (mp.elT <= 0 && !mpHost()) { mp.elT = 0.5; mpOnPeers(); if (!mp) return; }
   mp.list = mpList();
   const playing = state === 'play' || state === 'dying' || state === 'spectate';
+  if (playing) mp.peakN = Math.max(mp.peakN | 0, mp.list.length);
   // other players' birds glide to where they say they are
   for (const m of mp.list) {
     if (m.me) continue;
@@ -2568,6 +2697,13 @@ function mpTick(dt) {
     const n = +m.p.tw || 0, prev = mp.twSeen[m.peer];
     mp.twSeen[m.peer] = n;
     if (prev !== undefined && n > prev && playing) remoteTail(m);
+    // medals: a teammate who was down is flying again (the team brought them back), and the host's ranking report went through
+    const ss = m.p.s, ps = mp.sSeen[m.peer];
+    mp.sSeen[m.peer] = ss;
+    if (ps === 'dead' && ss === 'alive' && state === 'play' && lives > 0 && t - (mp.runT0 || 0) > 4) mev('revived');
+    const rkn = +m.p.rk || 0, prk = mp.rkSeen[m.peer];
+    mp.rkSeen[m.peer] = rkn;
+    if (prk !== undefined && rkn > prk) mev('ranked');
     const g = +m.p.mg || 0, pg = mp.mgSeen[m.peer];
     mp.mgSeen[m.peer] = g;
     if (pg !== undefined && g > pg && playing) remoteMega(m);
@@ -2596,7 +2732,7 @@ function mpTick(dt) {
   }
   mp.sendT -= dt;
   if (mp.sendT <= 0) {
-    mp.sendT = 0.08;
+    mp.sendT = mp.list.length > 6 ? 0.11 : 0.08;   // a big room sends a little less often, so ten phones do not flood each other
     const patch = {};
     const y = Math.round(bird.y), v = Math.round(bird.vy / 5) * 5;
     if (mp.sent.y !== y) { patch.y = y; mp.sent.y = y; }
@@ -2666,6 +2802,7 @@ function updateHazards(dt, sp) {
     }
     if (h.lead && !h.counted && h.x + (h.w || 0) / 2 < BIRD_X) {
       h.counted = true; encPassed++;
+      if (h.cr && state === 'play') mev('croc');
       if (encPassed % 3 === 0 && !pwMega('tail')) orbDue = true;
     }
   }
@@ -2739,7 +2876,8 @@ function touching(h, hr, ghost, ghostAll) {
   return hitRect(bird.x, bird.y, hr, h.x + 5, h.y - h.h / 2 + 5, h.w - 10, h.h - 10);
 }
 function closeCall() {
-  ach.close = (ach.close || 0) + 1; store.set('ach', ach);
+  if (!mp) { ach.close = (ach.close || 0) + 1; store.set('ach', ach); }
+  mev('close');
   setCap('Close call!', 900);
   tone(1500, 0.07, 'square', 0.03); tone(1900, 0.1, 'square', 0.03, 0.07);
   for (let i = 0; i < 8; i++) particle({ x: bird.x, y: bird.y, vx: rand(-80, 80), vy: rand(-80, 80), size: rand(1, 2), color: '#fff3a0', life: rand(0.2, 0.5) });
@@ -2798,7 +2936,8 @@ function updatePlay(dt) {
       s.near = s.near === undefined ? m : Math.min(s.near, m);
     } else if (!s.cc) {
       s.cc = true;
-      if (!mp && s.near !== undefined && s.near > 0 && s.near < 30) closeCall();
+      if (state === 'play') mev('bolt');
+      if (s.near !== undefined && s.near > 0 && s.near < 30) closeCall();
     }
   }
 }
@@ -2814,10 +2953,15 @@ function update(dt) {
   fS += ((state === 'finale' ? 1 : 0) - fS) * Math.min(1, dt * 1.2);
   const slow = (state === 'play' || state === 'spectate') ? 1.5 : 1;
   for (const c of clouds) { c.x -= c.sp * dt * slow; if (c.x < -150) c.x = W + 150; }
-  for (const d of rain) { d.y += d.v * dt; d.x -= d.v * 0.16 * dt; if (d.y > WATER || d.x < -20) { d.y = rand(-60, -5); d.x = rand(0, W + 80); } }
-  if (!reduceMotion && pS < 0.4 && state !== 'finale') {
+  const slant = scn().slant;
+  for (const d of rain) { d.y += d.v * dt; d.x -= d.v * slant * dt; if (d.y > WATER || d.x < -20) { d.y = rand(-60, -5); d.x = rand(0, W + 80); } }
+  if (!reduceMotion && (pS < 0.4 || week === 5) && week < 6 && state !== 'finale') {
     nextBolt -= dt;
-    if (nextBolt <= 0) { flash = Math.max(flash, 0.28); nextBolt = rand(4, 9); tone(64, 0.9, 'sawtooth', 0.025, 0.15, 38); }
+    if (nextBolt <= 0) { flash = Math.max(flash, 0.28); nextBolt = week === 5 ? rand(2.5, 5.5) : rand(4, 9); tone(64, 0.9, 'sawtooth', 0.025, 0.15, 38); }
+  }
+  for (let i = shoot.length - 1; i >= 0; i--) { const q = shoot[i]; q.life -= dt; q.x += q.vx * dt; q.y += q.vy * dt; if (q.life <= 0) shoot.splice(i, 1); }
+  if (!reduceMotion && nS > 0.6 && shoot.length < 2 && Math.random() < dt * 0.4) {
+    shoot.push({ x: rand(W * 0.3, W + 30), y: rand(10, 210), vx: -rand(380, 520), vy: rand(120, 220), life: 0.75, max: 0.75 });
   }
   iT = Math.max(0, iT - dt); hurtT = Math.max(0, hurtT - dt);
   flash = Math.max(0, flash - dt * 2.2);
@@ -2860,9 +3004,10 @@ function update(dt) {
 function drawSky() {
   const p = pS, u = uNow();
   const g = ctx.createLinearGradient(0, 0, 0, WATER);
-  g.addColorStop(0, mix('#101727', '#6aa7d8', p));
-  g.addColorStop(0.62, mix('#26324a', '#b9d6ea', p));
-  g.addColorStop(1, mix('#43526a', '#fadfae', p));
+  const K = scn().sky;
+  g.addColorStop(0, mix(K[0], K[1], p));
+  g.addColorStop(0.62, mix(K[2], K[3], p));
+  g.addColorStop(1, mix(K[4], K[5], p));
   ctx.fillStyle = g;
   ctx.fillRect(-20, -20, W + 40, H + 40);
   // sun: rises at dawn, sets at dusk, settles by the ark at the rest stop
@@ -2906,6 +3051,17 @@ function drawNight() {
     ctx.globalAlpha = sa * (0.55 + 0.45 * Math.sin(t * 2 + s.tw));
     ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.fill();
   }
+  if (shoot.length) {
+    ctx.lineCap = 'round';
+    for (const q of shoot) {
+      const a = nS * clamp(q.life / q.max, 0, 1), tx = q.x - q.vx * 0.16, ty = q.y - q.vy * 0.16;
+      ctx.strokeStyle = 'rgba(190,215,255,' + (a * 0.35).toFixed(3) + ')'; ctx.lineWidth = 3.2;
+      ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(tx, ty); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,' + a.toFixed(3) + ')'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x - q.vx * 0.075, q.y - q.vy * 0.075); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
   const m = clamp((uNow() - 0.55) / 0.4, 0, 1), mx = lerp(W * 0.88, W * 0.12, m), my = 150 - 90 * Math.sin(Math.PI * m);
   ctx.globalAlpha = nS * (0.35 + 0.65 * pS);
   ctx.fillStyle = '#f3efd9';
@@ -2913,6 +3069,112 @@ function drawNight() {
   ctx.fillStyle = 'rgba(40,50,80,.25)';
   ctx.beginPath(); ctx.arc(mx - 4, my - 3, 3.5, 0, TAU); ctx.arc(mx + 5, my + 4, 2.5, 0, TAU); ctx.fill();
   ctx.globalAlpha = 1;
+}
+
+// ---- the weekly backdrops
+function tornado(x, top, base, wTop, sway, a, k) {
+  const n = 9, L = [], R = [], st = stt();
+  for (let i = 0; i <= n; i++) {
+    const f = i / n, y = lerp(top, base, f), w = lerp(wTop, 3, Math.pow(f, 0.75)), cx = x + Math.sin(st * 1.1 + k + f * 4) * sway * (1 - f * 0.35) + f * 16;
+    L.push([cx - w / 2, y]); R.push([cx + w / 2, y]);
+  }
+  ctx.fillStyle = 'rgba(30,34,54,' + a.toFixed(3) + ')';
+  ctx.beginPath(); ctx.moveTo(L[0][0], L[0][1]);
+  for (let i = 1; i <= n; i++) ctx.lineTo(L[i][0], L[i][1]);
+  for (let i = n; i >= 0; i--) ctx.lineTo(R[i][0], R[i][1]);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(170,182,210,' + (a * 0.45).toFixed(3) + ')'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let i = 1; i < n; i += 2) { const o = Math.sin(st * 3 + i + k) * 0.25 * (R[i][0] - L[i][0]); ctx.moveTo(L[i][0] + o, L[i][1]); ctx.lineTo(R[i][0] + o, R[i][1] + 3); }
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(110,120,140,' + (a * 0.8).toFixed(3) + ')';
+  ctx.beginPath(); ctx.ellipse(R[n][0] - 1, base - 1, wTop * 0.3, 4, 0, 0, TAU); ctx.fill();
+}
+const wrapX = (x, span) => ((x % span) + span) % span - 120;
+function drawScene() {
+  if (week < 2 || state === 'finale') return;
+  const st = stt(), p = prog(), dark = 1 - pS * 0.55;
+  if (week === 2) {
+    // a faraway ark on the horizon, and two tornadoes walking across the sea
+    ctx.fillStyle = 'rgba(24,26,42,' + (0.5 * dark).toFixed(3) + ')';
+    const ax = W * 0.84, ay = WATER - 6 + Math.sin(st * 1.3) * 1.2;
+    ctx.beginPath(); ctx.moveTo(ax - 38, ay - 8); ctx.lineTo(ax + 38, ay - 8); ctx.lineTo(ax + 28, ay + 4); ctx.lineTo(ax - 30, ay + 4); ctx.closePath(); ctx.fill();
+    ctx.fillRect(ax - 22, ay - 20, 44, 12); ctx.beginPath(); ctx.moveTo(ax - 26, ay - 20); ctx.lineTo(ax, ay - 29); ctx.lineTo(ax + 26, ay - 20); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(26,28,46,' + (0.55 * dark).toFixed(3) + ')';
+    ctx.beginPath(); ctx.ellipse(wrapX(W * 0.22 - st * 5, W + 240), 138, 70, 22, 0, 0, TAU); ctx.ellipse(wrapX(W * 0.72 - st * 3, W + 240), 214, 44, 14, 0, 0, TAU); ctx.fill();
+    tornado(wrapX(W * 0.22 - st * 5, W + 240), 138, WATER + 4, 60, 10, 0.5 * dark, 0);
+    tornado(wrapX(W * 0.72 - st * 3, W + 240), 214, WATER + 4, 34, 7, 0.38 * dark, 2.3);
+  } else if (week === 4) {
+    const sink = 46 * p, T = st;
+    const ridge = (off, h, base, col, ph) => {
+      ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(-20, WATER + 12);
+      for (let x = -20; x <= W + 20; x += 8) {
+        const a = (x + off) / W * TAU, v = 0.5 + 0.28 * Math.sin(a * 2 + ph) + 0.2 * Math.sin(a * 3 + ph * 1.7) + 0.12 * Math.sin(a * 5 + ph * 0.6);
+        ctx.lineTo(x, base + sink - h * v);
+      }
+      ctx.lineTo(W + 20, WATER + 12); ctx.closePath(); ctx.fill();
+    };
+    ridge(T * 5, 190, WATER - 6, 'rgba(118,98,168,' + (0.5 * dark + 0.1).toFixed(3) + ')', 0.7);
+    ridge(T * 11, 140, WATER - 2, 'rgba(70,56,118,' + (0.62 * dark + 0.12).toFixed(3) + ')', 2.9);
+    const fg = ctx.createLinearGradient(0, WATER - 120, 0, WATER + 6);
+    fg.addColorStop(0, 'rgba(205,190,235,0)'); fg.addColorStop(0.7, 'rgba(205,190,235,' + (0.32 * dark).toFixed(3) + ')'); fg.addColorStop(1, 'rgba(205,190,235,0.1)');
+    ctx.fillStyle = fg; ctx.fillRect(-20, WATER - 120, W + 40, 126);
+  } else if (week === 5) {
+    const fl = 0.55 + 0.25 * Math.sin(st * 2.1) + flash * 1.4;
+    const g = ctx.createRadialGradient(W * 0.5, WATER, 10, W * 0.5, WATER, 300);
+    g.addColorStop(0, 'rgba(255,140,50,' + clamp(0.5 * fl, 0, 0.9).toFixed(3) + ')'); g.addColorStop(1, 'rgba(255,100,40,0)');
+    ctx.fillStyle = g; ctx.fillRect(-20, WATER - 300, W + 40, 310);
+  } else if (week === 6) {
+    const a = 0.05 + 0.08 * p;
+    for (let i = 0; i < 4; i++) {
+      const x0 = W * (0.42 + 0.17 * i) + Math.sin(st * 0.4 + i * 1.9) * 12, k = 0.6 + 0.4 * Math.sin(st * 0.5 + i * 2.2);
+      ctx.fillStyle = 'rgba(255,226,140,' + (a * k).toFixed(3) + ')';
+      ctx.beginPath(); ctx.moveTo(x0 - 6, -20); ctx.lineTo(x0 + 16, -20); ctx.lineTo(x0 - 70, WATER); ctx.lineTo(x0 - 128, WATER); ctx.closePath(); ctx.fill();
+    }
+    const rb = clamp((p - 0.5) / 0.45, 0, 1);
+    if (rb > 0.01) {
+      const cols = ['#e5484d', '#f08a3b', '#f4cf4a', '#7fc15a', '#4ba3e3', '#5b6fd6', '#9a5fc7'];
+      ctx.save(); ctx.globalAlpha = 0.55 * rb; ctx.lineWidth = 8;
+      cols.forEach((col, i) => { ctx.strokeStyle = col; ctx.beginPath(); ctx.arc(190, WATER + 10, 250 - i * 8, Math.PI, Math.PI + Math.PI * rb); ctx.stroke(); });
+      ctx.restore();
+      if (rb > 0.35 && !rbSaid && state === 'play') { rbSaid = true; setCap('A rainbow forms in the cloud. Genesis 9:13', 3600); }
+    }
+  }
+}
+const DEB = []; for (let i = 0; i < 7; i++) DEB.push({ x: i * 58 + (i * 37) % 31, ph: i * 1.7, kind: i % 3, sp: 16 + (i % 3) * 7, y: (i % 4) * 13 });
+function drawSceneFront() {
+  if (week < 3 || week > 5) return;
+  const st = stt(), rough = week === 3 ? 1 : week === 5 ? 1.5 : 0.5;
+  // whitecaps riding the swell
+  ctx.strokeStyle = 'rgba(236,244,248,' + (0.55 * Math.min(1, rough)).toFixed(3) + ')'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  ctx.beginPath();
+  const nc = week === 5 ? 12 : 9;
+  for (let i = 0; i < nc; i++) {
+    const x = wrapX(i * (W + 240) / nc - st * (40 + (i % 3) * 14) + 60, W + 240), y = WATER + 7 + (i % 4) * 11 + Math.sin(st * 2 + i) * 2;
+    ctx.moveTo(x - 9, y + 2); ctx.quadraticCurveTo(x, y - 5 * rough, x + 9, y + 2);
+  }
+  ctx.stroke();
+  if (week === 3) {
+    for (const d of DEB) {
+      const x = wrapX(d.x - st * d.sp, W + 160), y = WATER + 14 + d.y + Math.sin(st * 1.6 + d.ph) * 3, r = Math.sin(st * 1.3 + d.ph) * 0.25;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(r);
+      if (d.kind === 1) {   // a barrel
+        ctx.fillStyle = '#6a4727'; ctx.fillRect(-7, -9, 14, 18); ctx.fillStyle = '#3d2a17'; ctx.fillRect(-7, -5, 14, 2); ctx.fillRect(-7, 3, 14, 2);
+      } else {   // planks
+        ctx.fillStyle = '#7a5532'; ctx.fillRect(-20, -3, 40, 6); ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(-20, -3, 40, 1.5);
+        if (d.kind === 2) { ctx.rotate(0.9); ctx.fillStyle = '#69492a'; ctx.fillRect(-14, -2.5, 28, 5); }
+      }
+      ctx.restore();
+    }
+  }
+  if (week === 5) {   // spray flung up by the big waves
+    ctx.fillStyle = 'rgba(240,248,252,0.6)'; ctx.beginPath();
+    for (let i = 0; i < 18; i++) {
+      const f = (st * 0.9 + i * 0.37) % 1, x = (i * 61 + 24 * Math.sin(i * 2.3)) % W, y = WATER - 4 - 58 * Math.sin(Math.PI * f) * (0.6 + 0.4 * ((i * 7) % 5) / 4);
+      ctx.moveTo(x + 2, y); ctx.arc(x, y, 2 - f * 0.9, 0, TAU);
+    }
+    ctx.fill();
+  }
 }
 function drawRainbow() {
   if (!fin || fin.rain <= 0) return;
@@ -3017,6 +3279,11 @@ function drawHang(h) {
   ctx.globalAlpha = 0.35; ctx.fillStyle = hl;
   ctx.fillRect(x + w * 0.2, -30, w * 0.2, topH + 30 - r);
   ctx.globalAlpha = 1;
+  const rm = scn().rim;
+  if (rm > 0) {   // a pale edge keeps the pillars readable against the darker weekly skies
+    ctx.strokeStyle = 'rgba(205,220,245,' + (rm * (1 - pS * 0.5)).toFixed(3) + ')'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(x, -30); ctx.lineTo(x, topH - r); ctx.moveTo(x + w, -30); ctx.lineTo(x + w, topH - r); ctx.stroke();
+  }
 }
 function drawRock(h) {
   const x = h.x, w = h.w, botY = h.y, bottom = WATER + 30;
@@ -3026,6 +3293,8 @@ function drawRock(h) {
   ctx.lineTo(x + w - 9, botY); ctx.quadraticCurveTo(x + w + 3, botY, x + w + 3, botY + 12); ctx.lineTo(x + w + 3, bottom);
   ctx.closePath();
   ctx.fillStyle = '#3e4350'; ctx.fill();
+  const rm = scn().rim;
+  if (rm > 0) { ctx.strokeStyle = 'rgba(205,220,245,' + (rm * 1.2 * (1 - pS * 0.5)).toFixed(3) + ')'; ctx.lineWidth = 1.8; ctx.stroke(); }
   ctx.clip();
   ctx.fillStyle = 'rgba(255,255,255,.1)'; ctx.fillRect(x - 3, botY, 14, bottom - botY);
   ctx.fillStyle = 'rgba(0,0,0,.2)';
@@ -3184,8 +3453,9 @@ function waveLayer(y0, amp, len, spd, off, color) {
   ctx.fillStyle = color; ctx.fill();
 }
 function drawWater() {
-  waveLayer(WATER, 4, 22, 1.4, 0, mix('#1b3446', '#2d7a96', pS));
-  waveLayer(WATER + 9, 3, 17, -1.9, 2, mix('#16293a', '#276a85', pS));
+  const WC = scn().water, wv = week === 3 ? 1.35 : week === 5 ? 1.7 : 1;
+  waveLayer(WATER, 4 * wv, 22, 1.4, 0, mix(WC[0], WC[1], pS));
+  waveLayer(WATER + 9, 3 * wv, 17, -1.9, 2, mix(WC[2], WC[3], pS));
   const g = ctx.createLinearGradient(0, WATER, 0, H);
   g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.4)');
   ctx.fillStyle = g; ctx.fillRect(-20, WATER, W + 40, H - WATER + 20);
@@ -3282,10 +3552,10 @@ function drawMates() {
     }
     if (s !== 'alive' || !v) return;
     if (state !== 'play' && state !== 'ready' && state !== 'dying' && state !== 'spectate' && state !== 'depart') return;
-    const x = BIRD_X + (i - me) * 18, vy = +m.p.v || 0;
+    const nP = mp.list.length, x = BIRD_X + (i - me) * (nP <= 4 ? 18 : Math.max(6, 54 / (nP - 1))), vy = +m.p.v || 0;
     const wing = Math.sin(t * (vy < -40 ? 30 : 5) + i) * 0.7 + 0.15;
     drawBird(ctx, key, x, v.y, clamp(vy * 0.0017, -0.5, 1.15), wing, 1, false, 0.7);
-    nameTag(x, v.y - BIRDS[key].r - 12, nm, 'rgba(255,255,255,.85)');
+    if (nP <= 6) nameTag(x, v.y - BIRDS[key].r - 12, nm, 'rgba(255,255,255,.85)');
   });
 }
 function drawStrike(s) {
@@ -3332,6 +3602,7 @@ function draw() {
   drawSky();
   drawClouds();
   drawNight();
+  drawScene();
   drawRainbow();
   drawFinaleScenery();
   for (const h of hazards) {
@@ -3345,14 +3616,15 @@ function draw() {
   drawMates();
   drawPlayer();
   drawWater();
+  drawSceneFront();
   if (nS > 0.01) { ctx.fillStyle = 'rgba(4,8,26,' + (0.2 * nS).toFixed(3) + ')'; ctx.fillRect(-20, -20, W + 40, H + 40); }
   drawParticles();
-  const ri = 1 - pS;
+  const sc = scn(), ri = Math.max(1 - pS, sc.rainFloor);
   if (ri > 0.02) {
     ctx.strokeStyle = 'rgba(200,215,235,' + (0.42 * ri).toFixed(3) + ')';
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = sc.rw;
     ctx.beginPath();
-    for (const d of rain) { ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - d.l * 0.16, d.y + d.l); }
+    for (let i = 0; i < sc.rainN; i++) { const d = rain[i]; ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - d.l * sc.slant, d.y + d.l); }
     ctx.stroke();
   }
   for (const s of strikes) drawStrike(s);
@@ -3378,6 +3650,310 @@ function pickBird(k) {
   tone(600, 0.08, 'sine', 0.05);
   if (mp) mpSet({ c: charKey });
 }
+
+/* ---------- medals ---------- */
+// Six tiers: the harder the medal, the fancier the metal. Obsidian and Diamond glow.
+const TIERS = [
+  { k: 'bronze',   name: 'Bronze',   c: ['#f0b684', '#b8722e', '#6e3f17'], f: ['#d79a5e', '#8d5426'], rib: ['#8a3f2b', '#b4553c'], tx: '#e0a370' },
+  { k: 'silver',   name: 'Silver',   c: ['#ffffff', '#c3cad6', '#7c8698'], f: ['#f3f5f9', '#9aa4b5'], rib: ['#2c5aa0', '#3f78cc'], tx: '#dfe5ef' },
+  { k: 'gold',     name: 'Gold',     c: ['#fff3b0', '#f2c24a', '#a8741a'], f: ['#ffe27a', '#c28a1c'], rib: ['#a31d2b', '#d3303f'], tx: '#ffd35a' },
+  { k: 'platinum', name: 'Platinum', c: ['#f4fcff', '#9fd0e3', '#4f7f94'], f: ['#e8f6fb', '#6fa3b8'], rib: ['#127a8c', '#27b3c9'], tx: '#8fe7ff' },
+  { k: 'obsidian', name: 'Obsidian', c: ['#5a4580', '#241a35', '#07050b'], f: ['#2d2142', '#0a0710'], rib: ['#3b1d6e', '#6b34c9'], tx: '#b58cff' },
+  { k: 'diamond',  name: 'Diamond',  c: ['#ffffff', '#bfe6ff', '#8fa8ff'], f: ['#f4fcff', '#9cc6ff'], rib: ['#e0488b', '#8a5cff'], tx: '#ffffff' }
+];
+const MS0 = { fly: 0, day1: 0, wc: {}, ark: 0, flaw: 0, pw: 0, pills: 0, stack: 0, kinds: 0, chain3: 0, megas: 0, megaTail: 0, megaHalo: 0, close: 0, quick: 0, hurry: 0, last: 0, spark: 0, jonah: 0, tflights: 0, full: 0, rescued: 0, revives: 0, ttail: 0, tmega: 0, tark: 0, ranked: 0, days: [] };
+let ms = Object.assign({}, MS0, store.get('ms', {}));
+if (!ms.wc || typeof ms.wc !== 'object') ms.wc = {};
+if (!Array.isArray(ms.days)) ms.days = [];
+let md = store.get('md', null), mseen = store.get('mseen', []);
+if (!Array.isArray(mseen)) mseen = [];
+const mq = [];
+let wkLost = false, runLost = false, wkRev = false, wkBolts = 0, wkKinds = {}, runCreat = 0, mtoastT = 0;
+const birdsOpen = () => ORDER.filter(k => !isLocked(k)).length;
+// [id, name, tier, icon, description, goal, current]
+const MEDAL_GROUPS = [
+  ['Journey', [
+    ['beginner', 'Beginner', 0, '🎖️', 'Take off for the first time.', 1, () => ms.fly],
+    ['firstday', 'First Day', 0, '🌅', 'Make it through your first full day.', 1, () => ms.day1],
+    ['w1', 'Week 1 Cleared', 0, '🌧️', 'Clear Week 1.', 1, () => ms.wc[1] ? 1 : 0],
+    ['w2', 'Week 2 Cleared', 1, '🌪️', 'Clear Week 2: forty days of rain.', 1, () => ms.wc[2] ? 1 : 0],
+    ['w3', 'Week 3 Cleared', 1, '🌊', 'Clear Week 3: the rough sea.', 1, () => ms.wc[3] ? 1 : 0],
+    ['w4', 'Week 4 Cleared', 2, '⛰️', 'Clear Week 4: the drowned mountains.', 1, () => ms.wc[4] ? 1 : 0],
+    ['w5', 'Week 5 Cleared', 2, '⚡', 'Clear Week 5: the storm at full strength.', 1, () => ms.wc[5] ? 1 : 0],
+    ['olive', 'Olive Leaf', 3, '🌿', 'Reach the ark.', 1, () => ms.ark],
+    ['round', 'Round Trip', 4, '🔁', 'Reach the ark 3 times.', 3, () => ms.ark],
+    ['flawless', 'Flawless Voyage', 5, '🕊️', 'Reach the ark without losing a single heart.', 1, () => ms.flaw]]],
+  ['Perfect weeks', [
+    ['pw1', 'Spotless', 0, '✨', 'Clear a week without losing a heart.', 1, () => ms.pw],
+    ['pw5', 'Steady Wings', 0, '🪶', '5 perfect weeks.', 5, () => ms.pw],
+    ['pw10', 'Sure Flight', 1, '🎯', '10 perfect weeks.', 10, () => ms.pw],
+    ['pw15', 'Unshaken', 1, '🧱', '15 perfect weeks.', 15, () => ms.pw],
+    ['pw20', 'Rock Solid', 2, '🪨', '20 perfect weeks.', 20, () => ms.pw],
+    ['pw25', 'Silver Wings', 3, '🥈', '25 perfect weeks.', 25, () => ms.pw],
+    ['pw30', 'Gold Wings', 4, '🥇', '30 perfect weeks.', 30, () => ms.pw],
+    ['pw50', 'Untouchable', 5, '👑', '50 perfect weeks.', 50, () => ms.pw]]],
+  ['Power-ups', [
+    ['pill1', 'First Pill', 0, '💊', 'Grab your first power-up.', 1, () => ms.pills],
+    ['pill50', 'Collector', 1, '🎒', 'Grab 50 power-ups.', 50, () => ms.pills],
+    ['pill250', 'Hoarder', 2, '🧺', 'Grab 250 power-ups.', 250, () => ms.pills],
+    ['stack3', 'Triple Stack', 1, '🔱', 'Run three power-ups at once.', 3, () => ms.stack],
+    ['kinds6', 'Full Set', 2, '🌈', 'Use all six kinds of power-up in one week (solo).', 6, () => ms.kinds],
+    ['chain3', 'Chain Starter', 0, '🔗', 'Grab the same power-up 3 times in a row.', 1, () => ms.chain3]]],
+  ['Mega Boosts', [
+    ['mega1', 'Mega Maker', 1, '🌟', 'Trigger your first Mega Boost.', 1, () => ms.megas],
+    ['mega5', 'Power Surge', 2, '🔋', 'Trigger 5 Mega Boosts.', 5, () => ms.megas],
+    ['mega25', 'Mega Master', 4, '👑', 'Trigger 25 Mega Boosts.', 25, () => ms.megas],
+    ['warp', 'Warp Speed', 2, '💨', 'Trigger a Mega Tailwind.', 1, () => ms.megaTail],
+    ['saint', 'Saint', 3, '😇', 'Trigger a Mega Halo.', 1, () => ms.megaHalo]]],
+  ['Close calls', [
+    ['cc10', 'Whew', 0, '😮', 'Slip past 10 lightning bolts by a hair.', 10, () => ms.close],
+    ['cc25', 'Needle Thread', 1, '🧵', '25 close calls.', 25, () => ms.close],
+    ['cc50', 'Daredevil', 2, '😎', '50 close calls.', 50, () => ms.close],
+    ['cc100', 'Storm Dancer', 3, '⛈️', '100 close calls.', 100, () => ms.close],
+    ['cc250', 'Eye of the Storm', 4, '🌀', '250 close calls.', 250, () => ms.close]]],
+  ['Skill', [
+    ['quick', 'Quick Wings', 1, '🦋', 'Clear a week 12% under its clock.', 1, () => ms.quick],
+    ['hurry', 'Hurry Up', 2, '⏱️', 'Save 60 seconds with Tailwind in one week.', 1, () => ms.hurry],
+    ['last', 'Last Heart Standing', 2, '❤️‍🩹', 'Clear a week on your last heart.', 1, () => ms.last],
+    ['spark', 'Spark Dodger', 1, '🌩️', 'Dodge 10 lightning bolts in one week.', 10, () => ms.spark],
+    ['jonah', 'Jonah', 2, '🐋', 'Dodge 25 sea creatures in one flight.', 25, () => ms.jonah]]],
+  ['Team', [
+    ['tf1', 'Better Together', 0, '🤝', 'Take off in a team flight.', 1, () => ms.tflights],
+    ['full', 'Full House', 3, '🏠', 'Fly with 10 players.', 1, () => ms.full],
+    ['resc', 'Rescue', 0, '🛟', 'Get back in the air after a teammate keeps flying.', 1, () => ms.rescued],
+    ['life', 'Lifeline', 1, '🚑', 'Be flying when 10 teammates come back.', 10, () => ms.revives],
+    ['ttail', 'Team Tailwind', 1, '🌬️', 'Start a Tailwind for the team.', 1, () => ms.ttail],
+    ['tmega', 'Team Mega', 2, '🏅', 'Earn a Mega Boost for the team.', 1, () => ms.tmega],
+    ['tark', 'Team Ark', 3, '🏔️', 'Reach the ark as a team.', 1, () => ms.tark],
+    ['ranked', 'Ranked', 1, '📈', 'Get your team on the server ranking.', 1, () => ms.ranked]]],
+  ['Birds and habits', [
+    ['bird1', 'New Friend', 0, '🐦', 'Unlock a new bird.', 1, () => Math.max(0, birdsOpen() - 4)],
+    ['aviary', 'Aviary', 4, '🦜', 'Unlock all 9 birds.', 9, () => birdsOpen()],
+    ['days7', 'Seven Days', 1, '📅', 'Fly on 7 different days.', 7, () => ms.days.length]]]
+];
+const MEDALS = [];
+MEDAL_GROUPS.forEach(g => g[1].forEach(r => MEDALS.push({ id: r[0], name: r[1], t: r[2], ic: r[3], d: r[4], goal: r[5], cur: r[6], grp: g[0] })));
+const medalOwned = id => !!(md && md[id]);
+function checkMedals(silent) {
+  if (!md) md = {};
+  let got = 0;
+  for (const m of MEDALS) {
+    if (md[m.id]) continue;
+    let v = 0; try { v = m.cur(); } catch (e) { v = 0; }
+    if (v >= m.goal) { md[m.id] = Date.now(); got++; if (!silent) mq.push(m); }
+  }
+  if (got) { store.set('md', md); if (mq.length) pumpMedalToast(); }
+}
+function mev(k, a) {
+  switch (k) {
+    case 'fly': {
+      ms.fly++;
+      let key; try { const d = new Date(); key = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); } catch (e) { key = String(Math.floor(Date.now() / 864e5)); }
+      if (ms.days.indexOf(key) < 0) { ms.days.push(key); if (ms.days.length > 60) ms.days.shift(); }
+      if (mp) { ms.tflights++; if (mp.list && mp.list.length >= 10) ms.full = 1; mp.peakN = mp.list ? mp.list.length : 1; }
+      break;
+    }
+    case 'day1': ms.day1 = 1; break;
+    case 'pill': { ms.pills++; ms.stack = Math.max(ms.stack, pws.length); wkKinds[a] = 1; ms.kinds = Math.max(ms.kinds, Object.keys(wkKinds).length); break; }
+    case 'chain': if (a >= 3) ms.chain3 = 1; break;
+    case 'mega': ms.megas++; if (a === 'tail') ms.megaTail = 1; if (a === 'halo') ms.megaHalo = 1; break;
+    case 'close': ms.close++; break;
+    case 'bolt': wkBolts++; ms.spark = Math.max(ms.spark, wkBolts); break;
+    case 'croc': runCreat++; ms.jonah = Math.max(ms.jonah, runCreat); break;
+    case 'rescued': ms.rescued++; break;
+    case 'revived': ms.revives++; break;
+    case 'ttail': ms.ttail++; break;
+    case 'tmega': ms.tmega++; break;
+    case 'ranked': ms.ranked = 1; break;
+    case 'clear': {
+      ms.wc[week] = 1;
+      if (!wkLost) ms.pw++;
+      if (lives === 1 && wkLost && !wkRev) ms.last = 1;
+      if (a.frac >= 0.12) ms.quick = 1;
+      if (weekSaved >= 60) ms.hurry = 1;
+      if (a.isEnd) { ms.ark++; if (!runLost) ms.flaw++; if (mp) ms.tark = 1; }
+      break;
+    }
+    default: break;
+  }
+  store.set('ms', ms);
+  checkMedals();
+}
+// flights you made before medals existed still count for what we can tell from the old records
+if (md === null) {
+  ms.ark = Math.max(ms.ark, journeys); ms.close = Math.max(ms.close, ach.close || 0); ms.megas = Math.max(ms.megas, ach.mega || 0);
+  for (let w = 1; w <= 5; w++) if (best >= w * NDAYS) ms.wc[w] = 1;
+  if (best > 0 || wins > 0) { ms.fly = Math.max(ms.fly, 1); ms.day1 = 1; }
+  if (journeys > 0) ms.wc[6] = 1;
+  md = {}; checkMedals(true); store.set('ms', ms);
+}
+
+// ---- the medal artwork: an SVG per medal, drawn from its tier
+function starPts(cx, cy, R, r, n, rot) {
+  const p = [];
+  for (let i = 0; i < n * 2; i++) { const a = rot + i * Math.PI / n, q = i % 2 ? r : R; p.push((cx + Math.cos(a) * q).toFixed(1) + ',' + (cy + Math.sin(a) * q).toFixed(1)); }
+  return p.join(' ');
+}
+function medalSVG(m, owned, uid) {
+  const T = TIERS[m.t], id = 'm' + uid, cx = 50, cy = 71, c = T.c;
+  let s = '<svg viewBox="0 0 100 118" class="mdl t-' + T.k + (owned ? '' : ' lk') + '" aria-hidden="true"><defs>';
+  s += '<linearGradient id="' + id + 'r" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + c[0] + '"/><stop offset=".55" stop-color="' + c[1] + '"/><stop offset="1" stop-color="' + c[2] + '"/></linearGradient>';
+  s += '<radialGradient id="' + id + 'f" cx=".35" cy=".3" r=".95"><stop offset="0" stop-color="' + T.f[0] + '"/><stop offset="1" stop-color="' + T.f[1] + '"/></radialGradient>';
+  s += '<linearGradient id="' + id + 's" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>';
+  if (T.k === 'diamond') s += '<linearGradient id="' + id + 'w" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7aa8"/><stop offset=".2" stop-color="#ffd36b"/><stop offset=".4" stop-color="#8dff9e"/><stop offset=".6" stop-color="#6fe3ff"/><stop offset=".8" stop-color="#8f8bff"/><stop offset="1" stop-color="#ff7aa8"/></linearGradient>';
+  s += '<clipPath id="' + id + 'c"><circle cx="' + cx + '" cy="' + cy + '" r="30"/></clipPath></defs>';
+  s += '<path d="M28 0H50L63 50H44Z" fill="' + T.rib[0] + '"/><path d="M72 0H50L37 50H56Z" fill="' + T.rib[1] + '"/>';
+  s += '<path d="M50 0 56 18 50 50 44 18Z" fill="#000" opacity=".12"/>';
+  const rimFill = 'url(#' + id + 'r)';
+  if (T.k === 'bronze') {
+    s += '<circle cx="' + cx + '" cy="' + cy + '" r="38" fill="' + rimFill + '"/><circle cx="' + cx + '" cy="' + cy + '" r="34" fill="none" stroke="#4a280f" stroke-opacity=".5" stroke-width="1.2"/>';
+    for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8; s += '<circle cx="' + (cx + Math.cos(a) * 36).toFixed(1) + '" cy="' + (cy + Math.sin(a) * 36).toFixed(1) + '" r="1.1" fill="#fff" opacity=".35"/>'; }
+  } else if (T.k === 'silver') {
+    s += '<circle cx="' + cx + '" cy="' + cy + '" r="38" fill="' + rimFill + '"/><circle cx="' + cx + '" cy="' + cy + '" r="35" fill="none" stroke="#fff" stroke-width="2.4" stroke-dasharray="1.6 2.6" opacity=".85"/><circle cx="' + cx + '" cy="' + cy + '" r="32.5" fill="none" stroke="#5a6477" stroke-opacity=".5"/>';
+  } else if (T.k === 'gold') {
+    s += '<polygon points="' + starPts(cx, cy, 43, 36, 16, -Math.PI / 2) + '" fill="' + rimFill + '"/><circle cx="' + cx + '" cy="' + cy + '" r="34" fill="' + rimFill + '"/><circle cx="' + cx + '" cy="' + cy + '" r="33" fill="none" stroke="#7a4f0e" stroke-opacity=".55" stroke-width="1.2"/>';
+  } else if (T.k === 'platinum') {
+    s += '<polygon points="' + starPts(cx, cy, 41, 38, 8, -Math.PI / 2) + '" fill="' + rimFill + '"/>';
+    s += '<circle cx="' + cx + '" cy="' + cy + '" r="34" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="1.4"/><circle cx="' + cx + '" cy="' + cy + '" r="31.5" fill="none" stroke="#2f6277" stroke-opacity=".5"/>';
+    [[cx, cy - 41], [cx + 41, cy], [cx, cy + 41], [cx - 41, cy]].forEach(q => { s += '<path d="M' + q[0] + ' ' + (q[1] - 4.5) + 'L' + (q[0] + 2.2) + ' ' + q[1] + 'L' + q[0] + ' ' + (q[1] + 4.5) + 'L' + (q[0] - 2.2) + ' ' + q[1] + 'Z" fill="#e8fbff"/>'; });
+  } else if (T.k === 'obsidian') {
+    s += '<polygon points="' + starPts(cx, cy, 44, 33, 12, -Math.PI / 2) + '" fill="' + rimFill + '" stroke="' + T.tx + '" stroke-width="1.4" stroke-linejoin="round"/>';
+    s += '<circle cx="' + cx + '" cy="' + cy + '" r="33" fill="#0d0916" stroke="#8b5cf6" stroke-opacity=".8" stroke-width="1.2"/>';
+  } else {
+    s += '<polygon points="' + starPts(cx, cy, 45, 37, 8, -Math.PI / 2) + '" fill="url(#' + id + 'w)"/><polygon points="' + starPts(cx, cy, 38, 38, 4, Math.PI / 4) + '" fill="url(#' + id + 'w)"/><circle cx="' + cx + '" cy="' + cy + '" r="34" fill="url(#' + id + 'w)"/>';
+    s += '<path d="M50 33V109M12 71H88M23 44 77 98M77 44 23 98" stroke="#fff" stroke-opacity=".55" stroke-width=".9"/><circle cx="' + cx + '" cy="' + cy + '" r="34" fill="none" stroke="#fff" stroke-opacity=".9" stroke-width="1.4"/>';
+  }
+  s += '<circle cx="' + cx + '" cy="' + cy + '" r="28" fill="url(#' + id + 'f)" stroke="#000" stroke-opacity=".25"/>';
+  s += '<circle cx="' + cx + '" cy="' + cy + '" r="28" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="1" transform="rotate(-30 50 71)" stroke-dasharray="46 130"/>';
+  if (T.k === 'obsidian') {   // ember cracks glowing in the rim
+    let cr = '';
+    [20, 78, 140, 205, 262, 318].forEach((deg, i) => { const a = deg * Math.PI / 180, q = (r, d) => (cx + Math.cos(a + d) * r).toFixed(1) + ' ' + (cy + Math.sin(a + d) * r).toFixed(1); cr += 'M' + q(29.5, 0) + 'L' + q(33, 0.07) + 'L' + q(35, -0.05) + 'L' + q(38, 0.04); });
+    s += '<path d="' + cr + '" stroke="#ff7a45" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+  }
+  s += '<text x="50" y="' + (cy + 10.5) + '" text-anchor="middle" font-size="29" class="mic">' + (owned ? m.ic : '?') + '</text>';
+  if (owned && m.t >= 2) s += '<g clip-path="url(#' + id + 'c)"><rect class="shn" x="-40" y="30" width="22" height="90" fill="url(#' + id + 's)" transform="rotate(22 50 71)"/></g>';
+  if (owned && m.t === 5) s += '<path class="spk a" d="M16 36 18 41 23 43 18 45 16 50 14 45 9 43 14 41Z" fill="#fff"/><path class="spk b" d="M86 96 88 100 92 102 88 104 86 108 84 104 80 102 84 100Z" fill="#fff"/><path class="spk c" d="M84 40 85.5 43.5 89 45 85.5 46.5 84 50 82.5 46.5 79 45 82.5 43.5Z" fill="#fff"/>';
+  return s + '</svg>';
+}
+// the little banner that slides up when a medal is earned
+function pumpMedalToast() {
+  const el = $('#mtoast');
+  if (!el || mtoastT || !mq.length) return;
+  const m = mq.shift(), T = TIERS[m.t];
+  el.textContent = '';
+  const ic = document.createElement('div'); ic.className = 'mtI'; ic.innerHTML = medalSVG(m, true, 't' + m.id);
+  const tx = document.createElement('div'); tx.className = 'mtT';
+  const sm = document.createElement('small'), u = document.createElement('u'), nm = document.createElement('b'), ds = document.createElement('span');
+  u.textContent = T.name; u.style.color = T.tx; sm.append('Medal earned \u00b7 ', u);
+  nm.textContent = m.name; ds.textContent = m.d;
+  tx.append(sm, nm, ds); el.append(ic, tx);
+  el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+  [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.22, 'triangle', 0.05, i * 0.07));
+  if (m.t >= 4) tone(1568, 0.5, 'sine', 0.05, 0.3);
+  mtoastT = setTimeout(() => { el.classList.remove('on'); mtoastT = setTimeout(() => { mtoastT = 0; pumpMedalToast(); }, 450); }, 3300);
+}
+function renderMedals() {
+  const body = $('#mbody'); body.textContent = '';
+  const have = MEDALS.filter(m => medalOwned(m.id)).length;
+  $('#mCount').textContent = have + ' of ' + MEDALS.length;
+  const sum = $('#mTiers'); sum.textContent = '';
+  TIERS.forEach((T, ti) => {
+    const all = MEDALS.filter(m => m.t === ti), got = all.filter(m => medalOwned(m.id)).length;
+    const d = document.createElement('div'); d.className = 'mchip t-' + T.k;
+    const b = document.createElement('b'); b.textContent = got + '/' + all.length; b.style.color = T.tx;
+    const sp = document.createElement('span'); sp.textContent = T.name;
+    d.append(b, sp); sum.append(d);
+  });
+  let uid = 0;
+  MEDAL_GROUPS.forEach(g => {
+    const h = document.createElement('h3'); h.className = 'mgh'; h.textContent = g[0]; body.append(h);
+    const grid = document.createElement('div'); grid.className = 'mgrid';
+    g[1].forEach(r => {
+      const m = MEDALS.find(x => x.id === r[0]), owned = medalOwned(m.id), T = TIERS[m.t];
+      let cur = 0; try { cur = m.cur(); } catch (e) { cur = 0; }
+      const card = document.createElement('div'); card.className = 'mcard' + (owned ? '' : ' locked');
+      const art = document.createElement('div'); art.innerHTML = medalSVG(m, owned, ++uid);
+      const nm = document.createElement('div'); nm.className = 'mname'; nm.textContent = m.name;
+      const tr = document.createElement('div'); tr.className = 'mtier'; tr.textContent = T.name; tr.style.color = T.tx;
+      const ds = document.createElement('div'); ds.className = 'mdesc'; ds.textContent = m.d;
+      card.append(art.firstChild, nm, tr, ds);
+      if (m.goal > 1 && !owned) {
+        const bar = document.createElement('div'); bar.className = 'mbar';
+        const i = document.createElement('i'); i.style.width = Math.round(clamp(cur / m.goal, 0, 1) * 100) + '%'; bar.append(i);
+        const pg = document.createElement('div'); pg.className = 'mpg'; pg.textContent = Math.min(cur, m.goal) + ' / ' + m.goal;
+        card.append(bar, pg);
+      } else if (owned && mseen.indexOf(m.id) < 0) {
+        const nw = document.createElement('span'); nw.className = 'mnew'; nw.textContent = 'New'; card.append(nw);
+      }
+      grid.append(card);
+    });
+    body.append(grid);
+  });
+  mseen = MEDALS.filter(m => medalOwned(m.id)).map(m => m.id); store.set('mseen', mseen);
+}
+function updateMedalBtn() { const b = $('#openMedals'); if (b) b.textContent = 'Medals · ' + MEDALS.filter(m => medalOwned(m.id)).length + ' of ' + MEDALS.length; }
+
+/* ---------- server ranking (Firebase Realtime Database over plain HTTPS; no accounts, no keys) ---------- */
+const DB_URL = 'https://wings-over-the-flood-default-rtdb.firebaseio.com';
+const BOARDS = [['b14', '1 to 4 players'], ['b57', '5 to 7 players'], ['b810', '8 to 10 players']];
+const boardFor = n => n <= 4 ? 'b14' : n <= 7 ? 'b57' : 'b810';
+let rkPending = null;
+function rankId() {
+  const H = mpHost(), tag = ((H && H.p && +H.p.jn) || mp.jn || 0).toString(36);
+  return (mp.code + '-' + tag).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+}
+// the host reports the team's furthest day and the time it took; the database's own rules check the maths and the pace
+async function rankSubmit(days, tSec) {
+  if (!mp || !mp.isHost || typeof fetch !== 'function') return;
+  const day = clamp(days | 0, 1, NWEEKS * NDAYS), t = Math.max(0, Math.round(tSec));
+  const n = clamp(Math.max(mp.peakN | 0, mp.list.length), 1, MAX_TEAM), score = day * 1000000 - t;
+  if (mp.rkScore !== undefined && score <= mp.rkScore) return;
+  if (mp.rkAt && Date.now() - mp.rkAt < 5000) { clearTimeout(rkPending); const d = days, tt = tSec; rkPending = setTimeout(() => rankSubmit(d, tt), 5200 - (Date.now() - mp.rkAt)); return; }
+  mp.rkAt = Date.now();
+  const names = mp.list.map(m => cleanName(m.p.n) || 'Player').join(', ').slice(0, 118);
+  try {
+    const r = await fetch(DB_URL + '/boards/' + boardFor(n) + '/' + rankId() + '.json', { method: 'PUT', body: JSON.stringify({ score: score, day: day, t: t, n: n, names: names, ts: { '.sv': 'timestamp' } }) });
+    if (r.ok && mp) { mp.rkScore = score; mp.rk = (mp.rk | 0) + 1; mpSet({ rk: mp.rk }); mev('ranked'); }
+  } catch (e) { /* offline: the ranking just misses this one */ }
+}
+async function rankLoad(b) {
+  const r = await fetch(DB_URL + '/boards/' + b + '.json?orderBy=%22score%22&limitToLast=20', { cache: 'no-store' });
+  if (!r.ok) throw new Error('rank');
+  const o = await r.json(), out = [];
+  for (const id in (o || {})) { const v = o[id]; if (v && typeof v.score === 'number' && !/^zz-/.test(id)) out.push({ id: id, day: v.day | 0, t: +v.t || 0, n: v.n | 0, names: String(v.names || ''), score: v.score }); }
+  out.sort((a, b2) => b2.score - a.score);
+  return out;
+}
+let boardSel = 'b14', boardBack = 'menu';
+async function showBoard(b) {
+  boardSel = b || boardSel;
+  Array.prototype.forEach.call($('#btabs').children, x => x.setAttribute('aria-pressed', String(x.dataset.b === boardSel)));
+  const list = $('#blist'), msg = $('#bmsg'); list.textContent = ''; msg.textContent = 'Loading...';
+  let rows = null;
+  try { rows = await rankLoad(boardSel); } catch (e) { rows = null; }
+  if (boardSel !== (b || boardSel)) return;
+  if (!rows) { msg.textContent = 'The ranking could not be reached right now. Try again when you are online.'; return; }
+  if (!rows.length) { msg.textContent = 'Nobody is on this board yet. Fly a team flight and be the first.'; return; }
+  msg.textContent = '';
+  const mine = mp ? rankId() : '';
+  rows.forEach((e, i) => {
+    const li = document.createElement('li'); if (e.id === mine) li.className = 'me';
+    const rk = document.createElement('b'); rk.textContent = String(i + 1);
+    const mid = document.createElement('span'); const nm = document.createElement('em'); nm.textContent = cleanNames(e.names); const dd = document.createElement('small'); dd.textContent = fmtDay(e.day) + ' · ' + e.n + (e.n === 1 ? ' player' : ' players');
+    mid.append(nm, dd);
+    const tm = document.createElement('i'); tm.textContent = mmss(e.t);
+    li.append(rk, mid, tm); list.append(li);
+  });
+}
+const cleanNames = s => String(s).replace(/[^\w ,.'-]/g, '').slice(0, 120);
+function openBoard(from) {
+  boardBack = from || 'menu';
+  setPanels('board');
+  if (mp) { const n = clamp(Math.max(mp.peakN | 0, mp.list.length), 1, MAX_TEAM); boardSel = boardFor(n); }
+  showBoard(boardSel);
+}
+function openMedals() { setPanels('medals'); renderMedals(); }
+function closeSide() { if (boardBack === 'lobby' && mp) { setPanels('lobby'); renderLobby(); } else setPanels('menu'); updateMedalBtn(); }
 
 function init() {
   if (inited) return;
@@ -3406,6 +3982,13 @@ function init() {
   });
   $('#joinRoom').addEventListener('click', () => mpJoinRoom($('#jcode').value, false));
   $('#leaveRoom').addEventListener('click', () => mpLeave());
+  BOARDS.forEach(b => { const x = document.createElement('button'); x.type = 'button'; x.dataset.b = b[0]; x.textContent = b[1]; x.setAttribute('aria-pressed', String(b[0] === boardSel)); x.addEventListener('click', () => showBoard(b[0])); $('#btabs').append(x); });
+  $('#openMedals').addEventListener('click', () => { boardBack = 'menu'; openMedals(); });
+  $('#openBoard').addEventListener('click', () => openBoard('menu'));
+  $('#lBoard').addEventListener('click', () => openBoard('lobby'));
+  $('#mClose').addEventListener('click', closeSide);
+  $('#bClose').addEventListener('click', closeSide);
+  updateMedalBtn();
   $('#startMp').addEventListener('click', () => { ensureAudio(); if (mp && mp.isHost) mpHostGo(1); });
   $('#again').addEventListener('click', () => { if (mp) { if (mp.isHost) mpHostGo(week); } else beginReady(!cpBust && (week > 1 || !!cp)); });
   cpb.addEventListener('mousedown', e => e.preventDefault());
