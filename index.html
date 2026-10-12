@@ -167,7 +167,7 @@ body {
 .hint .hintV { width: 82%; margin: .7em auto 0; font: italic 500 .86em/1.35 var(--display); color: #efe4c8; }
 .hint .hintV cite { display: block; margin-top: .25em; font: 700 .78em/1 var(--body); font-style: normal; letter-spacing: .08em; color: var(--gold); }
 .hint .hintV:empty { display: none; }
-.hint.onlight { background: rgba(8, 14, 32, .68); border-radius: 1.1em; padding: .9em 1.1em; margin-inline: 1em; backdrop-filter: blur(3px); }
+.hint.onlight { background: rgba(8, 14, 32, .76); border-radius: 1.1em; padding: .9em 1.1em; margin-inline: 1em; }
 .cap {
   position: absolute;
   left: 1em;
@@ -233,9 +233,7 @@ body {
   justify-content: center;
   gap: .8em;
   padding: 1.3em;
-  background: linear-gradient(180deg, rgba(10, 14, 24, .68), rgba(10, 14, 24, .88));
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background: linear-gradient(180deg, rgba(10, 14, 24, .74), rgba(10, 14, 24, .9));
 }
 /* Cards that sit over the top of the scene so the bird on its branch stays visible. Taps pass through to the canvas. */
 .sheet {
@@ -1314,6 +1312,21 @@ let practice = 0;   // a replay of a week you already cleared: no medals, record
 function markWeek(w, d) { if (w >= 1 && w <= 6 && d > (wd[w - 1] || 0)) { wd[w - 1] = d; store.set('wd', wd); } }
 let lives = LIVES, iT = 0, hurtT = 0, hurtKind = '', oopsTimer = 0, lastOops = '', cq = [], lastSpace = 0, panelAt = 0;
 let dpr = 1, lastTs = 0, inited = false;
+// The canvas is redrawn in full every frame, so a sharp (high pixel density) screen costs a lot. If a phone cannot keep up, drop one step at a time (never below 1.5) and remember it.
+const DPR_STEPS = [2.5, 2, 1.5];
+let dprCap = +store.get('dprcap', 2.5); if (!(dprCap >= 1.5 && dprCap <= 2.5)) dprCap = 2.5;
+let pwSum = 0, pwN = 0, pwSlow = 0;
+function perfWatch(ms) {
+  if (!(ms > 0) || ms > 200) { pwSum = 0; pwN = 0; return; }   // a tab switch or a long pause is not lag
+  pwSum += ms; pwN++;
+  if (pwN < 90) return;
+  const avg = pwSum / pwN; pwSum = 0; pwN = 0;
+  pwSlow = avg > 23 ? pwSlow + 1 : 0;   // slower than about 43 frames a second
+  if (pwSlow >= 2 && dprCap > DPR_STEPS[DPR_STEPS.length - 1]) {
+    pwSlow = 0; dprCap = DPR_STEPS[Math.max(0, DPR_STEPS.indexOf(dprCap)) + 1] || DPR_STEPS[DPR_STEPS.length - 1];
+    store.set('dprcap', dprCap); fit();
+  }
+}
 let mp = null, roomNs = null;
 const clouds = [], rain = [], stars = [], shoot = [];
 
@@ -1683,7 +1696,7 @@ function fit() {
   stage.style.width = w + 'px';
   stage.style.height = h + 'px';
   stage.style.fontSize = (w / 360 * 16) + 'px';
-  dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  dpr = Math.min(window.devicePixelRatio || 1, dprCap);
   cv.width = Math.round(w * dpr);
   cv.height = Math.round(h * dpr);
 }
@@ -4605,10 +4618,18 @@ function draw() {
 }
 
 /* ---------- loop and input ---------- */
+// Run the game for `sec` real seconds. On a phone that drops frames the clock used to be capped at 1/30 s per frame, so everything slowed
+// down; now the same time is covered in several small steps (the sim is cheap, drawing is what costs), so speed stays true and physics stays the same size of step.
+function advance(sec) {
+  const acc = clamp(sec > 0 ? sec : 0.016, 0.001, 0.1), n = Math.max(1, Math.ceil(acc / 0.0334));
+  for (let i = 0; i < n; i++) update(acc / n);
+}
 function frame(ts) {
-  const dt = Math.min(0.033, (ts - lastTs) / 1000 || 0.016);
+  const raw = lastTs ? (ts - lastTs) / 1000 : 0.016;
+  const dt = Math.min(0.033, raw || 0.016);   // for the home screen animation, which has no sim steps
+  if (!paused && !document.hidden && (state === 'play' || state === 'dry' || state === 'finale' || state === 'depart' || state === 'ready')) perfWatch(ts - lastTs); else { pwSum = 0; pwN = 0; }
   lastTs = ts;
-  if (!paused) update(dt);
+  if (!paused) advance(raw);
   draw();
   const showP = !paused && canPause();
   if (pauseBtn.hidden === showP) pauseBtn.hidden = !showP;
