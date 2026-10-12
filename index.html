@@ -127,6 +127,14 @@ body {
 }
 .mates div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mates.many { font-size: .62em; line-height: 1.35; max-width: 11em; }
+.leafhud { position: absolute; left: 7.6em; top: 5.25em; display: flex; align-items: center; gap: .25em; font: 800 .95em/1 var(--body); color: #f2f6dc; text-shadow: 0 1px 6px rgba(0,0,0,.6); }
+.leafhud svg { width: 1.35em; height: 1.35em; }
+#hud.calm .leafhud.epi { display: flex; }
+.leafhud.epi { background: rgba(8, 14, 32, .55); padding: .3em .6em .3em .45em; border-radius: 1em; }
+.leafhud span { opacity: .65; font-weight: 700; }
+.leafhud.full b { color: var(--gold); }
+.leafhud.pop svg { animation: leafpop .5s ease-out; }
+@keyframes leafpop { 40% { transform: scale(1.5) rotate(-12deg); } }
 .pws { position: absolute; left: 1.1em; top: 7.4em; width: 12em; display: flex; flex-direction: column; gap: .45em; text-shadow: 0 1px 6px rgba(0, 0, 0, .6); }
 .pw b { display: block; white-space: nowrap; font: 700 .8em/1.2 var(--body); letter-spacing: .06em; }
 .pw i { display: block; height: .3em; margin-top: .3em; border-radius: 1em; background: rgba(255, 255, 255, .22); overflow: hidden; }
@@ -156,6 +164,10 @@ body {
 }
 .hint b { display: block; font: 800 1.35em/1.2 var(--display); letter-spacing: .04em; }
 .hint span { display: block; font-size: .78em; color: var(--muted); margin-top: .3em; }
+.hint .hintV { width: 82%; margin: .7em auto 0; font: italic 500 .86em/1.35 var(--display); color: #efe4c8; }
+.hint .hintV cite { display: block; margin-top: .25em; font: 700 .78em/1 var(--body); font-style: normal; letter-spacing: .08em; color: var(--gold); }
+.hint .hintV:empty { display: none; }
+.hint.onlight { background: rgba(8, 14, 32, .68); border-radius: 1.1em; padding: .9em 1.1em; margin-inline: 1em; backdrop-filter: blur(3px); }
 .cap {
   position: absolute;
   left: 1em;
@@ -197,7 +209,7 @@ body {
 .mute[aria-pressed="true"] .off { display: block; }
 
 /* at a rest stop the scene is the star: drop the day counter so the sheet can sit up top and the bird stays visible */
-#hud.calm .day, #hud.calm .track, #hud.calm .phase, #hud.calm .pws, #hud.calm .cpb, #hud.calm .mates, #hud.calm .lives { display: none; }
+#hud.calm .day, #hud.calm .track, #hud.calm .phase, #hud.calm .pws, #hud.calm .leafhud, #hud.calm .cpb, #hud.calm .mates, #hud.calm .lives { display: none; }
 
 /* three lives */
 .lives { position: absolute; left: 1.1em; top: 5.3em; display: flex; gap: .3em; }
@@ -442,6 +454,8 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
 .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: .4em; }
 .tile { appearance: none; text-align: left; display: flex; flex-direction: column; gap: .25em; padding: .6em .75em; border-radius: .8em; border: 1px solid rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .06); color: var(--text); font: 700 .86em/1.1 var(--body); cursor: pointer; }
 .tile small { font: 600 .74em/1.2 var(--body); color: var(--muted); }
+.tile.daily { grid-column: 1 / -1; border-color: rgba(246, 201, 120, .55); background: linear-gradient(100deg, rgba(246, 201, 120, .16), rgba(255, 255, 255, .05)); }
+.tile.daily[disabled] { opacity: .55; cursor: default; border-color: rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .06); }
 .tile:hover { border-color: rgba(246, 201, 120, .6); }
 .tile:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .sgrid { display: grid; grid-template-columns: 1fr 1fr; gap: .4em; }
@@ -491,8 +505,9 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
       <div class="mates" id="mates" hidden></div>
       <div class="lives" id="lives" role="img" aria-label="Lives"><svg class="heart" viewBox="0 0 24 22" aria-hidden="true"><path d="M12 21C5 15.5 1 11.7 1 7.2 1 4 3.4 1.6 6.4 1.6c2.1 0 4.1 1.2 5.6 3.2 1.5-2 3.5-3.2 5.6-3.2 3 0 5.4 2.4 5.4 5.6 0 4.5-4 8.3-11 13.8z"/></svg><svg class="heart" viewBox="0 0 24 22" aria-hidden="true"><path d="M12 21C5 15.5 1 11.7 1 7.2 1 4 3.4 1.6 6.4 1.6c2.1 0 4.1 1.2 5.6 3.2 1.5-2 3.5-3.2 5.6-3.2 3 0 5.4 2.4 5.4 5.6 0 4.5-4 8.3-11 13.8z"/></svg><svg class="heart" viewBox="0 0 24 22" aria-hidden="true"><path d="M12 21C5 15.5 1 11.7 1 7.2 1 4 3.4 1.6 6.4 1.6c2.1 0 4.1 1.2 5.6 3.2 1.5-2 3.5-3.2 5.6-3.2 3 0 5.4 2.4 5.4 5.6 0 4.5-4 8.3-11 13.8z"/></svg></div>
       <div class="pws" id="pws"></div>
+      <div class="leafhud" id="leafHud" hidden aria-label="Olive leaves this week"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20C3 10 9 4 21 3c0 11-6 17-16 17z" fill="#8fbf5a" stroke="#d9e8a8" stroke-width="1.4"/><path d="M3.5 20.5C9 14 13 10.5 18 6.5" fill="none" stroke="#3f6b2a" stroke-width="1.4" stroke-linecap="round"/></svg><b id="leafN">0</b><span id="leafMax">/5</span></div>
       <button class="cpb" id="cpb" type="button" tabindex="-1" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></svg><span id="cpbT">Checkpoint</span></button>
-      <div class="hint" id="hint"><b id="hintB">Tap to flap</b><span id="hintS">Space or Up Arrow works too</span><span id="hintT">Grab glowing orbs for power-ups. Grab the same one again and again for a MEGA boost.</span></div>
+      <div class="hint" id="hint"><b id="hintB">Tap to flap</b><span id="hintS">Space or Up Arrow works too</span><span class="hintV" id="hintV"></span><span id="hintT">Grab glowing orbs for power-ups. Grab the same one again and again for a MEGA boost.</span></div>
       <div class="oops" id="oops" aria-live="assertive"><b id="oopsB"></b><span id="oopsS"></span></div>
       <div class="cap" id="cap" aria-live="polite"></div>
     </div>
@@ -506,9 +521,10 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
         <button class="btn" id="toLobby" type="button" hidden>Multiplayer &middot; 2 to 10 players</button>
       </div>
       <div class="tiles">
+        <button class="tile daily" id="openDaily" type="button"><span id="dTitle">Daily flight</span><small id="dSub">Clear Week 1 to unlock</small></button>
         <button class="tile" id="openStats" type="button"><span>Personal stats</span><small id="tStats">Your flights</small></button>
         <button class="tile" id="openWeekly" type="button"><span>Weekly best</span><small id="tWeekly">Week by week</small></button>
-        <button class="tile" id="openMedals" type="button"><span>Medals</span><small id="tMedals">0 of 64</small></button>
+        <button class="tile" id="openMedals" type="button"><span>Medals</span><small id="tMedals">0 of 73</small></button>
         <button class="tile" id="openPlayers" type="button"><span>Players</span><small>Who holds which medal</small></button>
         <button class="tile" id="openJournal" type="button"><span>Verse journal</span><small id="tJournal">Verses you have earned</small></button>
         <button class="tile" id="openBoard" type="button"><span>Team ranking</span><small>Best team flights on the server</small></button>
@@ -608,7 +624,24 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
         <button class="btn primary" id="again2" type="button">Play again</button>
         <button class="btn" id="swap2" type="button">Change bird</button>
       </div>
+      <button class="btn" id="dryWin" type="button">Fly to dry land</button>
+      <button class="btn" id="shareWin" type="button">Share this journey</button>
       <button class="btn quiet" id="winHome" type="button">Home</button>
+    </section>
+
+    <section class="sheet" id="dry" hidden>
+      <p class="eyebrow">Epilogue</p>
+      <h2 class="gold">Dry land.</h2>
+      <p class="lede" id="dryLede">The earth was dried. Noah built an altar, and God set his bow in the cloud.</p>
+      <blockquote>I do set my bow in the cloud, and it shall be for a token of a covenant between me and the earth.<cite>Genesis 9:13</cite></blockquote>
+      <div class="nums">
+        <div><small>Olive leaves</small><b id="dryLeaves">0/16</b></div>
+        <div><small>Time</small><b id="dryTime">0:00</b></div>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="dryAgain" type="button">Fly it again</button>
+        <button class="btn" id="dryHome" type="button">Home</button>
+      </div>
     </section>
 
     <section class="panel" id="pauseP" hidden>
@@ -620,7 +653,7 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
     </section>
 
     <section class="panel" id="medalsP" hidden>
-      <div class="sidehead"><div><p class="eyebrow">Medals</p><h2 id="mCount">0 of 64</h2></div><button class="btn quiet" id="mClose" type="button">Close</button></div>
+      <div class="sidehead"><div><p class="eyebrow">Medals</p><h2 id="mCount">0 of 73</h2></div><button class="btn quiet" id="mClose" type="button">Close</button></div>
       <div class="mtiers" id="mTiers"></div>
       <div id="mbody"></div>
     </section>
@@ -997,13 +1030,14 @@ const BIRDS = {
 const ORDER = ['dove', 'sparrow', 'raven', 'eagle', 'butterfly', 'bee', 'ladybug', 'hummingbird', 'golden'];
 // how the four extra birds are earned; lifetime numbers live in `ach`
 const UNLOCKS = {
-  butterfly:   { need: 0.12, text: 'Finish a week 12% faster than its clock.', prog: () => Math.round(Math.min(1, (ach.fast || 0) / 0.12) * 100) + '%' },
-  bee:         { need: 25,   text: 'Collect 25 power-ups in one week.',          prog: () => Math.min(25, ach.picks || 0) + '/25' },
-  ladybug:     { need: 25,   text: 'Slip past 25 lightning bolts by a hair.',     prog: () => Math.min(25, ach.close || 0) + '/25' },
-  hummingbird: { need: 3,    text: 'Trigger 3 Mega Boosts.',                      prog: () => Math.min(3, ach.mega || 0) + '/3' }
+  golden:      { need: 3,    text: 'Clear Week 3.',                                 prog: () => [1, 2, 3].filter(w => ms.wc[w]).length + '/3 weeks' },
+  ladybug:     { need: 100,  text: 'Slip past 100 lightning bolts by a hair.',      prog: () => Math.min(100, ach.close || 0) + '/100' },
+  bee:         { need: 250,  text: 'Collect 250 power-ups, all flights together.',  prog: () => Math.min(250, ms.pills || 0) + '/250' },
+  hummingbird: { need: 10,   text: 'Trigger 10 Mega Boosts.',                       prog: () => Math.min(10, ach.mega || 0) + '/10' },
+  butterfly:   { need: 1,    text: 'Clear Week 3 or later without losing a heart.', prog: () => (ms.hpw3 ? 1 : 0) + '/1' }
 };
-const isLocked = k => k === 'golden' ? wins < 1 : !!UNLOCKS[k] && !unl[k];
-function lockText(k) { return k === 'golden' ? 'Reach the first rest stop to unlock.' : 'Locked: ' + UNLOCKS[k].text + ' (' + UNLOCKS[k].prog() + ')'; }
+const isLocked = k => !!UNLOCKS[k] && !unl[k];
+function lockText(k) { return 'Locked: ' + UNLOCKS[k].text + ' (' + UNLOCKS[k].prog() + ')'; }
 function grantUnlock(k) {
   if (!UNLOCKS[k] || unl[k]) return;
   unl[k] = true; store.set('unl', unl); unlockQ.push(k); setTimeout(() => checkMedals(), 0);
@@ -1012,10 +1046,11 @@ function grantUnlock(k) {
 }
 function checkUnlocks() {
   if (mp) return;
-  if ((ach.picks || 0) >= UNLOCKS.bee.need) grantUnlock('bee');
+  if (ms.wc[3]) grantUnlock('golden');
+  if ((ms.pills || 0) >= UNLOCKS.bee.need) grantUnlock('bee');
   if ((ach.close || 0) >= UNLOCKS.ladybug.need) grantUnlock('ladybug');
   if ((ach.mega || 0) >= UNLOCKS.hummingbird.need) grantUnlock('hummingbird');
-  if ((ach.fast || 0) >= UNLOCKS.butterfly.need) grantUnlock('butterfly');
+  if (ms.hpw3) grantUnlock('butterfly');
 }
 // the "new bird" banners on the end-of-flight screens
 function fillUnlocks(box) {
@@ -1253,12 +1288,15 @@ let fallT = 0, bounces = 0, burn = 0, stunT = 0, deathX = BIRD_X, zapY = 0;
 let week = 1, weekT0 = 0, dep = null;
 let flash = 0, shake = 0, nextBolt = 4, lastQuip = {}, lastVerse = -1;
 let dayLens = [], dayPre = [0], dayIdx = 0, dayT = 0, elapsed = 0, total = 1, runTime = 0;
+let leaves = [], leafNext = 0, wkLeaves = 0, lR = mkRng(5);
 let hazards = [], strikes = [], orbs = [], parts = [], pws = [], chain = { type: '', n: 0 }, fin = null, bird = newBird();
 let pwSig = '', pwRows = [];
 let cp = null, cpUsed = false, cpFalls = 0, cpBust = false, cpArm = 0, weekPicks = 0;
 let ach = store.get('ach', {}), unl = store.get('unl', {}), unlockQ = [];
 if (!ach || typeof ach !== 'object') ach = {};
 if (!unl || typeof unl !== 'object') unl = {};
+// the harder unlock rules came later: whoever already had the Golden Dove (it used to come at the first rest stop) keeps it
+if (!store.get('unl2', 0)) { if (+store.get('wins', 0) >= 1) unl.golden = true; store.set('unl', unl); store.set('unl2', 1); }
 if (!BIRDS[charKey] || isLocked(charKey)) charKey = 'dove';
 let fogCool = 0, fairT = 0, wDist = 0, spawnDist = 0, lastEnc = '', encPassed = 0, orbDue = false, strikeT = 8, hid = 0, prevC = null, bag = [], lastPw = '', curSp = 125;
 let hudDay = -1, hudPhase = '', capTimer = 0, hudCalm = false;
@@ -1271,6 +1309,7 @@ if (!Array.isArray(wd) || wd.length !== 6) {
   for (let w = 1; w <= 6; w++) wd.push((+wbest[w - 1] > 0 || best > 7 * w) ? 8 : Math.max(0, Math.min(7, best - 7 * (w - 1))));
   store.set('wd', wd);
 }
+let daily = null;   // today's daily flight, when you are in it
 let practice = 0;   // a replay of a week you already cleared: no medals, records or saved progress change
 function markWeek(w, d) { if (w >= 1 && w <= 6 && d > (wd[w - 1] || 0)) { wd[w - 1] = d; store.set('wd', wd); } }
 let lives = LIVES, iT = 0, hurtT = 0, hurtKind = '', oopsTimer = 0, lastOops = '', cq = [], lastSpace = 0, panelAt = 0;
@@ -1306,7 +1345,9 @@ const WK_STEP = [0, 0, 0.05, 0.07, 0.15, 0.07, 0.15];   // index = week; the ste
 const wkM = wk => { let m = 1; const w = wk === undefined ? week : wk; for (let i = 2; i <= w && i < WK_STEP.length; i++) m *= 1 + WK_STEP[i]; return m; };
 const spdAt = (p, wk) => lerp(125, 165, p) * Math.pow(wkM(wk), 0.4);
 const spacingAt = (p, wk) => lerp(250, 200, p) / Math.pow(wkM(wk), 0.35);
-const baseSpeed = () => spdAt(mp ? shProgAt(wDist) : prog(), week);
+// team play and the daily flight both build the sky from the DISTANCE flown, so the obstacles come in the same order for everyone
+const det = () => !!(mp || daily);
+const baseSpeed = () => spdAt(det() ? shProgAt(wDist) : prog(), week);
 // In team play every phone has to build the same sky, so what gets spawned and how fast the world scrolls follow the DISTANCE flown
 // (which the host keeps everybody in step on), not each phone's own clock. A table of distance against time tells us how far along the week that is.
 let dtab = null;
@@ -1327,12 +1368,12 @@ const shProgAt = D => {
   const f = (D - dtab[lo]) / Math.max(1e-6, dtab[hi] - dtab[lo]);
   return clamp((lo + f) * 0.5 / total, 0, 1);
 };
-const sdif = () => (mp ? shProgAt(wDist) : prog()) + (week - 1) * 0.5;   // for the scroll speed
+const sdif = () => (det() ? shProgAt(wDist) : prog()) + (week - 1) * 0.5;   // for the scroll speed
 const sdl = () => clamp(sdif() - 1, 0, 2.5);
 // What gets spawned is decided from how far along the week the ENCOUNTER is (the running total of the gaps dealt so far), which is the same
 // number on every phone, so a pillar spawning a pixel earlier or later on one phone can never change what comes next.
 let encCum = 0;
-const edif = () => (mp ? shProgAt(encCum) : prog()) + (week - 1) * 0.5;
+const edif = () => (det() ? shProgAt(encCum) : prog()) + (week - 1) * 0.5;
 const edl = () => clamp(edif() - 1, 0, 2.5);
 const distAtT = tt => {
   if (!dtab || dtab.length < 2) return 0;
@@ -1424,6 +1465,21 @@ function tone(freq, dur, type, vol, when, slide) {
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     o.connect(g); g.connect(busFor());
     o.start(t0); o.stop(t0 + dur + 0.02);
+  } catch (e) { /* audio unavailable */ }
+}
+// filtered noise for the ending sounds: a hiss, a gust, a rumble. `sweep` glides the filter; `swell` is the seconds it takes to fade in
+let sfxNoise = null;
+function noiseFx(dur, vol, kind, f1, f2, when, swell) {
+  if (muted || !actx) return;
+  try {
+    if (!sfxNoise || sfxNoise.ctx !== actx) { const n = actx.sampleRate * 2, b = actx.createBuffer(1, n, actx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; sfxNoise = { ctx: actx, b: b }; }
+    const t0 = actx.currentTime + (when || 0), src = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain();
+    src.buffer = sfxNoise.b; src.loop = true; f.type = kind; f.frequency.setValueAtTime(f1, t0); if (f2) f.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+    if (kind === 'bandpass') f.Q.value = 0.9;
+    const sw = Math.min(swell || 0.02, dur * 0.8);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(vol * SFX_GAIN, t0 + sw); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(f); f.connect(g); g.connect(busFor());
+    src.start(t0); src.stop(t0 + dur + 0.05);
   } catch (e) { /* audio unavailable */ }
 }
 function fanfare() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.35, 'triangle', 0.07, i * 0.13)); tone(1047, 0.7, 'sine', 0.05, 0.55); }
@@ -1588,7 +1644,7 @@ function musicStep(step, t0, th, sd) {
   if (D.h.indexOf(s) >= 0) mdrum('h', t0);
 }
 function wantTheme() {
-  if (state === 'finale' || state === 'depart') return 'rest';
+  if (state === 'finale' || state === 'depart' || state === 'dry') return 'rest';
   if (state === 'play' || state === 'dying' || state === 'spectate') return 'w' + week + 'd' + Math.min(dayIdx, 6);
   return 'menu';
 }
@@ -1684,7 +1740,7 @@ function renderMinis() {
 function updateStats() { $('#stats').textContent = 'Best: ' + fmtDay(best) + '  \u00b7  Journeys ' + journeys + (jbest ? '  \u00b7  Fastest ' + mmss(jbest) : ''); }
 function setPanels(which) {
   menu.hidden = which !== 'menu'; lobbyP.hidden = which !== 'lobby'; over.hidden = which !== 'over';
-  restP.hidden = which !== 'rest'; winP.hidden = which !== 'win';
+  restP.hidden = which !== 'rest'; winP.hidden = which !== 'win'; $('#dry').hidden = which !== 'dry';
   $('#medalsP').hidden = which !== 'medals'; $('#boardP').hidden = which !== 'board';
   $('#home').hidden = which !== 'home'; $('#infoP').hidden = which !== 'info';
   if (which) { paused = false; $('#pauseP').hidden = true; }
@@ -1764,6 +1820,7 @@ function newWeekClock() {
   total = dayPre[NDAYS]; buildDtab();
   dayIdx = 0; dayT = 0; elapsed = 0; weekT0 = runTime; weekSaved = 0; hudSaved = -1;
   hazards = []; strikes = []; orbs = []; pws = []; chain = { type: '', n: 0 }; weekPicks = 0;
+  leaves = []; leafNext = 0; wkLeaves = 0; lR = mkRng(seed * 53 + week * 3571 + 7); updateLeafHud();
   wDist = 0; encCum = 0; fogCool = 0; spawnDist = 0; lastSpace = 0; lastEnc = ''; encPassed = 0; orbDue = false; strikeT = 8; prevC = null; hid = 0; bag = []; lastPw = ''; rbSaid = false;
   wkLost = false; wkRev = false; wkBolts = 0; wkKinds = {};
   lives = LIVES; iT = 0; hurtT = 0; panelAt = 0; hideOops();
@@ -1839,7 +1896,7 @@ function plantCheckpoint() {
   if (mp || state !== 'play' || cp || cpUsed) return;
   if (cpArm <= 0) { cpArm = 3; updateCpHud(); return; }   // first tap only arms it, so a stray tap cannot commit you
   cpArm = 0;
-  cp = { dayIdx: dayIdx, u: uNow(), runTime: runTime, weekT0: weekT0, saved: weekSaved, picks: weekPicks };
+  cp = { dayIdx: dayIdx, u: uNow(), runTime: runTime, weekT0: weekT0, saved: weekSaved, picks: weekPicks, leaves: wkLeaves, lnext: leafNext };
   cpUsed = true; cpFalls = 0; cpBust = false;
   updateCpHud();
   flash = reduceMotion ? 0 : 0.2;
@@ -1850,6 +1907,7 @@ function applyCheckpoint() {
   const c = cp;
   dayIdx = clamp(c.dayIdx, 0, NDAYS - 1); dayT = c.u * dayLens[dayIdx]; elapsed = dayPre[dayIdx] + dayT;
   runTime = c.runTime; weekT0 = c.weekT0; weekSaved = c.saved; weekPicks = c.picks; hudSaved = -1;
+  wkLeaves = c.leaves || 0; leafNext = c.lnext || 0; updateLeafHud();
   cq = cq.filter(q => q.t >= elapsed);
   buildTicks(); syncHud(true);
 }
@@ -1884,7 +1942,7 @@ function updateResumeUi() {
 function resumeFlight() {
   const r = getResume();
   if (!r) { beginReady(false); return; }
-  practice = 0;
+  practice = 0; daily = null;
   week = r.w; weekT0 = r.t0; runLost = !!r.l; runCreat = r.c | 0;
   cp = null; cpUsed = false; cpFalls = 0; cpBust = false;
   beginReady(true);
@@ -1897,6 +1955,186 @@ function startPractice(w) {
   cp = null; cpUsed = false; cpFalls = 0; cpBust = false;
   beginReady(true);
 }
+/* ---------- dry land: the epilogue ----------
+   Earned by clearing Week 6. A calm flight with nothing to fear (the water only bounces you), a garland of 16 olive leaves, and then the land
+   itself: an altar, smoke going up, and the bow in the cloud (Genesis 8:20, 9:13). Nothing here is saved except its own two medals. */
+const DRY_N = 16, DRY_GAP = 172, DRY_SPEED = 108;
+let epi = null;
+const dryLeafY = n => clamp(250 + 105 * Math.sin(n * 0.72) + 40 * Math.sin(n * 1.9), 110, 410);
+const rrect = (x, y, w, h, r) => { if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); };
+function startEpilogue() {
+  if (mp || !(wd && wd[NWEEKS - 1] >= 8)) return;
+  ensureAudio();
+  practice = NWEEKS; daily = null; week = NWEEKS; weekT0 = 0; runTime = 0; runLost = false; runCreat = 0;
+  cp = null; cpUsed = false; cpFalls = 0; cpBust = false; cpArm = 0;
+  seed = newSeed(); resetWeek();
+  leaves = []; epi = { t: 0, got: 0, n: 0, dist: 0, phase: 'wait', pt: 0, perched: false, rb: 0, flame: 0, ev: {}, shown: false, bx0: 0, by0: 0, time: 0 };
+  state = 'dry'; bird = newBird();
+  $('#hintB').textContent = 'Epilogue · Dry land'; $('#hintS').textContent = 'Tap to flap. The water cannot hurt you. Gather the olive leaves.';
+  const v = $('#hintV'); v.textContent = ''; v.append('…and in the second month, on the seven and twentieth day of the month, was the earth dried.');
+  const c = document.createElement('cite'); c.textContent = 'Genesis 8:14'; v.append(c);
+  $('#hintT').hidden = true; hint.classList.add('onlight');
+  setPanels(''); hud.hidden = false; hint.hidden = false; matesEl.hidden = true; capHide();
+  updateLeafHud(); updateCpHud();
+}
+function dryFlap() {
+  const e = epi; if (!e || e.phase === 'land') return;
+  const B = BIRDS[charKey];
+  if (e.phase === 'wait') { e.phase = 'fly'; hint.hidden = true; setCap('Gather the olive leaves.', 2200); musicForce(); }
+  bird.vy = B.flap * 0.9; bird.flapT = 0.32;
+  tone(420, 0.09, 'triangle', 0.06, 0, 650);
+}
+const dryLandX = T => lerp(W + 190, 236, easeOut(clamp(T / 4.6, 0, 1)));
+function updateDry(dt) {
+  const e = epi; if (!e) return;
+  const B = BIRDS[charKey];
+  bird.flapT = Math.max(0, bird.flapT - dt);
+  if (e.phase === 'wait') { bird.y = H * 0.42 + Math.sin(t * 3.2) * 7; bird.rot = Math.sin(t * 3.2 + 1) * 0.07; bird.phase += dt * 9; return; }
+  e.t += dt;
+  if (e.phase === 'fly') {
+    curSp = DRY_SPEED;
+    bird.vy += B.g * 0.8 * dt; bird.y += bird.vy * dt;
+    const hr = hitR();
+    if (bird.y < hr) { bird.y = hr; bird.vy = Math.max(bird.vy, 0); }
+    if (bird.y + hr >= WATER - 6) { bird.y = WATER - 6 - hr; bird.vy = -330; tone(300, 0.1, 'sine', 0.035, 0, 170); splash(bird.x, WATER, 5); }   // the water only bounces you now
+    bird.rot = clamp(bird.vy * 0.0017, -0.5, 1.15); bird.phase += dt * (bird.flapT > 0 ? 30 : (B.buzz ? 26 : 5));
+    e.dist += DRY_SPEED * dt;
+    while (e.n < DRY_N && e.dist >= e.n * DRY_GAP) { leaves.push({ x: W + 40, y: dryLeafY(e.n), bob: e.n * 0.8, got: false, n: e.n }); e.n++; }
+    for (const l of leaves) {
+      l.x -= DRY_SPEED * dt; l.bob += dt;
+      if (!l.got && Math.hypot(l.x - bird.x, l.y + Math.sin(l.bob * 2.4) * 4 - bird.y) < 18 + hr + (B.mag || 0)) {
+        l.got = true; e.got++; updateLeafHud();
+        const el = $('#leafHud'); el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+        tone(784 + e.got * 18, 0.1, 'sine', 0.05); tone(1175 + e.got * 18, 0.16, 'sine', 0.045, 0.08); tone(1568, 0.22, 'sine', 0.03, 0.18);
+        for (let i = 0; i < 9; i++) { const a = rand(0, TAU); particle({ x: l.x, y: l.y, vx: Math.cos(a) * rand(30, 90), vy: Math.sin(a) * rand(30, 90) - 20, size: rand(1.6, 2.8), color: '#c8e08a', life: rand(0.4, 0.8) }); }
+      }
+    }
+    leaves = leaves.filter(l => !l.got && l.x > -40);
+    if (e.n >= DRY_N && !leaves.length) { e.phase = 'land'; e.pt = 0; e.bx0 = bird.x; e.by0 = bird.y; e.time = e.t; leaves = []; }
+    if (e.t > 3 && !e.ev.a) { e.ev.a = 1; setCap('The waters are going down.', 2400); }
+    if (e.dist > DRY_N * DRY_GAP * 0.6 && !e.ev.b) { e.ev.b = 1; setCap('Land is rising out of the sea.', 2600); }
+    return;
+  }
+  // landing: the hill slides in, the bird settles beside the altar, the fire is lit, the bow appears
+  curSp = 30;
+  e.pt += dt; const T = e.pt;
+  const ax = dryLandX(T), peak = WATER - 120;
+  const u = smooth(clamp(T / 5, 0, 1));
+  bird.x = lerp(e.bx0, ax - 38, u); bird.y = lerp(e.by0, peak - 9, u) - Math.sin(u * Math.PI) * 30;
+  e.perched = T > 5.2;
+  bird.rot = e.perched ? 0 : clamp(-0.1 + (1 - u) * 0.25, -0.4, 0.5); bird.phase += dt * (e.perched ? 0 : 11);
+  if (T > 5.4 && !e.ev.c) { e.ev.c = 1; setCap('Noah builded an altar unto the LORD.', 3200); tone(262, 1.2, 'sine', 0.04); tone(392, 1.4, 'sine', 0.035, 0.1); noiseFx(1.4, 0.02, 'bandpass', 900, 500, 0, 0.3); }
+  if (T > 6.2) {
+    e.flame = Math.min(1, e.flame + dt * 0.8);
+    if (Math.random() < dt * 14) particle({ x: ax + 38 + rand(-5, 5), y: peak - 36, vx: rand(-8, 14), vy: -rand(30, 60), g: -10, size: rand(3, 5), grow: rand(8, 16), color: 'rgba(235,235,240,.55)', life: rand(1.6, 2.6), fade: 2.4 });
+    if (Math.random() < dt * 20) particle({ x: ax + 38 + rand(-6, 6), y: peak - 30, vx: rand(-10, 10), vy: -rand(40, 90), g: 40, size: rand(1.2, 2.2), color: '#ffcf70', life: rand(0.4, 0.8) });
+  }
+  if (T > 8.6 && !e.ev.d) { e.ev.d = 1; setCap('I do set my bow in the cloud. Genesis 9:13', 4200); fanfare(); }
+  if (T > 8.6) { e.rb = clamp((T - 8.6) / 3.2, 0, 1); if (T < 13) { e.cf = (e.cf || 0) + dt * 50; const n = Math.floor(e.cf); e.cf -= n; if (n > 0) confetti(n); } }
+  if (T > 12.4 && !e.shown) showDry();
+}
+function showDry() {
+  const e = epi; e.shown = true; capHide();
+  mev('dry', { got: e.got });
+  $('#dryLeaves').textContent = e.got + '/' + DRY_N; $('#dryTime').textContent = mmss(e.time || e.t);
+  $('#dryLede').textContent = e.got >= DRY_N ? 'Every olive leaf gathered. The earth was dried, Noah built an altar, and God set his bow in the cloud.' : 'The earth was dried. Noah built an altar, and God set his bow in the cloud.';
+  setPanels('dry'); delayEnable($('#dry'));
+  try { $('#dryAgain').focus({ preventScroll: true }); } catch (er) { /* ignore */ }
+}
+// land rises out of the water as you fly, then the whole hill arrives with the altar on it
+function drawDry() {
+  const e = epi; if (!e) return;
+  const rise = smooth(clamp(e.dist / (DRY_N * DRY_GAP), 0, 1));
+  const ridge = (off, hgt, base, col, ph) => {
+    ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(-20, WATER + 12);
+    for (let x = -20; x <= W + 20; x += 8) {
+      const a = (x + off) / W * TAU, v = 0.5 + 0.28 * Math.sin(a * 2 + ph) + 0.2 * Math.sin(a * 3 + ph * 1.7) + 0.12 * Math.sin(a * 5 + ph * 0.6);
+      ctx.lineTo(x, base - hgt * v * rise);
+    }
+    ctx.lineTo(W + 20, WATER + 12); ctx.closePath(); ctx.fill();
+  };
+  const sc = e.dist * 0.25 + t * 2;
+  ridge(sc * 0.6, 170, WATER - 4, 'rgba(137,168,150,.55)', 0.7);
+  ridge(sc * 1.4, 120, WATER - 1, 'rgba(98,140,92,.8)', 2.9);
+  if (e.phase === 'land') drawDryHill(dryLandX(e.pt), e);
+  if (e.rb > 0.01) {
+    const cols = ['#e5484d', '#f08a3b', '#f4cf4a', '#7fc15a', '#4ba3e3', '#5b6fd6', '#9a5fc7'];
+    ctx.save(); ctx.globalAlpha = 0.62 * e.rb; ctx.lineWidth = 9;
+    cols.forEach((col, i) => { ctx.strokeStyle = col; ctx.beginPath(); ctx.arc(190, WATER + 8, 262 - i * 9, Math.PI, Math.PI + Math.PI * e.rb); ctx.stroke(); });
+    ctx.restore();
+  }
+}
+function drawDryHill(gx, e) {
+  const peak = WATER - 120;
+  const hg = ctx.createLinearGradient(0, peak, 0, WATER);
+  hg.addColorStop(0, '#7fa35e'); hg.addColorStop(1, '#4a643b');
+  ctx.fillStyle = hg;
+  ctx.beginPath();
+  ctx.moveTo(gx - 230, WATER + 6);
+  ctx.bezierCurveTo(gx - 150, WATER - 20, gx - 90, peak, gx - 20, peak);
+  ctx.lineTo(gx + 100, peak + 2);
+  ctx.bezierCurveTo(gx + 150, peak + 4, gx + 200, WATER - 30, gx + 250, WATER + 6);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#9db26a';
+  for (const [dx, dy, r] of [[-120, 52, 9], [-96, 40, 11], [-146, 66, 8], [150, 60, 10], [172, 74, 8]]) { ctx.beginPath(); ctx.arc(gx + dx, peak + dy, r, 0, TAU); ctx.fill(); }
+  // the altar: rough stones with a fire on top
+  const ax = gx + 38, ay = peak + 2;
+  ctx.fillStyle = '#8b8d93'; ctx.beginPath(); rrect(ax - 26, ay - 14, 52, 14, 3); ctx.fill();
+  ctx.fillStyle = '#a3a5ab'; ctx.beginPath(); rrect(ax - 20, ay - 25, 40, 12, 3); ctx.fill();
+  ctx.fillStyle = '#76787e'; ctx.beginPath(); rrect(ax - 12, ay - 33, 24, 9, 3); ctx.fill();
+  if (e.flame > 0) {
+    const f = e.flame, fl = 1 + Math.sin(t * 17) * 0.12 + Math.sin(t * 29) * 0.07;
+    const g = ctx.createRadialGradient(ax, ay - 40, 2, ax, ay - 40, 40 * f);
+    g.addColorStop(0, 'rgba(255,200,90,.5)'); g.addColorStop(1, 'rgba(255,160,60,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ax, ay - 40, 40 * f, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ef7a2b'; ctx.beginPath(); ctx.moveTo(ax - 9, ay - 33); ctx.quadraticCurveTo(ax - 12, ay - 50 * f * fl, ax, ay - 66 * f * fl); ctx.quadraticCurveTo(ax + 12, ay - 48 * f * fl, ax + 9, ay - 33); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#ffd25e'; ctx.beginPath(); ctx.moveTo(ax - 5, ay - 33); ctx.quadraticCurveTo(ax - 6, ay - 44 * f * fl, ax, ay - 53 * f * fl); ctx.quadraticCurveTo(ax + 6, ay - 42 * f * fl, ax + 5, ay - 33); ctx.closePath(); ctx.fill();
+  }
+}
+
+/* ---------- daily flight ----------
+   One sky a day, the same for everyone who flies on that calendar date: the date picks the week (2 to 6) and the seed. It is a practice-style
+   flight, so it never touches your saved progress, journeys, weekly bests or the usual medals; it keeps its own best time per day and a streak. */
+const pad2 = n => String(n).padStart(2, '0');
+const localKey = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+let dlog = store.get('dlog', {});   // 'YYYY-MM-DD' -> your best time that day, in seconds
+if (!dlog || typeof dlog !== 'object') dlog = {};
+function dailyToday() {
+  const key = localKey(new Date());
+  let h = 2166136261; const src = 'wotf-daily-' + key;
+  for (let i = 0; i < src.length; i++) { h ^= src.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+  return { key: key, seed: (h % 2147483646) + 1, week: 2 + ((h >>> 9) % 5) };
+}
+function dailyStreak() {
+  const d = new Date(); let n = 0;
+  if (!dlog[localKey(d)]) d.setDate(d.getDate() - 1);   // today is not done yet: the streak still stands until the day is over
+  while (dlog[localKey(d)] && n < 400) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+const dailyOpen = () => !mp && wd && wd[0] >= 8;
+function updateDailyTile() {
+  const b = $('#openDaily'); if (!b) return;
+  const open = dailyOpen(), d = dailyToday();
+  b.disabled = !open;
+  $('#dTitle').textContent = 'Daily flight' + (open ? ' \u00b7 Week ' + d.week : '');
+  const st = dailyStreak();
+  $('#dSub').textContent = !open ? 'Clear Week 1 to unlock' : (dlog[d.key] ? 'Done today in ' + mmsst(dlog[d.key]) : 'Today\u2019s sky is waiting') + (st > 0 ? ' \u00b7 ' + st + (st === 1 ? ' day' : ' days') + ' in a row' : '');
+}
+function startDaily() {
+  if (!dailyOpen()) return;
+  ensureAudio();
+  daily = dailyToday();
+  practice = daily.week; week = daily.week; weekT0 = 0; runLost = false; runCreat = 0;
+  cp = null; cpUsed = false; cpFalls = 0; cpBust = false;
+  beginReady(true);
+}
+// the same numbers a week gives you, kept against today's date instead of your weekly bests
+function dailyRecords() {
+  const wt = Math.max(1, runTime - weekT0), t = Math.round(wt * 10) / 10, prev = +dlog[daily.key] || 0, isBest = prev > 0 && t < prev, first = !prev;
+  if (first || isBest) { dlog[daily.key] = t; const ks = Object.keys(dlog).sort(); while (ks.length > 90) delete dlog[ks.shift()]; store.set('dlog', dlog); }
+  mev('daily', { first: first });
+  return { wt: wt, prev: prev, isBest: isBest, saved: weekSaved, hits: LIVES - lives, jNew: false };
+}
 function goHome() {
   if (mp) { mpLeave(); return; }
   saveProgress();
@@ -1904,7 +2142,7 @@ function goHome() {
 }
 let paused = false;
 const pauseBtn = $('#pauseBtn');
-const canPause = () => !mp && (state === 'play' || state === 'ready');
+const canPause = () => !mp && (state === 'play' || state === 'ready' || (state === 'dry' && !!epi && epi.phase !== 'land'));
 function setPaused(v) {
   v = !!v;
   if (v === paused) return;
@@ -1912,7 +2150,7 @@ function setPaused(v) {
   paused = v;
   $('#pauseP').hidden = !v;
   if (v) {
-    $('#pauseNote').textContent = practice ? 'This is a practice flight. Going Home leaves your saved progress as it is.' : week > 1 ? 'Going Home saves Week ' + week + '. Next time you can retry it from Day 1 or start again from Week 1.' : 'Going Home ends this run. Week 1 has nothing to save yet.';
+    $('#pauseNote').textContent = state === 'dry' ? 'This is the epilogue. Going Home leaves your saved progress as it is.' : daily ? 'This is the daily flight. Going Home leaves your saved progress as it is.' : practice ? 'This is a practice flight. Going Home leaves your saved progress as it is.' : week > 1 ? 'Going Home saves Week ' + week + '. Next time you can retry it from Day 1 or start again from Week 1.' : 'Going Home ends this run. Week 1 has nothing to save yet.';
     $('#pHome').textContent = week > 1 && !practice ? 'Save and go Home' : 'Go Home';
     try { if (actx && actx.suspend) actx.suspend(); } catch (e) { /* ignore */ }
     try { $('#pResume').focus({ preventScroll: true }); } catch (e) { /* ignore */ }
@@ -1921,7 +2159,7 @@ function setPaused(v) {
   }
 }
 function showMenu(pick) {
-  practice = 0;
+  practice = 0; daily = null; epi = null;
   week = 1; runTime = 0; seed = newSeed();
   cp = null; cpUsed = false; cpFalls = 0; cpBust = false; cpArm = 0;
   resetWeek();
@@ -1931,15 +2169,14 @@ function showMenu(pick) {
 }
 function beginReady(keepWeek) {
   ensureAudio(); cloudTip = false;
-  if (keepWeek === true) runTime = weekT0; else { practice = 0; week = 1; runTime = 0; cp = null; cpUsed = false; cpFalls = 0; cpBust = false; runLost = false; runCreat = 0; ms.pwRun = 0; store.set('resume', null); }
-  seed = newSeed();
+  if (keepWeek === true) runTime = weekT0; else { practice = 0; daily = null; week = 1; runTime = 0; cp = null; cpUsed = false; cpFalls = 0; cpBust = false; runLost = false; runCreat = 0; ms.pwRun = 0; store.set('resume', null); }
+  seed = daily ? daily.seed : newSeed();   // the daily flight deals the same sky every time you try it today
   resetWeek();
   const resume = keepWeek === true && !mp && cp && !cpBust;
   if (resume) applyCheckpoint();
   state = 'ready';
-  $('#hintB').textContent = resume ? 'Week ' + week + ', Day ' + (dayIdx + 1) : week > 1 ? 'Week ' + week + ' of ' + NWEEKS : 'Tap to flap';
-  $('#hintS').textContent = resume ? 'Resuming from your checkpoint. Tap to take off' : practice ? 'Practice flight. Tap to take off' : week > 1 ? 'Tap to take off' : 'Space or Up Arrow works too';
-  $('#hintT').hidden = false;
+  setHintWeek(resume);
+  $('#hintS').textContent = resume ? 'Resuming from your checkpoint. Tap to take off' : daily ? 'Daily flight. Tap to take off' : practice ? 'Practice flight. Tap to take off' : week > 1 ? 'Tap to take off' : 'Space or Up Arrow works too';
   setPanels(''); hud.hidden = false; hint.hidden = false; matesEl.hidden = true;
   cpArm = 0; updateCpHud();
 }
@@ -1956,6 +2193,7 @@ function startRun() {
 function flap() {
   if (paused) return;
   if (state === 'finale') { continueTap(); return; }
+  if (state === 'dry') { dryFlap(); return; }
   if (state === 'ready' && !mp) startRun();
   if (state !== 'play') return;
   const B = BIRDS[charKey];
@@ -2084,7 +2322,7 @@ function chooseEnc(d) {
   if (d > 0.38) opts.push(['shark', 2.5]);
   if (d > 0.66) opts.push(['whale', 2.5]);
   if (week >= 3) {
-    const ep = mp ? shProgAt(encCum) : prog(), ramp = (a, b) => clamp((ep - a) / (b - a), 0, 1);
+    const ep = det() ? shProgAt(encCum) : prog(), ramp = (a, b) => clamp((ep - a) / (b - a), 0, 1);
     opts.push(['fount', week === 3 ? 3 * ramp(0.1, 0.85) : 3]);
     if (week >= 4) opts.push(['gust', week === 4 ? 3 * ramp(0.1, 0.8) : 3]);
     if (week >= 5) opts.push(['debris', week === 5 ? 3 * ramp(0.1, 0.8) : 3]);
@@ -2144,7 +2382,7 @@ function tickTeamPw(dt) {
   if (changed) updatePwHud(); else tickPwHud();
 }
 function spawnEncounter() {
-  const d = edif(), ep = mp ? shProgAt(encCum) : prog(), x = W + 60 + Math.min(0, spawnDist), sp = baseSpeed() * speedMult();   // carry the bit of distance flown past the spawn point, so frame timing cannot shift the spacing
+  const d = edif(), ep = det() ? shProgAt(encCum) : prog(), x = W + 60 + Math.min(0, spawnDist), sp = baseSpeed() * speedMult();   // carry the bit of distance flown past the spawn point, so frame timing cannot shift the spacing
   const spacing = spacingAt(ep, week) + wrand(-18, 22);
   encCum += spacing;
   spawnDist = Math.min(0, spawnDist) + spacing; lastSpace = spacing;
@@ -2160,12 +2398,58 @@ function spawnEncounter() {
   else if (kind === 'debris') pushDebris(x);
   else if (kind === 'tree') pushTree(x);
   else pushCreature(kind, x, sp);
+  if (leavesOn()) maybeLeaf(kind, x, spacing, ep);   // before the fog is added, so the obstacle just pushed is the last one in the list
   if (week >= 6) { const fr = wR(); fogCool--; if (fr < 0.1 + 0.1 * ep && fogCool <= 0) { pushFog(x - 140); fogCool = 5; } }   // fog rolls over the next few obstacles
   if (orbDue) {
     orbDue = false;
     orbs.push({ x: x - spacing * 0.5, y: 150 + pR() * 260, type: nextPower(), bob: pR() * 6, got: false });
   }
   fairFixStrikes();
+}
+/* ---------- olive leaves ----------
+   Five a week, solo flights only. Each hangs at a risky spot (just over a rock, under a pillar, at a gate's edge, over a wave crest) so grabbing it is a choice.
+   They are dealt from their own random stream, so they never change where anything else appears. */
+const LEAF_AT = [0.13, 0.31, 0.5, 0.68, 0.84];
+const leavesOn = () => !mp && !practice && !daily;
+function maybeLeaf(kind, x, spacing, ep) {
+  if (leafNext >= LEAF_AT.length || ep < LEAF_AT[leafNext]) return;
+  const last = hazards[hazards.length - 1], first = hazards[hazards.length - 2];
+  let lx = null, ly = 0;
+  if (kind === 'rock') { lx = x + last.w / 2; ly = last.y - 24; }
+  else if (kind === 'hang') { lx = x + 29; ly = last.bottom + 24; }
+  else if (kind === 'gate') { lx = x + 29; ly = last.mvA ? (first.b0 + last.r0) / 2 : (lR() < 0.5 ? first.bottom + 22 : last.y - 22); }
+  else if (kind === 'tree') { lx = x + 22; ly = last.y - 26; }
+  else if (kind === 'debris') { lx = x + last.w / 2; ly = WATER - last.hgt - 38; }
+  else if (kind === 'fount') { lx = x + 18; ly = WATER - last.H - 30; }
+  else if (kind === 'wave') { lx = x + last.w / 2; ly = WATER - last.hp - 30; }
+  else if (kind === 'cloud') { lx = x + 46; ly = last.y0 - last.amp - 48; }
+  if (lx === null) {   // a gust or a creature: wait for a better spot, but never let the week run out of leaves
+    if (ep < LEAF_AT[leafNext] + 0.05) return;
+    lx = x - spacing * 0.25; ly = 150 + lR() * 250;
+  }
+  leaves.push({ x: lx, y: clamp(ly, 48, WATER - 36), bob: lR() * 6, got: false, n: leafNext });
+  leafNext++;
+}
+function updateLeafHud() {
+  const el = $('#leafHud'); if (!el) return;
+  const dry = state === 'dry' && !!epi, on = dry || (leavesOn() && !daily);
+  el.hidden = !on; el.classList.toggle('epi', dry); if (!on) return;
+  const n = dry ? epi.got : wkLeaves, mx = dry ? DRY_N : LEAF_AT.length;
+  $('#leafN').textContent = n; $('#leafMax').textContent = '/' + mx; el.classList.toggle('full', n >= mx);
+}
+function updateLeaves(dt, sp, hr, pick) {
+  for (const l of leaves) {
+    l.x -= sp * dt; l.bob += dt;
+    if (pick && !l.got && Math.hypot(l.x - bird.x, l.y + Math.sin(l.bob * 2.4) * 4 - bird.y) < 16 + hr + (BIRDS[charKey].mag || 0)) {
+      l.got = true; wkLeaves++; mev('leaf', wkLeaves); updateLeafHud();
+      const el = $('#leafHud'); el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+      tone(784, 0.1, 'sine', 0.05); tone(1175, 0.16, 'sine', 0.045, 0.08); tone(1568, 0.22, 'sine', 0.03, 0.18);
+      for (let i = 0; i < 9; i++) { const a = rand(0, TAU); particle({ x: l.x, y: l.y, vx: Math.cos(a) * rand(30, 90), vy: Math.sin(a) * rand(30, 90) - 20, size: rand(1.6, 2.8), color: '#c8e08a', life: rand(0.4, 0.8) }); }
+      if (wkLeaves >= LEAF_AT.length) setCap('All five olive leaves this week.', 2600);
+      else tipOnce('leaf', 'An olive leaf! Five hang over the flood each week.');
+    }
+  }
+  leaves = leaves.filter(l => !l.got && l.x > -40);
 }
 /* ---------- fairness ----------
    Lightning used to pick its spot at random, without looking at what a fish, a pillar or a wave was doing at that moment, so now and then
@@ -2275,7 +2559,7 @@ function fairFixStrikes() {
   strikes = strikes.filter(q => !q.dead);
 }
 function spawnStrike() {
-  const d = edif(), p = mp ? shProgAt(encCum) : prog(), M = wkM();
+  const d = edif(), p = det() ? shProgAt(encCum) : prog(), M = wkM();
   strikeT = srand(7, 11) * (1 - 0.4 * p) / Math.pow(M, 0.25);
   const n = (d > 0.6 && sR() < 0.3 + 0.35 * (M - 1) + 0.1 * p) ? 2 : 1;
   const ys = [];
@@ -2431,6 +2715,23 @@ const VERSES = [
 ];
 // The five rest stops (Weeks 1 to 5) each get their own scene on the ark, taken from Genesis 7 and 8. Week 6 is the finale with Noah.
 // title/verse/ref show on the rest card; tint is the sky laid over the clear sky for that scene; night turns the stars on.
+// the moment in Genesis that each week is flying through (KJV), shown when you are ready to take off
+const WEEK_INTRO = [null,
+  { v: '…the same day were all the fountains of the great deep broken up, and the windows of heaven were opened.', r: 'Genesis 7:11' },
+  { v: '…the waters increased, and bare up the ark…', r: 'Genesis 7:17' },
+  { v: 'And the waters prevailed, and were increased greatly upon the earth; and the ark went upon the face of the waters.', r: 'Genesis 7:18' },
+  { v: 'And the waters prevailed exceedingly upon the earth; and all the high hills, that were under the whole heaven, were covered.', r: 'Genesis 7:19' },
+  { v: 'And the waters prevailed upon the earth an hundred and fifty days.', r: 'Genesis 7:24' },
+  { v: 'And the waters returned from off the earth continually…', r: 'Genesis 8:3' }
+];
+function setHintWeek(resume) {
+  hint.classList.remove('onlight');
+  const wi = WEEK_INTRO[clamp(week, 1, NWEEKS)];
+  $('#hintB').textContent = resume ? 'Week ' + week + ', Day ' + (dayIdx + 1) : week > 1 ? 'Week ' + week + ' \u00b7 ' + scn().name : 'Tap to flap';
+  const v = $('#hintV'); v.textContent = ''; v.append(wi.v);
+  const c = document.createElement('cite'); c.textContent = wi.r; v.append(c);
+  $('#hintT').hidden = !!mp || week > 1 || !!resume;   // the power-up tip is for the first week; later weeks open with their verse
+}
 const ENDS = [null,
   { title: 'The door is shut.', verse: '…as God had commanded him: and the LORD shut him in.', ref: 'Genesis 7:16', tint: ['#1a2442', '#7a5f86', '#e0a77a'] },
   { title: 'Forty days.', verse: 'And the rain was upon the earth forty days and forty nights.', ref: 'Genesis 7:12', tint: ['#0b1322', '#2c4560', '#6d8497'] },
@@ -2612,14 +2913,13 @@ function wkItems(st, end) {
 function startFinale() {
   const isEnd = week >= NWEEKS;
   const first = !practice && wins < 1;
-  markWeek(week, 8);
+  if (!daily) markWeek(week, 8);   // a daily flight is a practice-style flight: it never marks a week as cleared
   if (!practice) { wins++; store.set('wins', wins); }
-  if (first && !isEnd) unlockQ.push('golden');
   if (isEnd && !practice) { journeys++; store.set('journeys', journeys); }
   newRecord = false;
   if (mp) newRecord = recordTeam(week * NDAYS, isEnd ? runTime : 0);
-  else { best = Math.max(best, week * NDAYS); store.set('best3', best); }
-  const stats = mp ? null : weekRecords(isEnd && !practice);
+  else if (!daily) { best = Math.max(best, week * NDAYS); store.set('best3', best); }
+  const stats = mp ? null : daily ? dailyRecords() : weekRecords(isEnd && !practice);
   if (!mp) {   // butterfly: finish a week well inside its own clock
     const frac = clamp(1 - stats.wt / Math.max(1, total), 0, 1);
     if (!practice && frac > (ach.fast || 0)) { ach.fast = frac; store.set('ach', ach); }
@@ -2627,9 +2927,10 @@ function startFinale() {
     if (!practice) checkUnlocks();
   }
   if (!practice) mev('clear', { isEnd: isEnd, frac: clamp(1 - (runTime - weekT0) / Math.max(1, total), 0, 1) });
+  if (!practice) checkUnlocks();   // Week 3 brings the Golden Dove, a flawless Week 3 or later the Butterfly
   if (mp) rankSubmit(isEnd ? NWEEKS * NDAYS : week * NDAYS, runTime);
   state = 'finale';
-  hazards = []; strikes = []; orbs = []; pws = []; chain = { type: '', n: 0 }; updatePwHud();
+  hazards = []; strikes = []; orbs = []; leaves = []; pws = []; chain = { type: '', n: 0 }; updatePwHud();
   burn = 0; stunT = 0; causeKind = ''; landed = false; hint.hidden = true;
   fin = { t: 0, gx: W + 110, sx: bird.x, sy: bird.y, rain: 0, lit: false, ev: {}, cf: 0, newUnlock: first && !isEnd, shown: false, py: bird.y, kind: isEnd ? 'end' : 'rest', wk: week, perched: false, tapAt: 0, stats: stats };
   saveProgress();
@@ -2658,6 +2959,66 @@ function birdPathAt(T) {
   }
   return [last[1], last[2], true];
 }
+/* ---------- share card ---------- */
+const SITE_URL = 'https://csantiago26.github.io/wings-over-the-flood/';
+// a 4:5 picture of the finished journey: sunrise, rainbow, your bird carrying the olive leaf, your time
+async function makeShareCard(info) {
+  try { await Promise.all([document.fonts.load('700 60px Cinzel'), document.fonts.load('700 30px Karla'), document.fonts.load('italic 500 30px Cinzel')]); } catch (e) { /* fall back to the system serif */ }
+  const w = 1080, h = 1350, c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d'), serif = "Cinzel, 'Trajan Pro', Georgia, serif", sans = "Karla, system-ui, sans-serif";
+  const sky = g.createLinearGradient(0, 0, 0, 1010);
+  sky.addColorStop(0, '#16213a'); sky.addColorStop(0.5, '#4a4f7a'); sky.addColorStop(0.82, '#e0a27a'); sky.addColorStop(1, '#f6d58f');
+  g.fillStyle = sky; g.fillRect(0, 0, w, h);
+  const sun = g.createRadialGradient(540, 1000, 10, 540, 1000, 520);
+  sun.addColorStop(0, 'rgba(255,240,190,.95)'); sun.addColorStop(0.35, 'rgba(255,214,140,.45)'); sun.addColorStop(1, 'rgba(255,214,140,0)');
+  g.fillStyle = sun; g.fillRect(0, 380, w, 640);
+  ['#ef6a5b', '#f4a259', '#f4d35e', '#7bc67b', '#5ab0d6', '#6a7fd1', '#9a6ad0'].forEach((col, i) => {
+    g.strokeStyle = col; g.globalAlpha = 0.5; g.lineWidth = 17;
+    g.beginPath(); g.arc(540, 1010, 540 - i * 17, Math.PI, TAU); g.stroke();
+  });
+  g.globalAlpha = 1;
+  const sea = g.createLinearGradient(0, 1000, 0, h);
+  sea.addColorStop(0, '#254766'); sea.addColorStop(0.22, '#122a43'); sea.addColorStop(1, '#08121f');
+  g.fillStyle = sea; g.beginPath(); g.moveTo(0, 1012);
+  for (let x = 0; x <= w; x += 20) g.lineTo(x, 1006 + Math.sin(x / 70) * 6);
+  g.lineTo(w, h); g.lineTo(0, h); g.closePath(); g.fill();
+  g.fillStyle = 'rgba(255,236,170,.22)'; g.fillRect(380, 1014, 320, 3); g.fillRect(450, 1030, 180, 3);
+  g.save(); g.translate(790, 982); g.scale(2.2, 2.2);   // the ark on the water
+  g.fillStyle = '#8a5a31'; g.beginPath(); g.moveTo(2, 12); g.lineTo(36, 12); g.bezierCurveTo(35, 18, 31, 22, 26, 22); g.lineTo(12, 22); g.bezierCurveTo(7, 22, 3, 18, 2, 12); g.fill();
+  g.fillStyle = '#a97a47'; g.fillRect(9, 5, 20, 7); g.fillStyle = '#5e3b1f'; g.beginPath(); g.moveTo(7, 5); g.lineTo(19, 0); g.lineTo(31, 5); g.fill();
+  g.restore();
+  g.save(); g.translate(540, 780); g.rotate(-0.12); drawBird(g, charKey, 0, 0, 0, 0.1, 5.5, true, 1); g.restore();
+  g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+  g.fillStyle = '#f0d9a0'; g.font = '700 38px ' + serif; if ('letterSpacing' in g) g.letterSpacing = '8px';
+  g.fillText('WINGS OVER THE FLOOD', 540 + 4, 118);
+  g.fillStyle = '#ffffff'; g.font = '700 108px ' + serif; if ('letterSpacing' in g) g.letterSpacing = '0px';
+  g.fillText('Welcome home.', 540, 262);
+  g.fillStyle = 'rgba(255,255,255,.86)'; g.font = '500 36px ' + sans;
+  g.fillText(info.team ? 'The whole team reached the ark.' : 'All ' + NWEEKS * NDAYS + ' days flown. The ark reached.', 540, 340);
+  g.fillStyle = 'rgba(240,217,160,.8)'; g.font = '700 24px ' + sans; if ('letterSpacing' in g) g.letterSpacing = '6px'; g.fillText('JOURNEY TIME', 540 + 3, 1058);
+  g.fillStyle = '#f6c667'; g.font = '700 150px ' + serif; if ('letterSpacing' in g) g.letterSpacing = '0px'; g.fillText(info.time, 540, 1182);
+  g.fillStyle = '#e8eef8'; g.font = 'italic 500 33px ' + serif;
+  g.fillText('\u201c\u2026and, lo, in her mouth was an olive leaf pluckt off\u201d', 540, 1236);
+  g.fillStyle = '#f0d9a0'; g.font = '700 26px ' + sans; if ('letterSpacing' in g) g.letterSpacing = '4px';
+  g.fillText('GENESIS 8:11', 540, 1274);
+  g.fillStyle = 'rgba(232,238,248,.72)'; g.font = '600 28px ' + sans; if ('letterSpacing' in g) g.letterSpacing = '1px';
+  g.fillText(info.medals + ' of ' + MEDALS.length + ' medals  \u00b7  csantiago26.github.io/wings-over-the-flood', 540, 1320);
+  return new Promise(res => c.toBlob(res, 'image/png'));
+}
+let shareInfo = null;
+async function shareJourney() {
+  if (!shareInfo) return;
+  const btn = $('#shareWin'), old = btn.textContent; btn.disabled = true; btn.textContent = 'Making your card\u2026';
+  try {
+    const blob = await makeShareCard(shareInfo);
+    if (!blob) throw new Error('no image');
+    const file = new File([blob], 'wings-over-the-flood.png', { type: 'image/png' });
+    const text = 'I carried the olive leaf home in ' + shareInfo.time + '. Wings Over the Flood: ' + SITE_URL;
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text: text, title: 'Wings Over the Flood' }); btn.textContent = 'Shared'; }
+    else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'wings-over-the-flood.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); btn.textContent = 'Saved to your downloads'; }
+  } catch (e) { btn.textContent = e && e.name === 'AbortError' ? old : 'Could not share. Try again'; }
+  setTimeout(() => { btn.textContent = old; btn.disabled = false; }, 2200);
+}
 function showRest() {
   const f = fin;
   f.shown = true; f.tapAt = f.t + 0.6;
@@ -2668,22 +3029,25 @@ function showRest() {
     $('#wJ').textContent = mp ? mmss(teamBestT) : journeys;
     fillWk($('#winStats'), wkItems(f.stats, true));
     fillUnlocks($('#winUnlock'));
-    $('#winLede').textContent = practice ? 'Practice flight done. Noah was waiting again. Your journey records are as you left them.' : 'Noah was waiting with his arm out. You carried the olive leaf all the way.' + (mp && newRecord ? ' New team record!' : '');
-    $('#again2').textContent = mp ? 'Back to lobby' : practice ? 'Practice again' : 'Play again';
+    $('#winLede').textContent = daily ? 'Daily flight done in ' + mmss(runTime - weekT0) + '.' + (dailyStreak() > 1 ? ' ' + dailyStreak() + ' days in a row.' : '') + ' A new sky arrives tomorrow.' : practice ? 'Practice flight done. Noah was waiting again. Your journey records are as you left them.' : 'Noah was waiting with his arm out. You carried the olive leaf all the way.' + (mp && newRecord ? ' New team record!' : '');
+    $('#again2').textContent = mp ? 'Back to lobby' : daily ? 'Fly it again' : practice ? 'Practice again' : 'Play again';
     $('#swap2').textContent = mp ? 'Leave room' : 'Change bird';
+    shareInfo = practice ? null : { time: mmss(runTime), medals: medalSummary().m, team: !!mp };
+    $('#shareWin').hidden = !shareInfo;
+    $('#dryWin').hidden = !!(mp || practice || daily);
     setPanels('win'); delayEnable(winP);
     try { $('#again2').focus({ preventScroll: true }); } catch (e) { /* ignore */ }
     return;
   }
   fillWk($('#restStats'), wkItems(f.stats, false));
   const rv = REST_VERSES[(week - 1) % REST_VERSES.length];
-  $('#restEye').textContent = 'Week ' + week + ' of ' + NWEEKS + ' complete';
+  $('#restEye').textContent = daily ? 'Daily flight complete' : 'Week ' + week + ' of ' + NWEEKS + ' complete';
   $('#restTitle').textContent = REST_TITLES[(week - 1) % REST_TITLES.length];
   $('#restVerse').textContent = rv[0]; $('#restRef').textContent = rv[1];
   const nextLen = Math.round(45 * Math.max(0.45, Math.pow(0.88, week)));
-  $('#nextInfo').textContent = practice ? 'Practice flight done. Your saved progress is exactly as you left it.' : 'Next, Week ' + (week + 1) + ': days run about ' + nextLen + ' seconds, the waves climb higher and the storm hits harder.' + (NEW_HAZ[week + 1] ? ' New this week: ' + NEW_HAZ[week + 1] + '.' : '');
+  $('#nextInfo').textContent = daily ? 'Daily flight done in ' + mmss(runTime - weekT0) + '.' + (dailyStreak() > 1 ? ' ' + dailyStreak() + ' days in a row.' : '') + ' A new sky arrives tomorrow.' : practice ? 'Practice flight done. Your saved progress is exactly as you left it.' : 'Next, Week ' + (week + 1) + ': days run about ' + nextLen + ' seconds, the waves climb higher and the storm hits harder.' + (NEW_HAZ[week + 1] ? ' New this week: ' + NEW_HAZ[week + 1] + '.' : '');
   $('#tapNote').textContent = (mp && !mp.isHost) ? 'Waiting for the host to fly on.' : practice ? 'Rest as long as you like. Tap to go Home.' : 'Rest as long as you like. Tap to fly on.';
-  $('#endRun').textContent = mp ? 'Leave room' : practice ? 'Practice again' : 'Save and go Home';
+  $('#endRun').textContent = mp ? 'Leave room' : daily ? 'Fly it again' : practice ? 'Practice again' : 'Save and go Home';
   fillUnlocks($('#unlock'));
   setPanels('rest');
 }
@@ -2724,26 +3088,34 @@ function updateFinale(dt) {
 // what happens at each rest stop: a caption and a sound or two, timed with the picture (drawRestScene)
 function restEvents(f, T) {
   const ev = f.ev, wk = f.wk;
-  if (wk === 1) {
-    if (T > 3.0 && !ev.a) { ev.a = 1; tone(95, 0.9, 'sawtooth', 0.03, 0, 55); }
-    if (T > 4.6 && !ev.b) { ev.b = 1; tone(70, 0.35, 'sine', 0.12, 0, 38); if (!reduceMotion) shake = Math.max(shake, 3); setCap('And the LORD shut him in.', 2800); }
-  } else if (wk === 2) {
+  if (wk === 1) {   // the door: a long creak, the latch, then the thud that shuts the world out
+    if (T > 2.6 && !ev.a) { ev.a = 1; tone(150, 1.3, 'sawtooth', 0.02, 0, 85); tone(158, 1.3, 'sawtooth', 0.012, 0.05, 90); noiseFx(1.3, 0.012, 'bandpass', 500, 220, 0, 0.5); }
+    if (T > 4.4 && !ev.c) { ev.c = 1; tone(1300, 0.04, 'square', 0.03); tone(900, 0.05, 'square', 0.025, 0.05); }
+    if (T > 4.6 && !ev.b) { ev.b = 1; tone(70, 0.45, 'sine', 0.14, 0, 36); tone(135, 0.12, 'triangle', 0.07); noiseFx(0.35, 0.05, 'lowpass', 400, 120, 0, 0.01); if (!reduceMotion) shake = Math.max(shake, 3); setCap('And the LORD shut him in.', 2800); }
+  } else if (wk === 2) {   // forty days of rain: a steady hiss that counts down, then silence and a few drips
+    if (!ev.r) { ev.r = 1; noiseFx(6.2, 0.045, 'bandpass', 4200, 1400, 0, 0.5); }
     const n = Math.floor(40 * smooth(clamp((T - 0.8) / 4.8, 0, 1)));
     if (n >= (ev.n || 0) + 5) { ev.n = n - (n % 5); tone(520 + n * 6, 0.05, 'square', 0.02); }
     if (T > 5.8 && !ev.a) { ev.a = 1; setCap('Forty days and forty nights.', 2400); }
-    if (T > 7.4 && !ev.b) { ev.b = 1; setCap('The rain has stopped.', 1500); }
-  } else if (wk === 3) {
+    if (T > 7.4 && !ev.b) { ev.b = 1; setCap('The rain has stopped.', 1500); [0, 0.5, 1.2].forEach((d, i) => tone(1500 - i * 140, 0.14, 'sine', 0.03, d, 700)); }
+  } else if (wk === 3) {   // a wind passes over the earth
+    if (T > 1.0 && !ev.w) { ev.w = 1; noiseFx(4.6, 0.06, 'bandpass', 260, 1100, 0, 1.8); }
     if (T > 1.4 && !ev.a) { ev.a = 1; tone(150, 1.6, 'sine', 0.035, 0, 90); }
-    if (T > 3.4 && !ev.b) { ev.b = 1; setCap('And God remembered Noah.', 2800); }
-  } else if (wk === 4) {
+    if (T > 3.4 && !ev.b) { ev.b = 1; setCap('And God remembered Noah.', 2800); [392, 494, 587].forEach((q, i) => tone(q, 1.4, 'sine', 0.025, i * 0.12)); }
+  } else if (wk === 4) {   // the ark drifts with timber creaking, then settles on the rock
+    if (T > 1.2 && !ev.c) { ev.c = 1; tone(110, 0.7, 'sawtooth', 0.016, 0, 80); noiseFx(0.7, 0.01, 'bandpass', 300, 160, 0, 0.3); }
+    if (T > 2.5 && !ev.d) { ev.d = 1; tone(98, 0.8, 'sawtooth', 0.016, 0, 72); noiseFx(0.8, 0.01, 'bandpass', 260, 140, 0, 0.35); }
     if (T > 3.8 && !ev.a) {
-      ev.a = 1; tone(60, 0.4, 'sine', 0.14, 0, 34); if (!reduceMotion) shake = Math.max(shake, 7);
+      ev.a = 1; tone(60, 0.5, 'sine', 0.15, 0, 32); tone(120, 0.15, 'triangle', 0.07); noiseFx(0.9, 0.05, 'lowpass', 300, 90, 0, 0.02); if (!reduceMotion) shake = Math.max(shake, 7);
       const ax = f.gx + 150; splash(ax - 50, WATER, 10); splash(ax + 50, WATER, 10); ripple(ax - 30, true); ripple(ax + 30, true);
       setCap('And the ark rested.', 2800);
     }
-  } else if (wk === 5) {
-    if (T > 2.4 && !ev.a) { ev.a = 1; setCap('The tops of the mountains were seen.', 2200); tone(660, 0.3, 'sine', 0.04); }
-    if (T > 4.6 && !ev.b) { ev.b = 1; setCap('A raven went out, to and fro.', 2400); tone(300, 0.14, 'sawtooth', 0.03, 0, 160); }
+  } else if (wk === 5) {   // sunrise on the peaks, then a raven's two calls
+    if (T > 2.4 && !ev.a) { ev.a = 1; setCap('The tops of the mountains were seen.', 2200); [523, 659, 784].forEach((q, i) => tone(q, 1.6, 'sine', 0.03, i * 0.15)); }
+    if (T > 4.6 && !ev.b) {
+      ev.b = 1; setCap('A raven went out, to and fro.', 2400);
+      [0, 0.34].forEach(d => { tone(520, 0.2, 'sawtooth', 0.03, d, 300); tone(780, 0.2, 'square', 0.012, d, 450); noiseFx(0.18, 0.012, 'bandpass', 1400, 900, d, 0.02); });
+    }
   }
 }
 function continueTap() {
@@ -2776,9 +3148,8 @@ function updateDepart(dt) {
   if (u >= 1) {
     fin = null; dep = null; bird.sprig = false; bird.x = BIRD_X; bird.y = H * 0.42;
     state = 'ready'; hint.hidden = false;
-    $('#hintB').textContent = 'Week ' + week + ' of ' + NWEEKS;
+    setHintWeek(false);
     $('#hintS').textContent = mp ? 'Get ready' : 'Tap to take off';
-    $('#hintT').hidden = !!mp;
     if (mp) mp.cd = null;
   }
 }
@@ -2964,7 +3335,7 @@ function mpOnGo(wk, sd) {
   } else {
     resetWeek();
     state = 'ready';
-    $('#hintB').textContent = 'Week ' + week + ' of ' + NWEEKS;
+    setHintWeek(false);
     $('#hintS').textContent = 'Get ready';
     $('#hintT').hidden = true;
     setPanels(''); hud.hidden = false; hint.hidden = false;
@@ -3027,6 +3398,7 @@ function showTeam() {
 function shiftWorld(d) {
   for (const h of hazards) { h.x -= d; if (h.x0 !== undefined) h.x0 -= d; if (h.launchX !== undefined) h.launchX -= d; }
   for (const o of orbs) o.x -= d;
+  for (const l of leaves) l.x -= d;
   spawnDist -= d; wDist += d;
 }
 function mpTick(dt) {
@@ -3216,6 +3588,7 @@ function worldStep(dt, pick) {
   updateHazards(dt, sp);
   fairT -= dt; if (fairT <= 0) { fairT = 0.25; if (strikes.length) fairFixStrikes(); }   // a fish launching can crowd a bolt that is still only a warning
   updateOrbs(dt, sp, hitR(), pick);
+  updateLeaves(dt, sp, hitR(), pick);
   updateStrikes(wdt);
   syncHud(false);
   return true;
@@ -3314,18 +3687,19 @@ function update(dt) {
   if (cpArm > 0) { cpArm -= dt; if (cpArm <= 0) { cpArm = 0; updateCpHud(); } }
   if (cpb.hidden === cpShow()) updateCpHud();
   if (mp) mpTick(dt);
-  if ((state === 'finale') !== hudCalm) { hudCalm = state === 'finale'; hud.classList.toggle('calm', hudCalm); }
-  const tgt = state === 'finale' ? 1 : prog();
+  const calmSky = state === 'finale' || state === 'dry';
+  if (calmSky !== hudCalm) { hudCalm = calmSky; hud.classList.toggle('calm', hudCalm); }
+  const tgt = calmSky ? 1 : prog();
   pS += (tgt - pS) * Math.min(1, dt * 1.6);
-  const nTgt = state === 'finale' ? (fin && fin.kind === 'rest' && ENDS[fin.wk] && ENDS[fin.wk].night ? smooth(clamp((fin.t - 1.2) / 5.5, 0, 1)) : 0) : nightOf(uNow());
+  const nTgt = state === 'dry' ? 0 : state === 'finale' ? (fin && fin.kind === 'rest' && ENDS[fin.wk] && ENDS[fin.wk].night ? smooth(clamp((fin.t - 1.2) / 5.5, 0, 1)) : 0) : nightOf(uNow());
   nS += (nTgt - nS) * Math.min(1, dt * 3);
-  fS += ((state === 'finale' ? 1 : 0) - fS) * Math.min(1, dt * 1.2);
+  fS += ((calmSky ? 1 : 0) - fS) * Math.min(1, dt * 1.2);
   const slow = (state === 'play' || state === 'spectate') ? 1.5 : 1;
   const wind = state === 'finale' && fin && fin.kind === 'rest' && fin.wk === 3 ? 1 + 5 * clamp((fin.t - 1) / 4, 0, 1) : 1;
   for (const c of clouds) { c.x -= c.sp * dt * slow * wind; if (c.x < -150) c.x = W + 150; }
   const slant = scn().slant;
   for (const d of rain) { d.y += d.v * dt; d.x -= d.v * slant * dt; if (d.y > WATER || d.x < -20) { d.y = rand(-60, -5); d.x = rand(0, W + 80); } }
-  if (!reduceMotion && (pS < 0.4 || week === 5) && week < 6 && state !== 'finale') {
+  if (!reduceMotion && (pS < 0.4 || week === 5) && week < 6 && state !== 'finale' && state !== 'dry') {
     nextBolt -= dt;
     if (nextBolt <= 0) { flash = Math.max(flash, 0.28); nextBolt = week === 5 ? rand(2.5, 5.5) : rand(4, 9); tone(64, 0.9, 'sawtooth', 0.025, 0.15, 38); }
   }
@@ -3360,6 +3734,8 @@ function update(dt) {
   } else if (state === 'spectate') {
     tickTeamPw(dt);
     worldStep(dt, false);
+  } else if (state === 'dry') {
+    updateDry(dt);
   } else if (state === 'finale') {
     curSp = 150;
     updateFinale(dt);
@@ -3468,7 +3844,7 @@ function tornado(x, top, base, wTop, sway, a, k) {
 }
 const wrapX = (x, span) => ((x % span) + span) % span - 120;
 function drawScene() {
-  if (week < 2 || state === 'finale') return;
+  if (week < 2 || state === 'finale' || state === 'dry') return;
   const st = stt(), p = prog(), dark = 1 - pS * 0.55;
   if (week === 2) {
     // a faraway ark on the horizon, and two tornadoes walking across the sea
@@ -3996,6 +4372,17 @@ function drawTelegraph(h) {
     ctx.globalAlpha = 1;
   }
 }
+function drawLeaf(l) {
+  const y = l.y + Math.sin(l.bob * 2.4) * 4, a = -0.5 + Math.sin(l.bob * 1.7) * 0.18;
+  const g = ctx.createRadialGradient(l.x, y, 3, l.x, y, 26);
+  g.addColorStop(0, 'rgba(220,240,150,.7)'); g.addColorStop(1, 'rgba(220,240,150,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(l.x, y, 26, 0, TAU); ctx.fill();
+  ctx.save(); ctx.translate(l.x, y); ctx.rotate(a);
+  ctx.fillStyle = '#8fbf5a'; ctx.strokeStyle = '#e4efb4'; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(-13, 5); ctx.quadraticCurveTo(-9, -12, 13, -6); ctx.quadraticCurveTo(10, 11, -13, 5); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = '#3f6b2a'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(-14, 6); ctx.quadraticCurveTo(0, 0, 11, -5); ctx.stroke();
+  ctx.restore();
+}
 function drawOrb(o) {
   const P = POWER[o.type], y = o.y + Math.sin(o.bob * 3) * 5;
   const g = ctx.createRadialGradient(o.x, y, 4, o.x, y, 30);
@@ -4057,7 +4444,7 @@ function drawPlayer() {
   if (state === 'menu' || state === 'spectate') return;
   const dead = state === 'dying' || state === 'dead';
   const fl = BIRDS[charKey].fall;
-  const perched = state === 'finale' && fin && fin.perched;
+  const perched = (state === 'finale' && fin && fin.perched) || (state === 'dry' && epi && epi.perched);
   let wing;
   if (perched) wing = -0.35 + Math.sin(t * 2) * 0.03;
   else if (!dead) wing = Math.sin(bird.phase) * 0.7 + 0.15;
@@ -4180,6 +4567,7 @@ function draw() {
   drawScene();
   drawRainbow();
   drawFinaleScenery();
+  if (state === 'dry') drawDry();
   for (const h of hazards) {
     if (h.type === 'rock') drawRock(h);
     else if (h.type === 'hang') drawHang(h);
@@ -4194,6 +4582,7 @@ function draw() {
   }
   drawFog();
   for (const o of orbs) drawOrb(o);
+  for (const l of leaves) drawLeaf(l);
   drawMates();
   drawPlayer();
   drawWater();
@@ -4201,7 +4590,7 @@ function draw() {
   if (nS > 0.01) { ctx.fillStyle = 'rgba(4,8,26,' + (0.2 * nS).toFixed(3) + ')'; ctx.fillRect(-20, -20, W + 40, H + 40); }
   drawParticles();
   const sc = scn();
-  let ri = Math.max(1 - pS, sc.rainFloor);
+  let ri = state === 'dry' ? 0 : Math.max(1 - pS, sc.rainFloor);
   if (fin && fin.kind === 'rest') ri = fin.wk === 2 ? Math.max(ri, 0.95) * (1 - smooth(clamp((fin.t - 5.6) / 2.4, 0, 1))) : ri * (1 - smooth(clamp((fin.t - 0.8) / 3.5, 0, 1)));   // the rain eases off at a rest stop (Week 2: it stops on the fortieth day)
   if (ri > 0.02) {
     ctx.strokeStyle = 'rgba(200,215,235,' + (0.42 * ri).toFixed(3) + ')';
@@ -4247,7 +4636,7 @@ const TIERS = [
   { k: 'obsidian', name: 'Obsidian', c: ['#5a4580', '#241a35', '#07050b'], f: ['#2d2142', '#0a0710'], rib: ['#3b1d6e', '#6b34c9'], tx: '#b58cff' },
   { k: 'diamond',  name: 'Diamond',  c: ['#ffffff', '#bfe6ff', '#8fa8ff'], f: ['#f4fcff', '#9cc6ff'], rib: ['#e0488b', '#8a5cff'], tx: '#ffffff' }
 ];
-const MS0 = { fly: 0, day1: 0, wc: {}, ark: 0, flaw: 0, pw: 0, pills: 0, stack: 0, kinds: 0, chain3: 0, megas: 0, megaTail: 0, megaHalo: 0, close: 0, quick: 0, hurry: 0, last: 0, spark: 0, jonah: 0, tflights: 0, full: 0, rescued: 0, revives: 0, ttail: 0, tmega: 0, tark: 0, ranked: 0, hpw: 0, hpw5: 0, pwRun: 0, pwBest: 0, bolts: 0, creat: 0, days: [] };
+const MS0 = { fly: 0, day1: 0, wc: {}, ark: 0, flaw: 0, pw: 0, pills: 0, stack: 0, kinds: 0, chain3: 0, megas: 0, megaTail: 0, megaHalo: 0, close: 0, quick: 0, hurry: 0, last: 0, spark: 0, jonah: 0, tflights: 0, full: 0, rescued: 0, revives: 0, ttail: 0, tmega: 0, tark: 0, ranked: 0, hpw3: 0, hpw: 0, hpw5: 0, pwRun: 0, pwBest: 0, bolts: 0, creat: 0, leaves: 0, leafWk: 0, leafDeep: 0, dry: 0, dryAll: 0, dn: 0, dstreak: 0, days: [] };
 let ms = Object.assign({}, MS0, store.get('ms', {}));
 if (!ms.wc || typeof ms.wc !== 'object') ms.wc = {};
 if (!Array.isArray(ms.days)) ms.days = [];
@@ -4285,6 +4674,18 @@ const MEDAL_GROUPS = [
     ['hat3', 'Hat Trick', 3, '🎩', 'Clear 3 perfect weeks in a row.', 3, () => ms.pwBest],
     ['deep5', 'Eye of the Flood', 4, '🌪️', 'Clear Week 5 or Week 6 without losing a heart.', 1, () => ms.hpw5],
     ['hat5', 'Fivefold Flight', 4, '🖐️', 'Clear 5 perfect weeks in a row.', 5, () => ms.pwBest]]],
+  ['Olive leaves', [
+    ['leaf10', 'Olive Gatherer', 1, '🌿', 'Collect 10 olive leaves, all flights together.', 10, () => ms.leaves],
+    ['leaf5wk', 'Olive Branch', 2, '🫒', 'Collect all 5 olive leaves in a single week.', 1, () => ms.leafWk],
+    ['leaf50', 'Olive Grove', 3, '🌳', 'Collect 50 olive leaves, all flights together.', 50, () => ms.leaves],
+    ['leafdeep', 'Peace in the Storm', 4, '☮️', 'Collect all 5 olive leaves in a single week, Week 4 or later.', 1, () => ms.leafDeep]]],
+  ['Daily flight', [
+    ['daily1', 'Daily Bread', 0, '🍞', 'Finish a daily flight.', 1, () => ms.dn],
+    ['daily7', 'Every Morning', 3, '☀️', 'Finish the daily flight 7 days in a row.', 7, () => ms.dstreak],
+    ['daily30', 'Faithful', 4, '📜', 'Finish 30 daily flights.', 30, () => ms.dn]]],
+  ['Dry land', [
+    ['dry1', 'Dry Land', 2, '🏔️', 'Fly the epilogue to dry land and see the rainbow.', 1, () => ms.dry],
+    ['dryall', 'Olive Harvest', 3, '🌾', 'Gather all 16 olive leaves on the way to dry land.', 1, () => ms.dryAll]]],
   ['Power-ups', [
     ['pill1', 'First Pill', 0, '💊', 'Grab your first power-up.', 1, () => ms.pills],
     ['pill50', 'Collector', 1, '🎒', 'Grab 50 power-ups.', 50, () => ms.pills],
@@ -4356,6 +4757,9 @@ function mev(k, a) {
     case 'day1': ms.day1 = 1; break;
     case 'pill': { ms.pills++; ms.stack = Math.max(ms.stack, pws.length); wkKinds[a] = 1; ms.kinds = Math.max(ms.kinds, Object.keys(wkKinds).length); break; }
     case 'chain': if (a >= 3) ms.chain3 = 1; break;
+    case 'dry': ms.dry = 1; if (a.got >= DRY_N) ms.dryAll = 1; break;
+    case 'daily': if (a.first) ms.dn++; ms.dstreak = Math.max(ms.dstreak, dailyStreak()); break;
+    case 'leaf': if (!practice && !mp) { ms.leaves++; if (a >= LEAF_AT.length) { ms.leafWk = 1; if (week >= 4) ms.leafDeep = 1; } } break;
     case 'mega': ms.megas++; if (a === 'tail') ms.megaTail = 1; if (a === 'halo') ms.megaHalo = 1; break;
     case 'close': ms.close++; break;
     case 'bolt': wkBolts++; if (!practice) ms.bolts++; ms.spark = Math.max(ms.spark, wkBolts); break;
@@ -4368,7 +4772,7 @@ function mev(k, a) {
     case 'ranked': ms.ranked = 1; break;
     case 'clear': {
       ms.wc[week] = 1;
-      if (!wkLost) { ms.pw++; ms.pwRun++; ms.pwBest = Math.max(ms.pwBest, ms.pwRun); if (week >= 4) ms.hpw = 1; if (week >= 5) ms.hpw5 = 1; }
+      if (!wkLost) { ms.pw++; ms.pwRun++; ms.pwBest = Math.max(ms.pwBest, ms.pwRun); if (week >= 3) ms.hpw3 = 1; if (week >= 4) ms.hpw = 1; if (week >= 5) ms.hpw5 = 1; }
       else ms.pwRun = 0;
       if (lives === 1 && wkLost && !wkRev) ms.last = 1;
       if (a.frac >= 0.12) ms.quick = 1;
@@ -4562,6 +4966,7 @@ function updateHomeTiles() {
   const a = $('#tStats'), b = $('#tWeekly');
   if (a) a.textContent = best > 0 ? 'Furthest: ' + fmtDay(best) : 'Your flights so far';
   if (b) b.textContent = wd.filter(v => v >= 8).length + ' of ' + NWEEKS + ' weeks cleared';
+  updateDailyTile();
   const j = $('#tJournal'); if (j) j.textContent = wd.filter(v => v >= 8).length + ' of ' + NWEEKS + ' verses found';
   updateMedalBtn();
 }
@@ -4586,6 +4991,7 @@ function openStats() {
     ['Total flights', String(ms.fly)],
     ['Team flights', String(ms.tflights)],
     ['Power-ups grabbed', String(ms.pills)],
+    ['Olive leaves', String(ms.leaves)],
     ['MEGA boosts', String(ms.megas)],
     ['Birds unlocked', ORDER.filter(k => !isLocked(k)).length + ' of ' + ORDER.length],
     ['Medals', sm.m + ' of ' + MEDALS.length + (sm.m ? ' · best: ' + TIERS[sm.top].name : ''), true],
@@ -4621,6 +5027,10 @@ function openJournal() {
     ol.append(li);
   }
   body.append(p, ol);
+  if (wd[NWEEKS - 1] >= 8) {
+    const b = document.createElement('button'); b.className = 'btn'; b.type = 'button'; b.textContent = 'Fly to dry land'; b.style.marginTop = '.8em';
+    b.addEventListener('click', startEpilogue); body.append(b);
+  }
 }
 function openWeekly() {
   const body = infoOpen('Weekly best', 'Week by week');
@@ -4920,16 +5330,21 @@ function init() {
   $('#bClose').addEventListener('click', closeSide);
   updateMedalBtn();
   $('#startMp').addEventListener('click', () => { ensureAudio(); if (mp && mp.isHost) mpHostGo(1); });
-  $('#again').addEventListener('click', () => { if (mp) { if (mp.isHost) mpHostGo(week); } else if (practice) { if (cpBust || (week === 1 && !cp)) startPractice(practice); else beginReady(true); } else beginReady(!cpBust && (week > 1 || !!cp)); });
+  $('#again').addEventListener('click', () => { if (mp) { if (mp.isHost) mpHostGo(week); } else if (practice) { if (cpBust || (week === 1 && !cp)) { if (daily) startDaily(); else startPractice(practice); } else beginReady(true); } else beginReady(!cpBust && (week > 1 || !!cp)); });
   cpb.addEventListener('mousedown', e => e.preventDefault());
   cpb.addEventListener('click', e => { e.stopPropagation(); plantCheckpoint(); try { cpb.blur(); } catch (er) { /* ignore */ } });
   $('#restart').addEventListener('click', () => beginReady(false));
   $('#swap').addEventListener('click', () => { if (mp) mpLeave(); else showMenu(true); });
-  $('#again2').addEventListener('click', () => { if (mp) mpToLobby(); else if (practice) startPractice(practice); else beginReady(false); });
+  $('#again2').addEventListener('click', () => { if (mp) mpToLobby(); else if (daily) startDaily(); else if (practice) startPractice(practice); else beginReady(false); });
   $('#swap2').addEventListener('click', () => { if (mp) mpLeave(); else showMenu(true); });
-  $('#endRun').addEventListener('click', () => { if (practice) startPractice(practice); else goHome(); });
+  $('#endRun').addEventListener('click', () => { if (daily) startDaily(); else if (practice) startPractice(practice); else goHome(); });
+  $('#openDaily').addEventListener('click', startDaily);
   $('#overHome').addEventListener('click', goHome);
   $('#winHome').addEventListener('click', goHome);
+  $('#shareWin').addEventListener('click', shareJourney);
+  $('#dryWin').addEventListener('click', startEpilogue);
+  $('#dryAgain').addEventListener('click', startEpilogue);
+  $('#dryHome').addEventListener('click', goHome);
   $('#goResume').addEventListener('click', () => { ensureAudio(); resumeFlight(); });
   pauseBtn.addEventListener('click', e => { e.stopPropagation(); setPaused(true); });
   pauseBtn.addEventListener('mousedown', e => e.preventDefault());
