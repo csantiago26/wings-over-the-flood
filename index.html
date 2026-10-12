@@ -442,7 +442,6 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
 .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: .4em; }
 .tile { appearance: none; text-align: left; display: flex; flex-direction: column; gap: .25em; padding: .6em .75em; border-radius: .8em; border: 1px solid rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .06); color: var(--text); font: 700 .86em/1.1 var(--body); cursor: pointer; }
 .tile small { font: 600 .74em/1.2 var(--body); color: var(--muted); }
-.tile:last-child { grid-column: 1 / -1; }
 .tile:hover { border-color: rgba(246, 201, 120, .6); }
 .tile:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .sgrid { display: grid; grid-template-columns: 1fr 1fr; gap: .4em; }
@@ -454,6 +453,15 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
 .pubrow input { min-width: 0; padding: .6em .7em; border-radius: .7em; border: 1px solid rgba(255, 255, 255, .25); background: rgba(255, 255, 255, .08); color: var(--text); font: 600 .85em/1 var(--body); }
 .pubrow .btn { padding: .6em .8em; font-size: .78em; }
 .blist.wkl { width: 100%; }
+.blist.wkl li { grid-template-columns: 1.9em 1fr auto auto; }
+.pracbtn { padding: .4em .6em; font-size: .7em; margin-left: .4em; flex: none; }
+.jlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .5em; }
+.jlist li { padding: .6em .75em; border-radius: .8em; background: rgba(255, 255, 255, .07); border-left: 3px solid var(--gold); }
+.jlist li.lock { border-left-color: rgba(255, 255, 255, .2); color: var(--muted); }
+.jlist small { display: block; font: 700 .62em/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: .35em; }
+.jlist em { display: block; font: 800 1em/1.2 var(--display); font-style: normal; margin-bottom: .3em; }
+.jlist q { display: block; font: 500 .82em/1.4 var(--body); quotes: none; font-style: italic; }
+.jlist cite { display: block; margin-top: .3em; font: 700 .72em/1 var(--body); font-style: normal; color: var(--gold); }
 .blist .tcol { font: 800 .72em/1 var(--body); letter-spacing: .06em; text-transform: uppercase; }
 #iBody { display: flex; flex-direction: column; gap: .5em; min-height: 0; overflow-y: auto; }
 .linkrow .btn { padding: .55em .5em; font-size: .85em; }
@@ -500,8 +508,9 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
       <div class="tiles">
         <button class="tile" id="openStats" type="button"><span>Personal stats</span><small id="tStats">Your flights</small></button>
         <button class="tile" id="openWeekly" type="button"><span>Weekly best</span><small id="tWeekly">Week by week</small></button>
-        <button class="tile" id="openMedals" type="button"><span>Medals</span><small id="tMedals">0 of 50</small></button>
+        <button class="tile" id="openMedals" type="button"><span>Medals</span><small id="tMedals">0 of 64</small></button>
         <button class="tile" id="openPlayers" type="button"><span>Players</span><small>Who holds which medal</small></button>
+        <button class="tile" id="openJournal" type="button"><span>Verse journal</span><small id="tJournal">Verses you have earned</small></button>
         <button class="tile" id="openBoard" type="button"><span>Team ranking</span><small>Best team flights on the server</small></button>
       </div>
       <p class="stats" id="homeMsg" role="status"></p>
@@ -611,7 +620,7 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
     </section>
 
     <section class="panel" id="medalsP" hidden>
-      <div class="sidehead"><div><p class="eyebrow">Medals</p><h2 id="mCount">0 of 50</h2></div><button class="btn quiet" id="mClose" type="button">Close</button></div>
+      <div class="sidehead"><div><p class="eyebrow">Medals</p><h2 id="mCount">0 of 64</h2></div><button class="btn quiet" id="mClose" type="button">Close</button></div>
       <div class="mtiers" id="mTiers"></div>
       <div id="mbody"></div>
     </section>
@@ -1251,7 +1260,7 @@ let ach = store.get('ach', {}), unl = store.get('unl', {}), unlockQ = [];
 if (!ach || typeof ach !== 'object') ach = {};
 if (!unl || typeof unl !== 'object') unl = {};
 if (!BIRDS[charKey] || isLocked(charKey)) charKey = 'dove';
-let wDist = 0, spawnDist = 0, lastEnc = '', encPassed = 0, orbDue = false, strikeT = 8, hid = 0, prevC = null, bag = [], lastPw = '', curSp = 125;
+let fogCool = 0, fairT = 0, wDist = 0, spawnDist = 0, lastEnc = '', encPassed = 0, orbDue = false, strikeT = 8, hid = 0, prevC = null, bag = [], lastPw = '', curSp = 125;
 let hudDay = -1, hudPhase = '', capTimer = 0, hudCalm = false;
 let weekSaved = 0, hudSaved = -1, cloudTip = false;
 let wbest = store.get('wbest', []), jbest = store.get('jbest', 0), wd = store.get('wd', null);
@@ -1262,6 +1271,7 @@ if (!Array.isArray(wd) || wd.length !== 6) {
   for (let w = 1; w <= 6; w++) wd.push((+wbest[w - 1] > 0 || best > 7 * w) ? 8 : Math.max(0, Math.min(7, best - 7 * (w - 1))));
   store.set('wd', wd);
 }
+let practice = 0;   // a replay of a week you already cleared: no medals, records or saved progress change
 function markWeek(w, d) { if (w >= 1 && w <= 6 && d > (wd[w - 1] || 0)) { wd[w - 1] = d; store.set('wd', wd); } }
 let lives = LIVES, iT = 0, hurtT = 0, hurtKind = '', oopsTimer = 0, lastOops = '', cq = [], lastSpace = 0, panelAt = 0;
 let dpr = 1, lastTs = 0, inited = false;
@@ -1754,7 +1764,7 @@ function newWeekClock() {
   total = dayPre[NDAYS]; buildDtab();
   dayIdx = 0; dayT = 0; elapsed = 0; weekT0 = runTime; weekSaved = 0; hudSaved = -1;
   hazards = []; strikes = []; orbs = []; pws = []; chain = { type: '', n: 0 }; weekPicks = 0;
-  wDist = 0; encCum = 0; spawnDist = 0; lastSpace = 0; lastEnc = ''; encPassed = 0; orbDue = false; strikeT = 8; prevC = null; hid = 0; bag = []; lastPw = ''; rbSaid = false;
+  wDist = 0; encCum = 0; fogCool = 0; spawnDist = 0; lastSpace = 0; lastEnc = ''; encPassed = 0; orbDue = false; strikeT = 8; prevC = null; hid = 0; bag = []; lastPw = ''; rbSaid = false;
   wkLost = false; wkRev = false; wkBolts = 0; wkKinds = {};
   lives = LIVES; iT = 0; hurtT = 0; panelAt = 0; hideOops();
   cq = week === 1 ? planClouds() : [];
@@ -1786,7 +1796,7 @@ function spawnCloud(Dc) {
   const cx = W + 60 - (mp ? Math.max(0, wDist - Dc) : 0);
   const amp = c.mv ? c.amp : 0, y0 = clamp(c.y, 70 + amp, WATER - 110 - amp);
   const nh = { type: 'cloud', x: cx, w: 92, h: 48, y: y0, y0: y0, x0: cx, amp: amp, wl: c.wl, ph: c.ph, id: hid++, lead: true, sched: true, charged: c.charged, delay: c.delay, age: 0, zapped: false, day: c.day };
-  hazards.push(nh); tipCloud(nh);
+  hazards.push(nh); tipCloud(nh); fairFixStrikes();
   if (mp) { const Sn = Math.max(wDist + spawnDist, Dc + 190); spawnDist = Sn - wDist; lastSpace = Sn - Dc; }
   else { spawnDist = Math.max(spawnDist, 190); lastSpace = spawnDist; }
 }
@@ -1806,7 +1816,8 @@ function spawnDue() {
   }
 }
 function zapCloud(h) {
-  strikes.push({ x: BIRD_X + srand(-48, 60), y: srand(125, 395), t: 0, warn: lerp(1.6, 1.3, Math.min(1, dif())), state: 'warn', pts: null, blink: -1 });
+  const q = newStrike(lerp(1.6, 1.3, Math.min(1, dif())), strikes.filter(v => v.state === 'warn').map(v => v.y));
+  if (q) strikes.push(q);
 }
 // ---- checkpoint: once a week you may plant a flag; after that, four falls before the next rest stop send you back to Week 1
 function cpLeft() { return Math.max(0, CP_RETRIES - cpFalls); }
@@ -1852,7 +1863,7 @@ function resetWeek() {
 // leaving a run keeps the week you were in: next time you can retry it from Day 1 or start again from Week 1
 function getResume() { const r = store.get('resume', null); return r && r.w >= 2 && r.w <= NWEEKS && isFinite(r.t0) ? r : null; }
 function saveProgress() {
-  if (mp) return;
+  if (mp || practice) return;
   let r = null;
   if (state === 'finale' && fin) { if (fin.kind === 'rest' && week < NWEEKS) r = { w: week + 1, t0: runTime }; }
   else if (!cpBust && week > 1) r = { w: week, t0: weekT0 };
@@ -1873,7 +1884,16 @@ function updateResumeUi() {
 function resumeFlight() {
   const r = getResume();
   if (!r) { beginReady(false); return; }
+  practice = 0;
   week = r.w; weekT0 = r.t0; runLost = !!r.l; runCreat = r.c | 0;
+  cp = null; cpUsed = false; cpFalls = 0; cpBust = false;
+  beginReady(true);
+}
+// fly a week you have already cleared again, for fun or for a better time. Nothing but that week's best time can change.
+function startPractice(w) {
+  if (mp || !(wd[w - 1] >= 8)) return;
+  ensureAudio();
+  practice = w; week = w; weekT0 = 0; runLost = false; runCreat = 0;
   cp = null; cpUsed = false; cpFalls = 0; cpBust = false;
   beginReady(true);
 }
@@ -1892,8 +1912,8 @@ function setPaused(v) {
   paused = v;
   $('#pauseP').hidden = !v;
   if (v) {
-    $('#pauseNote').textContent = week > 1 ? 'Going Home saves Week ' + week + '. Next time you can retry it from Day 1 or start again from Week 1.' : 'Going Home ends this run. Week 1 has nothing to save yet.';
-    $('#pHome').textContent = week > 1 ? 'Save and go Home' : 'Go Home';
+    $('#pauseNote').textContent = practice ? 'This is a practice flight. Going Home leaves your saved progress as it is.' : week > 1 ? 'Going Home saves Week ' + week + '. Next time you can retry it from Day 1 or start again from Week 1.' : 'Going Home ends this run. Week 1 has nothing to save yet.';
+    $('#pHome').textContent = week > 1 && !practice ? 'Save and go Home' : 'Go Home';
     try { if (actx && actx.suspend) actx.suspend(); } catch (e) { /* ignore */ }
     try { $('#pResume').focus({ preventScroll: true }); } catch (e) { /* ignore */ }
   } else {
@@ -1901,6 +1921,7 @@ function setPaused(v) {
   }
 }
 function showMenu(pick) {
+  practice = 0;
   week = 1; runTime = 0; seed = newSeed();
   cp = null; cpUsed = false; cpFalls = 0; cpBust = false; cpArm = 0;
   resetWeek();
@@ -1910,14 +1931,14 @@ function showMenu(pick) {
 }
 function beginReady(keepWeek) {
   ensureAudio(); cloudTip = false;
-  if (keepWeek === true) runTime = weekT0; else { week = 1; runTime = 0; cp = null; cpUsed = false; cpFalls = 0; cpBust = false; runLost = false; runCreat = 0; store.set('resume', null); }
+  if (keepWeek === true) runTime = weekT0; else { practice = 0; week = 1; runTime = 0; cp = null; cpUsed = false; cpFalls = 0; cpBust = false; runLost = false; runCreat = 0; ms.pwRun = 0; store.set('resume', null); }
   seed = newSeed();
   resetWeek();
   const resume = keepWeek === true && !mp && cp && !cpBust;
   if (resume) applyCheckpoint();
   state = 'ready';
   $('#hintB').textContent = resume ? 'Week ' + week + ', Day ' + (dayIdx + 1) : week > 1 ? 'Week ' + week + ' of ' + NWEEKS : 'Tap to flap';
-  $('#hintS').textContent = resume ? 'Resuming from your checkpoint. Tap to take off' : week > 1 ? 'Tap to take off' : 'Space or Up Arrow works too';
+  $('#hintS').textContent = resume ? 'Resuming from your checkpoint. Tap to take off' : practice ? 'Practice flight. Tap to take off' : week > 1 ? 'Tap to take off' : 'Space or Up Arrow works too';
   $('#hintT').hidden = false;
   setPanels(''); hud.hidden = false; hint.hidden = false; matesEl.hidden = true;
   cpArm = 0; updateCpHud();
@@ -1976,15 +1997,22 @@ const FISH_SKINS = ['#e8a643', '#7cc3d9', '#d96b6b'];
 
 function pushRock(x, lead) { hazards.push({ type: 'rock', x: x, w: wrand(48, 64), y: WATER - wrand(80, 250), id: hid++, lead: lead }); }
 function pushHang(x, lead) { hazards.push({ type: 'hang', x: x, w: 58, bottom: wrand(90, 270), id: hid++, lead: lead }); }
+// Week 6 only: now and then the gap in a gate drifts slowly up and down (distance-based, so every phone agrees). The gap is a little wider to pay for it.
 function pushGate(x, ep) {
-  const gap = lerp(205, 172, ep) - 13 * (wkM() - 1);
-  const minC = gap / 2 + 60, maxC = WATER - gap / 2 - 50;
+  const mv = week >= 6 && wrand(0, 1) < 0.25 + 0.4 * ep;
+  const gap = lerp(205, 172, ep) - 13 * (wkM() - 1) + (mv ? 14 : 0);
+  const amp = mv ? wrand(16, 32) : 0;
+  const minC = gap / 2 + 60 + amp, maxC = WATER - gap / 2 - 50 - amp;
   let c = wrand(minC, maxC);
   if (prevC != null) c = clamp(c, prevC - 170, prevC + 170);
   c = clamp(c, minC, maxC); prevC = c;
-  hazards.push({ type: 'hang', x: x, w: 58, bottom: c - gap / 2, id: hid++, lead: true });
-  hazards.push({ type: 'rock', x: x, w: 58, y: c + gap / 2, id: hid++, lead: false });
+  const m = mv ? { mvA: amp, mvWl: wrand(380, 520), mvPh: wrand(0, TAU), x0: x } : {};
+  hazards.push(Object.assign({ type: 'hang', x: x, w: 58, bottom: c - gap / 2, b0: c - gap / 2, id: hid++, lead: true }, m));
+  hazards.push(Object.assign({ type: 'rock', x: x, w: 58, y: c + gap / 2, r0: c + gap / 2, id: hid++, lead: false }, m));
+  if (mv) tipOnce('mgate', 'Gates with gold tips drift up and down. Time your pass.');
 }
+const debrisBob = (h, x) => 4 * Math.sin(x * 0.045 + h.ph);
+const gShift = (h, x) => h.mvA ? h.mvA * Math.sin((h.x0 - x) / h.mvWl * TAU + h.mvPh) : 0;
 // A cloud is only dangerous while it has lightning inside. Pale clouds are safe to fly through; some drift up and down, some stay put.
 function pushCloud(x) {
   const moves = wrand(0, 1) < 0.5;
@@ -1998,6 +2026,48 @@ function tipCloud(h) {
   if (cloudTip || !h.charged) return;
   cloudTip = true;
   setCap('Clouds with lightning inside are dangerous. Pale clouds are safe.', 3400);
+}
+/* ---------- new hazards, phased in week by week ----------
+   Week 3 fountains (little by little), Week 4 + wind gusts, Week 5 + floating debris, Week 6 + drowned treetops, drifting gates and fog.
+   They take the place of an ordinary obstacle in the line-up: the number of obstacles a week throws at you does not go up. */
+let tips = {};
+function tipOnce(k, msg) { if (tips[k]) return; tips[k] = 1; setCap(msg, 3400); }
+const GUST_DN = 0.4, GUST_UP = 0.5;   // wind pull as a share of the bird's own gravity: a flap always beats it
+// the bubbling water, then a spout (about a second): fly over it
+function pushFount(x) {
+  hazards.push({ type: 'fount', x: x, w: 36, H: wrand(130, 250), ht: -1, cur: 0, arr: 9, id: hid++, lead: true });
+  tipOnce('fount', 'Bubbling water: a fountain of the deep is about to burst. Fly over it.');
+}
+const fountEnv = ht => ht < 0 ? 0 : ht < 0.22 ? easeOut(ht / 0.22) : ht < 1.15 ? 1 : ht < 1.4 ? 1 - smooth((ht - 1.15) / 0.25) : 0;
+// a zone that leans on you while you cross it; the white streaks show which way
+function pushGust(x, spacing) {
+  const w = Math.min(wrand(170, 230), spacing * 0.72), dir = wrand(0, 1) < 0.5 ? -1 : 1;
+  hazards.push({ type: 'gust', x: x, w: w, dir: dir, id: hid++, lead: true });
+  tipOnce('gust', 'Wind gust ahead. The white streaks show which way it pushes.');
+}
+function pushDebris(x) {
+  const comp = Math.floor(wrand(0, 3)), dims = [[112, 20], [124, 36], [96, 46]][comp];
+  hazards.push({ type: 'debris', comp: comp, x: x, w: dims[0], hgt: dims[1], ph: wrand(0, TAU), id: hid++, lead: true });
+  tipOnce('debris', 'Logs and barrels float on the flood. Fly over them.');
+}
+function pushTree(x) {
+  const hgt = wrand(110, 230);
+  hazards.push({ type: 'tree', x: x, w: 44, y: WATER - hgt, hgt: hgt, ph: wrand(0, TAU), id: hid++, lead: true });
+  tipOnce('tree', 'Treetops are poking out of the water. Land is near.');
+}
+function pushFog(x) {
+  hazards.push({ type: 'fog', x: x, w: wrand(300, 420), id: hid++, lead: false });
+  tipOnce('fog', 'Fog hides what is ahead until it is close.');
+}
+// how much a gust is pulling on the bird right now: -1 up .. +1 down, softening at the edges of the zone
+function windPush() {
+  let a = 0;
+  for (const h of hazards) {
+    if (h.type !== 'gust') continue;
+    const k = smooth(clamp(Math.min(bird.x - h.x, h.x + h.w - bird.x) / 36, 0, 1));
+    if (k > 0) a += h.dir * k;
+  }
+  return clamp(a, -1, 1);
 }
 // a swell that climbs out of the sea as it nears you: fly over the top
 function pushWave(x) { hazards.push({ type: 'wave', x: x, w: wrand(66, 88), hp: wrand(120, 250), cur: 8, id: hid++, lead: true, said: false }); }
@@ -2013,6 +2083,13 @@ function chooseEnc(d) {
   if (d > 0.22) opts.push(['wave', 3]);
   if (d > 0.38) opts.push(['shark', 2.5]);
   if (d > 0.66) opts.push(['whale', 2.5]);
+  if (week >= 3) {
+    const ep = mp ? shProgAt(encCum) : prog(), ramp = (a, b) => clamp((ep - a) / (b - a), 0, 1);
+    opts.push(['fount', week === 3 ? 3 * ramp(0.1, 0.85) : 3]);
+    if (week >= 4) opts.push(['gust', week === 4 ? 3 * ramp(0.1, 0.8) : 3]);
+    if (week >= 5) opts.push(['debris', week === 5 ? 3 * ramp(0.1, 0.8) : 3]);
+    if (week >= 6) opts.push(['tree', 2.5 * ramp(0.05, 0.6)]);
+  }
   const list = opts.filter(o => o[0] !== lastEnc);
   let sum = 0; list.forEach(o => { sum += o[1]; });
   let r = wR() * sum;
@@ -2078,11 +2155,124 @@ function spawnEncounter() {
   else if (kind === 'gate') pushGate(x, ep);
   else if (kind === 'cloud') pushCloud(x);
   else if (kind === 'wave') pushWave(x);
+  else if (kind === 'fount') pushFount(x);
+  else if (kind === 'gust') { const extra = spacing * 0.25; encCum += extra; spawnDist += extra; lastSpace += extra; pushGust(x, spacing + extra); }   // a breather after the gust
+  else if (kind === 'debris') pushDebris(x);
+  else if (kind === 'tree') pushTree(x);
   else pushCreature(kind, x, sp);
+  if (week >= 6) { const fr = wR(); fogCool--; if (fr < 0.1 + 0.1 * ep && fogCool <= 0) { pushFog(x - 140); fogCool = 5; } }   // fog rolls over the next few obstacles
   if (orbDue) {
     orbDue = false;
     orbs.push({ x: x - spacing * 0.5, y: 150 + pR() * 260, type: nextPower(), bob: pR() * 6, got: false });
   }
+  fairFixStrikes();
+}
+/* ---------- fairness ----------
+   Lightning used to pick its spot at random, without looking at what a fish, a pillar or a wave was doing at that moment, so now and then
+   a bolt, a fish and a gate landed together and left no way through. Before a bolt is placed we now look about two seconds ahead and
+   check that a bird flapping at an ordinary pace can still weave through everything that will be near it. If it cannot, the bolt lands
+   somewhere else (or waits a moment). This only changes WHERE lightning falls; nothing is made weaker. */
+const FAIR_DT = 0.1, FAIR_UP = 230, FAIR_DOWN = 300, FAIR_GAP = 46, FAIR_KEEP = 36;   // px per second a bird can climb and drop; the narrowest slot we will CREATE (46) and the narrowest we tolerate once a bolt is already showing (36)
+function fairBlocks(tau, sp, hr, extra) {
+  const out = [], bx = BIRD_X, m = 3;
+  for (const h of hazards) {
+    if (h.dead) continue;
+    const x = h.x - sp * tau;
+    if (h.cr) {
+      let y, vy;
+      if (h.launched) { y = h.y + h.vy * tau + 0.5 * GR * tau * tau; vy = h.vy + GR * tau; }
+      else {
+        const tl = (h.x - h.launchX) / sp;
+        if (tau < tl) continue;
+        const ta = tau - tl; y = h.y - h.v0 * ta + 0.5 * GR * ta * ta; vy = -h.v0 + GR * ta;
+      }
+      if (y > WATER + 8) continue;
+      const spec = CREATURE[h.type], phi = Math.atan2(-vy, sp), ux = -Math.cos(phi), uy = -Math.sin(phi), R = spec.r + hr * 0.6 + m + 2;
+      for (const o of spec.offs) {
+        const cx = x + ux * o, cy = y + uy * o, dx = cx - bx;
+        if (Math.abs(dx) < R) { const hf = Math.sqrt(R * R - dx * dx); out.push([cy - hf, cy + hf]); }
+      }
+    } else if (h.type === 'rock') { if (bx > x - hr - m && bx < x + h.w + hr + m) out.push([(h.mvA ? h.r0 + gShift(h, x) : h.y) - hr - m, 1e9]); }
+    else if (h.type === 'hang') { if (bx > x - hr - m && bx < x + h.w + hr + m) out.push([-1e9, (h.mvA ? h.b0 + gShift(h, x) : h.bottom) + hr + m]); }
+    else if (h.type === 'tree') { if (bx > x - hr - m && bx < x + h.w + hr + m) out.push([h.y - hr - m, 1e9]); }
+    else if (h.type === 'fount') { if (bx > x - hr - m && bx < x + h.w + hr + m) out.push([WATER - h.H - hr - m, 1e9]); }   // by the time it reaches you it is up, so count it at full height
+    else if (h.type === 'debris') { if (bx > x - hr - m && bx < x + h.w + hr + m) out.push([WATER - h.hgt - 4 - hr - m, 1e9]); }
+    else if (h.type === 'wave') {
+      const f = smooth(clamp((W + 60 - x) / (W + 60 - (BIRD_X + 70)), 0, 1));
+      const cur = x + h.w < BIRD_X - 20 ? 6 : 8 + (h.hp - 8) * f;
+      if (bx > x + h.w * 0.1 - hr - m && bx < x + h.w * 0.82 + hr + m) out.push([WATER - cur + 5 - hr - m, 1e9]);
+    } else if (h.type === 'cloud') {
+      if (!(h.charged && !h.zapped)) continue;
+      const cy = h.amp ? h.y0 + h.amp * Math.sin((h.x0 - x) / h.wl * TAU + h.ph) : h.y;
+      if (bx > x + 5 - hr - m && bx < x + h.w - 5 + hr + m) out.push([cy - h.h / 2 + 5 - hr - m, cy + h.h / 2 - 5 + hr + m]);
+    }
+  }
+  const sl = strikes.concat(extra || []);
+  for (const s of sl) {
+    if (s.dead) continue;
+    const on = s.state === 'bolt' ? 0 : s.warn - s.t, off = s.state === 'bolt' ? 0.3 - s.t : s.warn - s.t + 0.3;
+    if (tau < on - 0.05 || tau > off + 0.05) continue;
+    const dx = s.x - bx, Rr = 40 + hr + 4;
+    if (Math.abs(dx) < Rr) { const hf = Math.sqrt(Rr * Rr - dx * dx); out.push([s.y - hf, s.y + hf]); }
+    if (Math.abs(dx) < 10 + hr + m) out.push([-1e9, s.y]);
+  }
+  return out;
+}
+function fairOk(extra, T, any, gap) {
+  const hr = hitR(), sp = curSp > 40 ? curSp : 140, lo = hr, hi = WATER - 2 - hr;
+  let last = 1.6;
+  for (const s of strikes.concat(extra || [])) if (!s.dead) last = Math.max(last, (s.state === 'bolt' ? 0.3 - s.t : s.warn - s.t + 0.3) + 0.4);
+  const steps = Math.round(Math.min(T || last, 2.8) / FAIR_DT);
+  let R = [[lo, hi]];
+  if (!any && !mp && state === 'play') R = [[clamp(bird.y - FAIR_UP * 0.25, lo, hi), clamp(bird.y + FAIR_DOWN * 0.25, lo, hi)]];   // where you are now, plus a moment to react
+  for (let k = 0; k <= steps; k++) {
+    if (k > 0) {
+      // a gust over the bird: leaning down makes climbing about a fifth slower, leaning up slows the drop
+      let gu = 1, gd = 1;
+      for (const h of hazards) if (h.type === 'gust') { const gx = h.x - sp * k * FAIR_DT; if (BIRD_X > gx && BIRD_X < gx + h.w) { if (h.dir > 0) { gu = 0.8; gd = 1.25; } else { gu = 1.1; gd = 0.7; } } }
+      R = R.map(r => [r[0] - FAIR_UP * gu * FAIR_DT, r[1] + FAIR_DOWN * gd * FAIR_DT]);
+    }
+    let free = [[lo, hi]];
+    for (const b of fairBlocks(k * FAIR_DT, sp, hr, extra)) {
+      const nf = [];
+      for (const f of free) {
+        if (b[1] <= f[0] || b[0] >= f[1]) { nf.push(f); continue; }
+        if (b[0] > f[0]) nf.push([f[0], b[0]]);
+        if (b[1] < f[1]) nf.push([b[1], f[1]]);
+      }
+      free = nf;
+    }
+    free = free.filter(f => f[1] - f[0] >= (gap || FAIR_GAP));
+    const nr = [];
+    for (const r of R) for (const f of free) { const a = Math.max(r[0], f[0]), b = Math.min(r[1], f[1]); if (b > a) nr.push([a, b]); }
+    if (!nr.length) return false;
+    R = nr;
+  }
+  return true;
+}
+// a bolt: ten possible heights are always drawn (so every phone stays on the same random sequence); the first one that leaves a way through is used
+function newStrike(warn, avoid) {
+  const x = BIRD_X + srand(-48, 60), cand = [];
+  for (let i = 0; i < 10; i++) cand.push(srand(125, 395));
+  for (const y of cand) {
+    if (avoid.some(v => Math.abs(v - y) < 120)) continue;
+    const s = { x: x, y: y, t: 0, warn: warn, state: 'warn', pts: null, blink: -1 };
+    if (fairOk([s])) return s;
+  }
+  return null;
+}
+// a new fish, wave or pillar has just come in: if it now crowds a bolt that is still only a warning, move that bolt (or drop it)
+function fairFixStrikes() {
+  if (!strikes.length || fairOk([], 0, false, FAIR_KEEP)) return;
+  for (let k = strikes.length - 1; k >= 0; k--) {
+    const s = strikes[k];
+    if (s.state !== 'warn') continue;
+    const keep = s.y;
+    for (let i = 0; i < 12; i++) { s.y = 125 + Math.random() * 270; if (fairOk([], 0, false, FAIR_KEEP)) return; }
+    s.y = keep; s.dead = true;
+    if (fairOk([], 0, false, FAIR_KEEP)) break;
+  }
+  strikes = strikes.filter(q => !q.dead);
 }
 function spawnStrike() {
   const d = edif(), p = mp ? shProgAt(encCum) : prog(), M = wkM();
@@ -2090,11 +2280,10 @@ function spawnStrike() {
   const n = (d > 0.6 && sR() < 0.3 + 0.35 * (M - 1) + 0.1 * p) ? 2 : 1;
   const ys = [];
   for (let i = 0; i < n; i++) {
-    let y, guard = 0;
-    do { y = srand(125, 395); guard++; } while (ys.some(v => Math.abs(v - y) < 120) && guard < 20);
-    ys.push(y);
-    strikes.push({ x: BIRD_X + srand(-48, 60), y: y, t: 0, warn: lerp(1.5, 1.2, p), state: 'warn', pts: null, blink: -1 });
+    const s = newStrike(lerp(1.5, 1.2, p), ys);
+    if (s) { ys.push(s.y); strikes.push(s); }
   }
+  if (!ys.length) strikeT = 0.7;   // nowhere safe to put it right now: try again in a moment
 }
 function makeBolt(x, y) {
   const pts = [], n = 9;
@@ -2203,7 +2392,7 @@ function updateLivesHud() { Array.prototype.forEach.call(livesEl.children, (h, i
 // a hit costs a life; only the last one ends the flight
 function takeHit(kind) {
   breakChain();
-  wkLost = true; runLost = true;
+  wkLost = true; runLost = true; mev('hurt');
   lives = Math.max(0, lives - 1);
   updateLivesHud();
   // the last hit keeps its words up about two seconds longer, and the options screen waits for them
@@ -2240,14 +2429,18 @@ const VERSES = [
   ['Are not two sparrows sold for a farthing? and one of them shall not fall on the ground without your Father.', 'Matthew 10:29'],
   ['Fear ye not therefore, ye are of more value than many sparrows.', 'Matthew 10:31']
 ];
-const REST_VERSES = [
-  ['He maketh me to lie down in green pastures: he leadeth me beside the still waters.', 'Psalm 23:2'],
-  ['While the earth remaineth, seedtime and harvest, and cold and heat, and summer and winter, and day and night shall not cease.', 'Genesis 8:22'],
-  ['Be still, and know that I am God.', 'Psalm 46:10'],
-  ['Thou wilt keep him in perfect peace, whose mind is stayed on thee: because he trusteth in thee.', 'Isaiah 26:3'],
-  ['I do set my bow in the cloud, and it shall be for a token of a covenant between me and the earth.', 'Genesis 9:13']
+// The five rest stops (Weeks 1 to 5) each get their own scene on the ark, taken from Genesis 7 and 8. Week 6 is the finale with Noah.
+// title/verse/ref show on the rest card; tint is the sky laid over the clear sky for that scene; night turns the stars on.
+const ENDS = [null,
+  { title: 'The door is shut.', verse: '…as God had commanded him: and the LORD shut him in.', ref: 'Genesis 7:16', tint: ['#1a2442', '#7a5f86', '#e0a77a'] },
+  { title: 'Forty days.', verse: 'And the rain was upon the earth forty days and forty nights.', ref: 'Genesis 7:12', tint: ['#0b1322', '#2c4560', '#6d8497'] },
+  { title: 'God remembered.', verse: 'And God remembered Noah, and every living thing, and all the cattle that was with him in the ark: and God made a wind to pass over the earth, and the waters asswaged;…', ref: 'Genesis 8:1', tint: ['#04060d', '#101a33', '#27406a'], night: true },
+  { title: 'The ark rested.', verse: 'And the ark rested in the seventh month, on the seventeenth day of the month, upon the mountains of Ararat.', ref: 'Genesis 8:4', tint: ['#2b2250', '#8b6fb8', '#f0b9a4'] },
+  { title: 'Mountaintops.', verse: 'And the waters decreased continually until the tenth month: in the tenth month, on the first day of the month, were the tops of the mountains seen.', ref: 'Genesis 8:5', tint: ['#1a2a3d', '#4c7a8c', '#f6d79a'] }
 ];
-const REST_TITLES = ['Land at last.', 'Safe harbor.', 'Still waters.', 'Almost home.', 'One more flight.'];
+const NEW_HAZ = [null, null, null, 'fountains of the deep', 'wind gusts', 'floating debris', 'drowned treetops, drifting gates and fog'];   // what a week brings that the one before did not
+const REST_VERSES = ENDS.slice(1).map(e => [e.verse, e.ref]);
+const REST_TITLES = ENDS.slice(1).map(e => e.title);
 
 function die(kind) {
   state = 'dying'; deadT = 0; fallT = 0; bounces = 0; causeKind = kind; chain = { type: '', n: 0 };
@@ -2342,16 +2535,16 @@ function showOver() {
   $('#again').textContent = week > 1 ? 'Retry Week ' + week : 'Fly again';
   $('#again').disabled = false;
   $('#swap').textContent = 'Change bird';
-  $('#restart').hidden = week <= 1;
+  $('#restart').hidden = week <= 1 || !!practice;
   const ci = $('#cpInfo');
   ci.hidden = true;
   if (!mp && cp) {
     ci.hidden = false;
     if (cpBust) {
-      ci.textContent = 'That was the 4th fall since your checkpoint. The flood carries you all the way back to Week 1.';
-      $('#again').textContent = 'Start over from Week 1';
+      ci.textContent = practice ? 'That was the 4th fall since your checkpoint. This practice week starts again from Day 1.' : 'That was the 4th fall since your checkpoint. The flood carries you all the way back to Week 1.';
+      $('#again').textContent = practice ? 'Retry Week ' + week : 'Start over from Week 1';
       $('#restart').hidden = true;
-      $('#overEye').textContent = 'Back to Week 1';
+      $('#overEye').textContent = practice ? 'Practice' : 'Back to Week 1';
     } else {
       ci.textContent = cpLeft() > 0
         ? 'Your checkpoint on Day ' + (cp.dayIdx + 1) + ' holds. After this try you still have ' + cpLeft() + (cpLeft() === 1 ? ' retry' : ' retries') + '. Fall past that and it is Week 1 again.'
@@ -2367,10 +2560,11 @@ function showOver() {
 
 /* ---------- rest stop, and the ending at the ark ---------- */
 // where each bird sits: on the olive branch for a weekly rest, on Noah's outstretched arm at the very end
-function perchSpot(slot, gx) {
-  const n = mp && mp.list ? mp.list.length : 1, peak = WATER - 135;
-  const u = n <= 4 ? [0.12, 0.38, 0.64, 0.9][slot % 4] : 0.06 + 0.88 * (slot % n) / (n - 1);
-  return [lerp(gx - 6, gx - 96, u), lerp(peak - 20, peak - 40, u) - 13 - (n > 4 ? (slot % 2) * 15 : 0)];
+function perchSpot(slot, gx) {   // birds rest along the ark's roof (up to ten)
+  const n = mp && mp.list ? mp.list.length : 1;
+  const xl = n <= 4 ? [-22, 24, -42, 42][slot % 4] : -46 + 92 * (slot % n) / (n - 1);
+  const lift = n > 4 ? (slot % 2) * 14 : 0;
+  return [gx + 150 + xl, WATER + 2 - 98 + Math.abs(xl) * 26 / 54 - 12 - lift];
 }
 function armSpot(slot, gx) {
   const nx = gx + 92, y0 = WATER - 36;
@@ -2417,27 +2611,27 @@ function wkItems(st, end) {
 }
 function startFinale() {
   const isEnd = week >= NWEEKS;
-  const first = wins < 1;
+  const first = !practice && wins < 1;
   markWeek(week, 8);
-  wins++; store.set('wins', wins);
+  if (!practice) { wins++; store.set('wins', wins); }
   if (first && !isEnd) unlockQ.push('golden');
-  if (isEnd) { journeys++; store.set('journeys', journeys); }
+  if (isEnd && !practice) { journeys++; store.set('journeys', journeys); }
   newRecord = false;
   if (mp) newRecord = recordTeam(week * NDAYS, isEnd ? runTime : 0);
   else { best = Math.max(best, week * NDAYS); store.set('best3', best); }
-  const stats = mp ? null : weekRecords(isEnd);
+  const stats = mp ? null : weekRecords(isEnd && !practice);
   if (!mp) {   // butterfly: finish a week well inside its own clock
     const frac = clamp(1 - stats.wt / Math.max(1, total), 0, 1);
-    if (frac > (ach.fast || 0)) { ach.fast = frac; store.set('ach', ach); }
+    if (!practice && frac > (ach.fast || 0)) { ach.fast = frac; store.set('ach', ach); }
     cp = null; cpUsed = false; cpFalls = 0; cpBust = false; updateCpHud();
-    checkUnlocks();
+    if (!practice) checkUnlocks();
   }
-  mev('clear', { isEnd: isEnd, frac: clamp(1 - (runTime - weekT0) / Math.max(1, total), 0, 1) });
+  if (!practice) mev('clear', { isEnd: isEnd, frac: clamp(1 - (runTime - weekT0) / Math.max(1, total), 0, 1) });
   if (mp) rankSubmit(isEnd ? NWEEKS * NDAYS : week * NDAYS, runTime);
   state = 'finale';
   hazards = []; strikes = []; orbs = []; pws = []; chain = { type: '', n: 0 }; updatePwHud();
   burn = 0; stunT = 0; causeKind = ''; landed = false; hint.hidden = true;
-  fin = { t: 0, gx: W + 110, sx: bird.x, sy: bird.y, rain: 0, lit: false, ev: {}, cf: 0, newUnlock: first && !isEnd, shown: false, py: bird.y, kind: isEnd ? 'end' : 'rest', perched: false, tapAt: 0, stats: stats };
+  fin = { t: 0, gx: W + 110, sx: bird.x, sy: bird.y, rain: 0, lit: false, ev: {}, cf: 0, newUnlock: first && !isEnd, shown: false, py: bird.y, kind: isEnd ? 'end' : 'rest', wk: week, perched: false, tapAt: 0, stats: stats };
   saveProgress();
   flash = reduceMotion ? 0 : 0.35;
   setCap('The sky clears.', 2000);
@@ -2469,13 +2663,13 @@ function showRest() {
   f.shown = true; f.tapAt = f.t + 0.6;
   capHide();
   if (f.kind === 'end') {
-    $('#wDays').textContent = NWEEKS * NDAYS; $('#wTime').textContent = mmss(runTime);
+    $('#wDays').textContent = practice ? NDAYS : NWEEKS * NDAYS; $('#wTime').textContent = mmss(practice ? runTime - weekT0 : runTime);
     $('#wJL').textContent = mp ? 'Team best time' : 'Journeys';
     $('#wJ').textContent = mp ? mmss(teamBestT) : journeys;
     fillWk($('#winStats'), wkItems(f.stats, true));
     fillUnlocks($('#winUnlock'));
-    $('#winLede').textContent = 'Noah was waiting with his arm out. You carried the olive leaf all the way.' + (mp && newRecord ? ' New team record!' : '');
-    $('#again2').textContent = mp ? 'Back to lobby' : 'Play again';
+    $('#winLede').textContent = practice ? 'Practice flight done. Noah was waiting again. Your journey records are as you left them.' : 'Noah was waiting with his arm out. You carried the olive leaf all the way.' + (mp && newRecord ? ' New team record!' : '');
+    $('#again2').textContent = mp ? 'Back to lobby' : practice ? 'Practice again' : 'Play again';
     $('#swap2').textContent = mp ? 'Leave room' : 'Change bird';
     setPanels('win'); delayEnable(winP);
     try { $('#again2').focus({ preventScroll: true }); } catch (e) { /* ignore */ }
@@ -2487,9 +2681,9 @@ function showRest() {
   $('#restTitle').textContent = REST_TITLES[(week - 1) % REST_TITLES.length];
   $('#restVerse').textContent = rv[0]; $('#restRef').textContent = rv[1];
   const nextLen = Math.round(45 * Math.max(0.45, Math.pow(0.88, week)));
-  $('#nextInfo').textContent = 'Next, Week ' + (week + 1) + ': days run about ' + nextLen + ' seconds, the waves climb higher and the storm hits harder.';
-  $('#tapNote').textContent = (mp && !mp.isHost) ? 'Waiting for the host to fly on.' : 'Rest as long as you like. Tap to fly on.';
-  $('#endRun').textContent = mp ? 'Leave room' : 'Save and go Home';
+  $('#nextInfo').textContent = practice ? 'Practice flight done. Your saved progress is exactly as you left it.' : 'Next, Week ' + (week + 1) + ': days run about ' + nextLen + ' seconds, the waves climb higher and the storm hits harder.' + (NEW_HAZ[week + 1] ? ' New this week: ' + NEW_HAZ[week + 1] + '.' : '');
+  $('#tapNote').textContent = (mp && !mp.isHost) ? 'Waiting for the host to fly on.' : practice ? 'Rest as long as you like. Tap to go Home.' : 'Rest as long as you like. Tap to fly on.';
+  $('#endRun').textContent = mp ? 'Leave room' : practice ? 'Practice again' : 'Save and go Home';
   fillUnlocks($('#unlock'));
   setPanels('rest');
 }
@@ -2505,30 +2699,58 @@ function updateFinale(dt) {
   bird.x = pos[0]; bird.y = ny; f.py = ny;
   bird.phase += dt * 13;
 
-  if (T > 2.4 && !f.ev.a) { f.ev.a = 1; setCap('The rain has stopped.', 1800); }
-  if (T > 3.8 && !f.ev.b) { f.ev.b = 1; setCap('The waters are going down.', 1800); }
-  if (T > 4.4 && !f.ev.c) {
-    f.ev.c = 1; bird.sprig = true; setCap('An olive leaf, plucked off.', 1700);
-    tone(880, 0.12, 'sine', 0.07); tone(1320, 0.2, 'sine', 0.06, 0.1);
-    for (let i = 0; i < 14; i++) particle({ x: bird.x + 24, y: bird.y - 6, vx: rand(-60, 60), vy: rand(-80, 20), g: 60, size: rand(1.4, 2.8), color: '#c9dc7a', life: rand(0.5, 0.9) });
-  }
-  f.rain = clamp((T - 5.4) / 2.2, 0, 1);
-  if (!end) {
-    if (T > 5.8 && !f.ev.d) { f.ev.d = 1; setCap('Rest, little bird.', 2400); tone(523, 0.5, 'sine', 0.05); tone(784, 0.6, 'sine', 0.05, 0.15); }
-    if (T > 6.4 && !f.ev.e) { f.ev.e = 1; f.lit = true; tone(659, 0.3, 'triangle', 0.05); tone(988, 0.5, 'triangle', 0.05, 0.12); }
-    if (T > 6.0 && T < 7.6) { f.cf += dt * 30; const n = Math.floor(f.cf); f.cf -= n; if (n > 0) confetti(n); }
-    if (T > 7.4 && !f.shown) showRest();
-  } else {
+  if (end) {
+    if (T > 2.4 && !f.ev.a) { f.ev.a = 1; setCap('The rain has stopped.', 1800); }
+    if (T > 3.8 && !f.ev.b) { f.ev.b = 1; setCap('The waters are going down.', 1800); }
+    if (T > 4.4 && !f.ev.c) {
+      f.ev.c = 1; bird.sprig = true; setCap('An olive leaf, plucked off.', 1700);
+      tone(880, 0.12, 'sine', 0.07); tone(1320, 0.2, 'sine', 0.06, 0.1);
+      for (let i = 0; i < 14; i++) particle({ x: bird.x + 24, y: bird.y - 6, vx: rand(-60, 60), vy: rand(-80, 20), g: 60, size: rand(1.4, 2.8), color: '#c9dc7a', life: rand(0.5, 0.9) });
+    }
+    f.rain = clamp((T - 8.4) / 2.6, 0, 1);   // the rainbow belongs to the last week (Genesis 9:13)
     if (T > 5.8 && !f.ev.d) { f.ev.d = 1; setCap('Someone is waiting on the ark.', 2200); tone(523, 0.5, 'sine', 0.05); tone(784, 0.6, 'sine', 0.05, 0.15); }
     if (T > 8.4 && !f.ev.e) { f.ev.e = 1; f.lit = true; fanfare(); setCap('Noah was waiting.', 4000); }
     if (T > 8.4 && T < 13) { f.cf += dt * 70; const n = Math.floor(f.cf); f.cf -= n; if (n > 0) confetti(n); }
     if (T > 10.6 && !f.shown) showRest();
+  } else {
+    f.rain = 0;
+    restEvents(f, T);
+    if (T > 6.8 && !f.ev.d) { f.ev.d = 1; setCap('Rest, little bird.', 2400); tone(523, 0.5, 'sine', 0.05); tone(784, 0.6, 'sine', 0.05, 0.15); }
+    if (T > 7.0 && !f.ev.e) { f.ev.e = 1; f.lit = true; tone(659, 0.3, 'triangle', 0.05); tone(988, 0.5, 'triangle', 0.05, 0.12); }
+    if (T > 7.0 && T < 8.4) { f.cf += dt * 30; const n = Math.floor(f.cf); f.cf -= n; if (n > 0) confetti(n); }
+    if (T > 8.4 && !f.shown) showRest();
+  }
+}
+// what happens at each rest stop: a caption and a sound or two, timed with the picture (drawRestScene)
+function restEvents(f, T) {
+  const ev = f.ev, wk = f.wk;
+  if (wk === 1) {
+    if (T > 3.0 && !ev.a) { ev.a = 1; tone(95, 0.9, 'sawtooth', 0.03, 0, 55); }
+    if (T > 4.6 && !ev.b) { ev.b = 1; tone(70, 0.35, 'sine', 0.12, 0, 38); if (!reduceMotion) shake = Math.max(shake, 3); setCap('And the LORD shut him in.', 2800); }
+  } else if (wk === 2) {
+    const n = Math.floor(40 * smooth(clamp((T - 0.8) / 4.8, 0, 1)));
+    if (n >= (ev.n || 0) + 5) { ev.n = n - (n % 5); tone(520 + n * 6, 0.05, 'square', 0.02); }
+    if (T > 5.8 && !ev.a) { ev.a = 1; setCap('Forty days and forty nights.', 2400); }
+    if (T > 7.4 && !ev.b) { ev.b = 1; setCap('The rain has stopped.', 1500); }
+  } else if (wk === 3) {
+    if (T > 1.4 && !ev.a) { ev.a = 1; tone(150, 1.6, 'sine', 0.035, 0, 90); }
+    if (T > 3.4 && !ev.b) { ev.b = 1; setCap('And God remembered Noah.', 2800); }
+  } else if (wk === 4) {
+    if (T > 3.8 && !ev.a) {
+      ev.a = 1; tone(60, 0.4, 'sine', 0.14, 0, 34); if (!reduceMotion) shake = Math.max(shake, 7);
+      const ax = f.gx + 150; splash(ax - 50, WATER, 10); splash(ax + 50, WATER, 10); ripple(ax - 30, true); ripple(ax + 30, true);
+      setCap('And the ark rested.', 2800);
+    }
+  } else if (wk === 5) {
+    if (T > 2.4 && !ev.a) { ev.a = 1; setCap('The tops of the mountains were seen.', 2200); tone(660, 0.3, 'sine', 0.04); }
+    if (T > 4.6 && !ev.b) { ev.b = 1; setCap('A raven went out, to and fro.', 2400); tone(300, 0.14, 'sawtooth', 0.03, 0, 160); }
   }
 }
 function continueTap() {
   if (!fin || !fin.shown || fin.kind !== 'rest' || fin.t < fin.tapAt) return;
   if (mp) { if (mp.isHost) mpHostGo(week + 1); return; }
   ensureAudio();
+  if (practice) { showMenu(); return; }
   week++; seed = newSeed();
   cp = null; cpUsed = false; cpFalls = 0; cpBust = false;
   beginDepart();
@@ -2924,6 +3146,14 @@ function updateHazards(dt, sp) {
     } else if (h.type === 'cloud') {
       if (h.amp) h.y = h.y0 + h.amp * Math.sin((h.x0 - h.x) / h.wl * TAU + h.ph);
       if (h.charged && !h.zapped) { h.age += dt; if (h.age >= h.delay) { h.zapped = true; zapCloud(h); } }
+    } else if (h.type === 'fount') {
+      h.arr = (h.x + h.w / 2 - BIRD_X) / Math.max(sp, 60);   // seconds until it reaches you
+      if (h.ht < 0 && h.arr <= 0.75) { h.ht = 0; splash(h.x + h.w / 2, WATER, 8); tone(120, 0.5, 'sine', 0.05, 0, 60); }
+      if (h.ht >= 0) h.ht += dt;
+      h.cur = h.H * fountEnv(h.ht);
+      if (h.cur > 20 && Math.random() < dt * 34) particle({ x: h.x + h.w / 2 + rand(-12, 12), y: WATER - h.cur + rand(0, 10), vx: rand(-45, 45), vy: -rand(0, 70), g: 620, size: rand(1.4, 3), color: '#e8f4f8', life: 0.55 });
+    } else if (h.type === 'hang' || h.type === 'rock') {
+      if (h.mvA) { const sh = gShift(h, h.x); if (h.type === 'hang') h.bottom = h.b0 + sh; else h.y = h.r0 + sh; }
     } else if (h.type === 'wave') {
       const f = smooth(clamp((W + 60 - h.x) / (W + 60 - (BIRD_X + 70)), 0, 1));
       if (h.x + h.w < BIRD_X - 20) h.cur = Math.max(6, h.cur - 150 * dt);
@@ -2937,7 +3167,7 @@ function updateHazards(dt, sp) {
       if (encPassed % 3 === 0 && !pwMega('tail')) orbDue = true;
     }
   }
-  hazards = hazards.filter(h => !h.dead && h.x > -170);
+  hazards = hazards.filter(h => !h.dead && h.x + Math.max(0, (h.w || 0) - 100) > -170);
 }
 function updateOrbs(dt, sp, hr, pick) {
   for (const o of orbs) {
@@ -2984,6 +3214,7 @@ function worldStep(dt, pick) {
   strikeT -= wdt;
   if (week > 1 && strikeT <= 0 && edif() > 0.04) spawnStrike();
   updateHazards(dt, sp);
+  fairT -= dt; if (fairT <= 0) { fairT = 0.25; if (strikes.length) fairFixStrikes(); }   // a fish launching can crowd a bolt that is still only a warning
   updateOrbs(dt, sp, hitR(), pick);
   updateStrikes(wdt);
   syncHud(false);
@@ -3001,6 +3232,10 @@ function touching(h, hr, ghost, ghostAll) {
   if (ghost || ghostAll) return false;
   if (h.x > bird.x + 90 || h.x + h.w < bird.x - 90) return false;
   if (h.type === 'cloud' && !(h.charged && !h.zapped)) return false;   // no lightning inside: safe to pass through
+  if (h.type === 'gust' || h.type === 'fog') return false;   // wind pushes and fog hides, neither hurts
+  if (h.type === 'fount') return h.cur > 6 && hitRect(bird.x, bird.y, hr, h.x + 4, WATER - h.cur, h.w - 8, h.cur + 30);
+  if (h.type === 'debris') return hitRect(bird.x, bird.y, hr, h.x + 3, WATER - h.hgt + debrisBob(h, h.x), h.w - 6, h.hgt + 40);
+  if (h.type === 'tree') return hitRect(bird.x, bird.y, hr, h.x + 5, h.y, h.w - 10, WATER + 40 - h.y);
   if (h.type === 'rock') return hitRect(bird.x, bird.y, hr, h.x, h.y, h.w, WATER + 40 - h.y);
   if (h.type === 'hang') return hitRect(bird.x, bird.y, hr, h.x, -120, h.w, h.bottom + 120);
   if (h.type === 'wave') return hitRect(bird.x, bird.y, hr, h.x + h.w * 0.1, WATER - h.cur + 5, h.w * 0.72, h.cur + 30);
@@ -3026,7 +3261,9 @@ function updatePlay(dt) {
     if (changed) updatePwHud(); else tickPwHud();
   }
   const fl = pwHas('float');
-  bird.vy += B.g * (fl ? (pwMega('float') ? 0.3 : 0.55) : 1) * dt; bird.y += bird.vy * dt;
+  bird.vy += B.g * (fl ? (pwMega('float') ? 0.3 : 0.55) : 1) * dt;
+  const wp = windPush(); if (wp) bird.vy += wp * (wp > 0 ? GUST_DN : GUST_UP) * B.g * dt;
+  bird.y += bird.vy * dt;
   const hr = hitR();
   if (bird.y < hr) { bird.y = hr; bird.vy = Math.max(bird.vy, 0); }
   bird.rot = clamp(bird.vy * 0.0017, -0.5, 1.15);
@@ -3080,10 +3317,12 @@ function update(dt) {
   if ((state === 'finale') !== hudCalm) { hudCalm = state === 'finale'; hud.classList.toggle('calm', hudCalm); }
   const tgt = state === 'finale' ? 1 : prog();
   pS += (tgt - pS) * Math.min(1, dt * 1.6);
-  nS += ((state === 'finale' ? 0 : nightOf(uNow())) - nS) * Math.min(1, dt * 3);
+  const nTgt = state === 'finale' ? (fin && fin.kind === 'rest' && ENDS[fin.wk] && ENDS[fin.wk].night ? smooth(clamp((fin.t - 1.2) / 5.5, 0, 1)) : 0) : nightOf(uNow());
+  nS += (nTgt - nS) * Math.min(1, dt * 3);
   fS += ((state === 'finale' ? 1 : 0) - fS) * Math.min(1, dt * 1.2);
   const slow = (state === 'play' || state === 'spectate') ? 1.5 : 1;
-  for (const c of clouds) { c.x -= c.sp * dt * slow; if (c.x < -150) c.x = W + 150; }
+  const wind = state === 'finale' && fin && fin.kind === 'rest' && fin.wk === 3 ? 1 + 5 * clamp((fin.t - 1) / 4, 0, 1) : 1;
+  for (const c of clouds) { c.x -= c.sp * dt * slow * wind; if (c.x < -150) c.x = W + 150; }
   const slant = scn().slant;
   for (const d of rain) { d.y += d.v * dt; d.x -= d.v * slant * dt; if (d.y > WATER || d.x < -20) { d.y = rand(-60, -5); d.x = rand(0, W + 80); } }
   if (!reduceMotion && (pS < 0.4 || week === 5) && week < 6 && state !== 'finale') {
@@ -3150,7 +3389,7 @@ function drawSky() {
     a = clamp((p - 0.2) / 0.6, 0, 1) * (1 - nS);
   }
   sx = lerp(sx, W * 0.8, fS); sy = lerp(sy, WATER - 150, fS);
-  a = lerp(a, clamp((p - 0.35) / 0.65, 0, 1), fS);
+  a = lerp(a, clamp((p - 0.35) / 0.65, 0, 1) * (1 - nS), fS);
   if (a > 0.02) {
     const rg = ctx.createRadialGradient(sx, sy, 10, sx, sy, 240);
     rg.addColorStop(0, 'rgba(255,240,190,' + (0.8 * a).toFixed(3) + ')');
@@ -3160,12 +3399,18 @@ function drawSky() {
     ctx.fillStyle = 'rgba(255,248,214,' + (0.95 * a).toFixed(3) + ')';
     ctx.beginPath(); ctx.arc(sx, sy, 26, 0, TAU); ctx.fill();
   }
+  if (fin && fin.kind === 'rest' && ENDS[fin.wk] && fS > 0.01) {   // each rest stop has its own sky: dusk, a rainy slate, night, lavender, dawn
+    const tn = ENDS[fin.wk].tint, tg = ctx.createLinearGradient(0, 0, 0, WATER);
+    tn.forEach((c, i) => tg.addColorStop(i / (tn.length - 1), c));
+    ctx.globalAlpha = 0.92 * fS; ctx.fillStyle = tg; ctx.fillRect(-20, -20, W + 40, WATER + 22); ctx.globalAlpha = 1;
+  }
 }
 const PUFFS = [[-34, 8, 20], [-12, -6, 26], [16, -2, 24], [40, 8, 17], [0, 12, 24]];
 function drawClouds() {
   ctx.fillStyle = mix('#1a2133', '#ffffff', pS);
+  const cm = fin && fin.kind === 'rest' && fin.wk === 3 ? 1 - smooth(clamp((fin.t - 1) / 6, 0, 1)) * fS : 1;   // the wind clears them away
   for (const c of clouds) {
-    ctx.globalAlpha = c.a;
+    ctx.globalAlpha = c.a * cm;
     ctx.beginPath();
     for (const q of PUFFS) { ctx.moveTo(c.x + q[0] * c.s + q[2] * c.s, c.y + q[1] * c.s); ctx.arc(c.x + q[0] * c.s, c.y + q[1] * c.s, q[2] * c.s, 0, TAU); }
     ctx.fill();
@@ -3321,28 +3566,56 @@ function drawRainbow() {
   });
   ctx.restore();
 }
-function drawArk(x, y, lit) {
+function drawArk(x, y, lit, o) {
+  o = o || {};
+  const L = lit === true ? 1 : (lit || 0);
   ctx.save();
   ctx.translate(x, y);
+  if (o.tilt) ctx.rotate(o.tilt);
   ctx.fillStyle = '#7a4f2b';
   ctx.beginPath(); ctx.moveTo(-72, -34); ctx.lineTo(72, -34); ctx.quadraticCurveTo(66, 10, 34, 12); ctx.lineTo(-34, 12); ctx.quadraticCurveTo(-66, 10, -72, -34); ctx.closePath(); ctx.fill();
   ctx.strokeStyle = 'rgba(0,0,0,.22)'; ctx.lineWidth = 1.5;
   for (const yy of [-22, -10, 2]) { ctx.beginPath(); ctx.moveTo(-66, yy); ctx.lineTo(66, yy); ctx.stroke(); }
+  if (o.tally != null) {   // Week 2: a mark for each day of rain
+    ctx.fillStyle = '#8e6a3f'; ctx.fillRect(-68, -31, 52, 36);
+    ctx.strokeStyle = '#2a1b0f'; ctx.lineWidth = 1.2; ctx.strokeRect(-68, -31, 52, 36);
+    ctx.lineWidth = 1.3; ctx.beginPath();
+    for (let i = 0; i < o.tally; i++) {
+      const g = (i / 5) | 0, k = i % 5, gx0 = -63 + (g % 4) * 12.5, gy0 = -27 + ((g / 4) | 0) * 16;
+      if (k < 4) { ctx.moveTo(gx0 + k * 2.6, gy0); ctx.lineTo(gx0 + k * 2.6, gy0 + 11); }
+      else { ctx.moveTo(gx0 - 1.5, gy0 + 9.5); ctx.lineTo(gx0 + 10.5, gy0 + 1.5); }
+    }
+    ctx.stroke();
+  }
+  if (o.door != null) {   // Week 1: the big side door slides shut
+    const dx = 36, dy = -30, dw = 20, dh = 28;
+    ctx.fillStyle = o.door < 1 ? '#f2b45e' : '#2a1b0f'; ctx.fillRect(dx, dy, dw, dh);
+    ctx.fillStyle = '#8a5d33'; ctx.fillRect(dx, dy, dw, dh * o.door);
+    ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = 1; ctx.strokeRect(dx, dy, dw, dh);
+    if (o.door >= 1 && o.seam) { ctx.fillStyle = 'rgba(255,214,140,' + o.seam.toFixed(2) + ')'; ctx.fillRect(dx, dy + dh - 1.5, dw, 1.5); ctx.fillRect(dx - 0.5, dy, 1, dh); }
+  }
   ctx.fillStyle = '#5e3b1f'; ctx.fillRect(-74, -38, 148, 6);
   ctx.fillStyle = '#98693a'; ctx.fillRect(-46, -72, 92, 34);
   ctx.fillStyle = 'rgba(0,0,0,.18)';
   for (let xx = -34; xx < 46; xx += 12) ctx.fillRect(xx, -72, 1.5, 34);
   ctx.fillStyle = '#5e3b1f';
   ctx.beginPath(); ctx.moveTo(-54, -72); ctx.lineTo(0, -98); ctx.lineTo(54, -72); ctx.closePath(); ctx.fill();
-  if (lit) {
+  if (L > 0.02) {
     const g = ctx.createRadialGradient(0, -80, 2, 0, -80, 46);
-    g.addColorStop(0, 'rgba(255,224,138,.6)'); g.addColorStop(1, 'rgba(255,224,138,0)');
+    g.addColorStop(0, 'rgba(255,224,138,' + (0.6 * L).toFixed(3) + ')'); g.addColorStop(1, 'rgba(255,224,138,0)');
     ctx.fillStyle = g; ctx.fillRect(-50, -126, 100, 100);
   }
-  ctx.fillStyle = lit ? '#ffe08a' : '#3a2814';
+  ctx.fillStyle = L > 0.02 ? 'rgba(255,224,138,' + (0.3 + 0.7 * L).toFixed(2) + ')' : '#3a2814';
   ctx.fillRect(-9, -86, 18, 12);
   ctx.fillStyle = '#3a2814';
   ctx.fillRect(-30, -62, 10, 12); ctx.fillRect(20, -62, 10, 12);
+  if (o.eyes) {   // animals looking out of the little windows
+    ctx.fillStyle = '#fff';
+    [-25, 25].forEach((cx, k) => {
+      if (Math.sin(o.eyes * 2.3 + k * 2.1) > 0.93) return;
+      ctx.beginPath(); ctx.arc(cx - 2.5, -56, 1.5, 0, TAU); ctx.arc(cx + 2.5, -56, 1.5, 0, TAU); ctx.fill();
+    });
+  }
   ctx.restore();
 }
 // Noah on the ark's rail, one arm held out for the dove
@@ -3367,8 +3640,59 @@ function drawNoah(gx, raised) {
   ctx.beginPath(); ctx.arc(nx - 4.5, y0 - 38.5, 0.9, 0, TAU); ctx.fill();
   ctx.restore();
 }
+// A rest stop's picture (Weeks 1 to 5): the ark scrolls in as before, but each week it is a different moment from Genesis. T is seconds since the finale began.
+function drawRestScene(gx, T, wk) {
+  const ax = gx + 150, ay = WATER + 2 + Math.sin(t * 1.6) * 1.5, sg = (a, b) => clamp((T - a) / (b - a), 0, 1);
+  const o = { lit: fin.lit ? 1 : 0 };
+  if (wk === 1) {
+    o.door = smooth(sg(3.0, 4.6)); o.seam = smooth(sg(4.6, 5.4)); o.lit = Math.max(o.lit, smooth(sg(4.8, 6.4))); o.eyes = T > 6.0 ? T : 0;
+  } else if (wk === 2) {
+    o.lit = Math.max(o.lit, 0.75); o.tally = Math.floor(40 * smooth(sg(0.8, 5.6)));
+  } else if (wk === 3) {
+    o.lit = Math.max(o.lit, 0.9); o.eyes = T > 4 ? T : 0;
+    const a = 0.34 * Math.sin(Math.PI * sg(0, 9));   // the wind
+    if (a > 0.01) {
+      ctx.strokeStyle = 'rgba(210,230,255,' + a.toFixed(3) + ')'; ctx.lineWidth = 1.6; ctx.lineCap = 'round'; ctx.beginPath();
+      for (let i = 0; i < 9; i++) { const y = 40 + i * 52, x0 = W + 60 - ((T * 170 + i * 71) % (W + 180)); ctx.moveTo(x0, y); ctx.bezierCurveTo(x0 - 30, y - 14, x0 - 60, y + 14, x0 - 100, y - 4); }
+      ctx.stroke();
+    }
+  } else if (wk === 4) {
+    o.lit = Math.max(o.lit, 0.6);
+    const hit = 3.8, bump = T - hit;
+    o.tilt = T < hit ? -0.04 * smooth(sg(0, hit)) : 0.05 * Math.exp(-bump * 2.2) * Math.cos(bump * 5.5);   // drifts, bumps, then settles
+  } else if (wk === 5) {
+    o.lit = Math.max(o.lit, 0.5);
+    const gl = ctx.createRadialGradient(60, WATER - 30, 6, 60, WATER - 30, 230);
+    gl.addColorStop(0, 'rgba(255,226,150,' + (0.85 * smooth(sg(0, 6))).toFixed(3) + ')'); gl.addColorStop(1, 'rgba(255,226,150,0)');
+    ctx.fillStyle = gl; ctx.fillRect(0, 160, W, WATER - 160);
+    [[22, 120], [84, 165], [146, 104], [204, 146]].forEach((pk, i) => {
+      const r = smooth(sg(0.9 + i * 0.8, 2.7 + i * 0.8)), top = WATER - 4 - pk[1] * r;
+      ctx.fillStyle = '#34425a'; ctx.beginPath(); ctx.moveTo(pk[0] - 62, WATER - 2); ctx.lineTo(pk[0], top); ctx.lineTo(pk[0] + 62, WATER - 2); ctx.closePath(); ctx.fill();
+      if (r > 0.3) { ctx.fillStyle = 'rgba(255,238,200,' + (r * 0.9).toFixed(2) + ')'; ctx.beginPath(); ctx.moveTo(pk[0] - 14, top + 24 * r); ctx.lineTo(pk[0], top); ctx.lineTo(pk[0] + 14, top + 24 * r); ctx.lineTo(pk[0] + 4, top + 18 * r); ctx.lineTo(pk[0] - 5, top + 22 * r); ctx.closePath(); ctx.fill(); }
+    });
+    const mg = ctx.createLinearGradient(0, WATER - 90, 0, WATER); mg.addColorStop(0, 'rgba(230,236,240,0)'); mg.addColorStop(1, 'rgba(230,236,240,0.55)');
+    ctx.fillStyle = mg; ctx.fillRect(0, WATER - 90, W, 92);
+  }
+  drawArk(ax, ay, o.lit, o);
+  if (wk === 4) {   // the peak the ark came to rest on
+    const rise = smooth(sg(3.7, 4.4));
+    ctx.fillStyle = '#4a4458';
+    ctx.beginPath(); ctx.moveTo(ax - 98, WATER + 16); ctx.lineTo(ax - 62, WATER - 10 * rise + 4); ctx.lineTo(ax - 30, WATER - 18 * rise + 6); ctx.lineTo(ax - 8, WATER + 16); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(ax + 12, WATER + 16); ctx.lineTo(ax + 40, WATER - 22 * rise + 6); ctx.lineTo(ax + 72, WATER - 12 * rise + 4); ctx.lineTo(ax + 104, WATER + 16); ctx.closePath(); ctx.fill();
+  }
+  if (wk === 5) {   // the raven goes out from the ark and does not come back
+    const ru = sg(4.4, 11);
+    if (ru > 0 && ru < 1) {
+      const rx = lerp(ax - 14, 40, ru), ry = lerp(WATER - 108, WATER - 330, ru) + Math.sin(ru * 22) * 8, rs = lerp(1, 0.22, ru);
+      ctx.save(); ctx.translate(rx, ry); ctx.scale(-1, 1);
+      drawBird(ctx, 'raven', 0, 0, 0, Math.sin(t * 11) * 0.7 + 0.15, rs, false, 1);
+      ctx.restore();
+    }
+  }
+}
 function drawFinaleScenery() {
   if (!fin) return;
+  if (fin.kind === 'rest' && ENDS[fin.wk]) { drawRestScene(fin.gx, fin.t, fin.wk); return; }
   const gx = fin.gx, peak = WATER - 135;
   const hg = ctx.createLinearGradient(0, peak, 0, WATER);
   hg.addColorStop(0, '#74905a'); hg.addColorStop(1, '#46583a');
@@ -3410,6 +3734,7 @@ function drawHang(h) {
   ctx.globalAlpha = 0.35; ctx.fillStyle = hl;
   ctx.fillRect(x + w * 0.2, -30, w * 0.2, topH + 30 - r);
   ctx.globalAlpha = 1;
+  if (h.mvA) { ctx.fillStyle = '#f6c978'; ctx.fillRect(x - 1, topH - 3, w + 2, 4); }
   const rm = scn().rim;
   if (rm > 0) {   // a pale edge keeps the pillars readable against the darker weekly skies
     ctx.strokeStyle = 'rgba(205,220,245,' + (rm * (1 - pS * 0.5)).toFixed(3) + ')'; ctx.lineWidth = 1.6;
@@ -3432,6 +3757,7 @@ function drawRock(h) {
   for (let yy = botY + 22 + (h.id % 3) * 4; yy < bottom; yy += 26) ctx.fillRect(x - 3, yy, w + 6, 2);
   ctx.fillStyle = 'rgba(255,255,255,.2)'; ctx.fillRect(x + 6, botY + 1, w - 12, 3);
   ctx.restore();
+  if (h.mvA) { ctx.fillStyle = '#f6c978'; ctx.fillRect(x - 3, botY - 1, w + 6, 4); }
 }
 function drawWave(h) {
   const x = h.x, w = h.w, c = h.cur, top = WATER - c;
@@ -3456,6 +3782,124 @@ function drawWave(h) {
     ctx.stroke();
     ctx.fillStyle = 'rgba(240,248,252,.85)';
     for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.arc(x + w * (0.22 + 0.17 * k), top + 2 + Math.sin(t * 5 + k * 1.7 + h.id) * 2 + (k % 2) * 4, 2.3, 0, TAU); ctx.fill(); }
+  }
+}
+// the sea bubbles and rings out, then a spout bursts up for about a second
+function drawFount(h) {
+  const cx = h.x + h.w / 2, e = h.cur / h.H;
+  const day = pS;
+  if (h.ht < 0 || h.ht > 1.1) {
+    const k = h.ht < 0 ? clamp(1 - (h.arr - 0.75) / 1.6, 0.15, 1) : clamp(1 - (h.ht - 1.1) / 0.3, 0, 1);   // the bubbling builds as it nears
+    ctx.save();
+    ctx.strokeStyle = 'rgba(232,244,250,' + (0.7 * k).toFixed(3) + ')'; ctx.lineWidth = 2;
+    for (let r = 0; r < 3; r++) {
+      const ph = (stt() * 1.4 + r / 3 + h.id * 0.17) % 1;
+      ctx.beginPath(); ctx.ellipse(cx, WATER + 3, 8 + ph * 34 * (0.6 + 0.4 * k), 2.5 + ph * 7, 0, 0, TAU);
+      ctx.globalAlpha = (1 - ph) * k; ctx.stroke();
+    }
+    ctx.globalAlpha = 1; ctx.fillStyle = 'rgba(240,248,252,' + (0.8 * k).toFixed(3) + ')';
+    for (let b = 0; b < 6; b++) {
+      const ph = (stt() * 1.1 + b * 0.37 + h.id) % 1;
+      ctx.beginPath(); ctx.arc(cx + Math.sin(b * 2.4 + h.id) * 15, WATER - ph * 20 * k, 1.4 + (b % 3) * 0.8, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  }
+  if (h.cur > 3) {
+    const top = WATER - h.cur, wb = h.w * 0.5, wt = h.w * 0.34;
+    const g = ctx.createLinearGradient(0, top, 0, WATER);
+    g.addColorStop(0, 'rgba(250,253,255,.97)'); g.addColorStop(0.35, mix('#b6dcea', '#d7f0f8', day)); g.addColorStop(1, mix('#4f93b0', '#78c0d8', day));
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(cx - wb, WATER + 8); ctx.lineTo(cx - wt, top + 8);
+    ctx.quadraticCurveTo(cx - wt, top, cx, top - 3); ctx.quadraticCurveTo(cx + wt, top, cx + wt, top + 8);
+    ctx.lineTo(cx + wb, WATER + 8); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1.5;
+    for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(cx + i * 7, WATER); ctx.lineTo(cx + i * 5, top + 12 + Math.sin(stt() * 12 + i) * 4); ctx.stroke(); }
+    ctx.fillStyle = 'rgba(255,255,255,.9)';
+    ctx.beginPath(); ctx.arc(cx - 7, top + 2, 6 * e + 2, 0, TAU); ctx.arc(cx + 6, top - 1, 7 * e + 2, 0, TAU); ctx.arc(cx, top - 6, 6 * e + 2, 0, TAU); ctx.fill();
+  }
+}
+// wind: white streaks that slide across the zone in the direction it pushes, with arrows in the middle
+function drawGust(h) {
+  const d = h.dir, x0 = h.x, w = h.w;
+  ctx.save();
+  const a = clamp(Math.min(x0 + w, W + 40 - x0 + w) / 40, 0, 1);
+  ctx.beginPath(); ctx.rect(x0, 0, w, WATER); ctx.clip();
+  ctx.fillStyle = 'rgba(220,235,250,.07)'; ctx.fillRect(x0, 0, w, WATER);
+  ctx.strokeStyle = 'rgba(245,250,255,.55)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  const n = Math.max(6, Math.round(w / 15));
+  for (let i = 0; i < n; i++) {
+    const sx = x0 + ((i * 37 + h.id * 11) % Math.max(1, w - 10)) + 5, ph = (stt() * 0.9 + i * 0.173 + h.id * 0.31) % 1;
+    const y = 30 + ((i * 97 + h.id * 53) % (WATER - 90)) + d * (ph - 0.5) * 90;
+    ctx.globalAlpha = Math.sin(ph * Math.PI) * 0.8;
+    ctx.beginPath(); ctx.moveTo(sx - 4, y - d * 13); ctx.quadraticCurveTo(sx + 3, y, sx - 3, y + d * 13); ctx.stroke();
+  }
+  ctx.globalAlpha = 0.28 + 0.12 * Math.sin(stt() * 4);
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; ctx.lineJoin = 'round';
+  const cx = x0 + w / 2;
+  for (let r = 0; r < 3; r++) {
+    const cy = 150 + r * 120 + d * 0;
+    ctx.beginPath(); ctx.moveTo(cx - 16, cy - d * 8); ctx.lineTo(cx, cy + d * 8); ctx.lineTo(cx + 16, cy - d * 8); ctx.stroke();
+  }
+  ctx.restore();
+}
+// logs, planks and barrels bobbing on the flood
+function drawDebris(h) {
+  const x = h.x, base = WATER + debrisBob(h, x), day = pS;
+  const wood = mix('#4a3a2c', '#8a6a48', day), wood2 = mix('#5a4636', '#a98259', day), dark = mix('#2b2118', '#5a4330', day);
+  const log = (lx, ly, lw, lh) => {
+    ctx.fillStyle = wood; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(lx, ly - lh, lw, lh + 6, lh / 2) : ctx.rect(lx, ly - lh, lw, lh + 6); ctx.fill();
+    ctx.fillStyle = wood2; ctx.beginPath(); ctx.ellipse(lx + lw - 3, ly - lh / 2 + 3, 4.2, lh / 2, 0, 0, TAU); ctx.fill();
+    ctx.strokeStyle = dark; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(lx + 8, ly - lh * 0.5); ctx.lineTo(lx + lw - 12, ly - lh * 0.5); ctx.stroke();
+  };
+  const barrel = (bx, by) => {
+    ctx.fillStyle = wood2; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx, by - 30, 26, 34, 6) : ctx.rect(bx, by - 30, 26, 34); ctx.fill();
+    ctx.strokeStyle = dark; ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.moveTo(bx, by - 21); ctx.lineTo(bx + 26, by - 21); ctx.moveTo(bx, by - 7); ctx.lineTo(bx + 26, by - 7); ctx.stroke();
+  };
+  ctx.save();
+  ctx.translate(0, 0);
+  if (h.comp === 0) { ctx.translate(x + 56, base); ctx.rotate(Math.sin(x * 0.03 + h.ph) * 0.04); ctx.translate(-(x + 56), -base); log(x, base, 112, 20); }
+  else if (h.comp === 1) {
+    ctx.fillStyle = wood; ctx.fillRect(x, base - 8, 82, 9); ctx.fillRect(x + 6, base - 18, 74, 9);
+    ctx.fillStyle = dark; ctx.fillRect(x + 22, base - 18, 2, 19); ctx.fillRect(x + 54, base - 18, 2, 19);
+    barrel(x + 92, base);
+  } else { log(x, base, 96, 18); barrel(x + 36, base - 14); }
+  ctx.restore();
+}
+// the tip of a drowned tree, swaying a little
+function drawTree(h) {
+  const cx = h.x + h.w / 2, top = h.y, hgt = h.hgt, sw = reduceMotion ? 0 : Math.sin(stt() * 1.3 + h.ph);
+  const bark = mix('#2c241f', '#6a5444', pS), bark2 = mix('#3a2f28', '#85694f', pS), leaf = mix('#34402a', '#6f8450', pS);
+  const sx = y => sw * 3.5 * clamp((WATER - y) / hgt, 0, 1);
+  ctx.save();
+  ctx.strokeStyle = bark; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(cx, WATER + 10); ctx.lineTo(cx + sx(top + hgt * 0.5) * 0.4, top + hgt * 0.5); ctx.lineTo(cx + sx(top), top + 6); ctx.stroke();
+  const br = [[0.2, -1, 24, 18], [0.34, 1, 22, 16], [0.5, -1, 20, 15], [0.62, 1, 17, 12], [0.76, -1, 13, 10]];
+  for (const b of br) {
+    const y = top + hgt * (1 - b[0]) * 0.92 + 4, x1 = cx + sx(y), x2 = x1 + b[1] * b[2] + sx(y - 10) * 0.5, y2 = y - b[3];
+    ctx.lineWidth = 4.5; ctx.strokeStyle = bark2; ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x2 + b[1] * 6, y2 - 7); ctx.stroke();
+    ctx.fillStyle = leaf; ctx.beginPath(); ctx.ellipse(x2 + b[1] * 3, y2 - 2, 6, 3.4, b[1] * 0.5, 0, TAU); ctx.fill();
+  }
+  ctx.fillStyle = leaf; ctx.beginPath(); ctx.ellipse(cx + sx(top), top - 1, 8, 5, 0, 0, TAU); ctx.fill();
+  ctx.restore();
+}
+// fog dims everything behind it: clear next to the bird, thickening with distance ahead
+function drawFog() {
+  for (const h of hazards) {
+    if (h.type !== 'fog') continue;
+    const x0 = Math.max(h.x, -10), x1 = Math.min(h.x + h.w, W + 10);
+    if (x1 <= x0) continue;
+    ctx.fillStyle = mix('#232b3d', '#dbe4ef', pS);
+    for (let sx = Math.floor(x0 / 10) * 10; sx < x1; sx += 10) {
+      const edge = clamp(Math.min(sx - h.x, h.x + h.w - sx) / 50, 0, 1), dx = sx - BIRD_X;
+      const a = 0.58 * smooth(edge) * smooth(clamp((dx - 60) / 110, 0, 1));
+      if (a < 0.01) continue;
+      ctx.globalAlpha = a; ctx.fillRect(sx, 0, 10, WATER);
+      ctx.globalAlpha = a * 0.5; ctx.fillRect(sx, WATER - 150, 10, 150);
+    }
+    ctx.globalAlpha = 1;
   }
 }
 function drawStormCloud(h) {
@@ -3741,8 +4185,14 @@ function draw() {
     else if (h.type === 'hang') drawHang(h);
     else if (h.type === 'cloud') drawStormCloud(h);
     else if (h.type === 'wave') drawWave(h);
+    else if (h.type === 'fount') drawFount(h);
+    else if (h.type === 'gust') drawGust(h);
+    else if (h.type === 'debris') drawDebris(h);
+    else if (h.type === 'tree') drawTree(h);
+    else if (h.type === 'fog') continue;   // drawn on top of everything else, below
     else { drawTelegraph(h); if (h.launched) drawCreature(h); }
   }
+  drawFog();
   for (const o of orbs) drawOrb(o);
   drawMates();
   drawPlayer();
@@ -3750,7 +4200,9 @@ function draw() {
   drawSceneFront();
   if (nS > 0.01) { ctx.fillStyle = 'rgba(4,8,26,' + (0.2 * nS).toFixed(3) + ')'; ctx.fillRect(-20, -20, W + 40, H + 40); }
   drawParticles();
-  const sc = scn(), ri = Math.max(1 - pS, sc.rainFloor);
+  const sc = scn();
+  let ri = Math.max(1 - pS, sc.rainFloor);
+  if (fin && fin.kind === 'rest') ri = fin.wk === 2 ? Math.max(ri, 0.95) * (1 - smooth(clamp((fin.t - 5.6) / 2.4, 0, 1))) : ri * (1 - smooth(clamp((fin.t - 0.8) / 3.5, 0, 1)));   // the rain eases off at a rest stop (Week 2: it stops on the fortieth day)
   if (ri > 0.02) {
     ctx.strokeStyle = 'rgba(200,215,235,' + (0.42 * ri).toFixed(3) + ')';
     ctx.lineWidth = sc.rw;
@@ -3795,7 +4247,7 @@ const TIERS = [
   { k: 'obsidian', name: 'Obsidian', c: ['#5a4580', '#241a35', '#07050b'], f: ['#2d2142', '#0a0710'], rib: ['#3b1d6e', '#6b34c9'], tx: '#b58cff' },
   { k: 'diamond',  name: 'Diamond',  c: ['#ffffff', '#bfe6ff', '#8fa8ff'], f: ['#f4fcff', '#9cc6ff'], rib: ['#e0488b', '#8a5cff'], tx: '#ffffff' }
 ];
-const MS0 = { fly: 0, day1: 0, wc: {}, ark: 0, flaw: 0, pw: 0, pills: 0, stack: 0, kinds: 0, chain3: 0, megas: 0, megaTail: 0, megaHalo: 0, close: 0, quick: 0, hurry: 0, last: 0, spark: 0, jonah: 0, tflights: 0, full: 0, rescued: 0, revives: 0, ttail: 0, tmega: 0, tark: 0, ranked: 0, days: [] };
+const MS0 = { fly: 0, day1: 0, wc: {}, ark: 0, flaw: 0, pw: 0, pills: 0, stack: 0, kinds: 0, chain3: 0, megas: 0, megaTail: 0, megaHalo: 0, close: 0, quick: 0, hurry: 0, last: 0, spark: 0, jonah: 0, tflights: 0, full: 0, rescued: 0, revives: 0, ttail: 0, tmega: 0, tark: 0, ranked: 0, hpw: 0, hpw5: 0, pwRun: 0, pwBest: 0, bolts: 0, creat: 0, days: [] };
 let ms = Object.assign({}, MS0, store.get('ms', {}));
 if (!ms.wc || typeof ms.wc !== 'object') ms.wc = {};
 if (!Array.isArray(ms.days)) ms.days = [];
@@ -3816,7 +4268,9 @@ const MEDAL_GROUPS = [
     ['w5', 'Week 5 Cleared', 2, '⚡', 'Clear Week 5: the storm at full strength.', 1, () => ms.wc[5] ? 1 : 0],
     ['olive', 'Olive Leaf', 3, '🌿', 'Reach the ark.', 1, () => ms.ark],
     ['round', 'Round Trip', 4, '🔁', 'Reach the ark 3 times.', 3, () => ms.ark],
-    ['flawless', 'Flawless Voyage', 5, '🕊️', 'Reach the ark without losing a single heart.', 1, () => ms.flaw]]],
+    ['flawless', 'Flawless Voyage', 5, '🕊️', 'Reach the ark without losing a single heart.', 1, () => ms.flaw],
+    ['flaw2', 'Twice Blessed', 5, '🙏', 'Reach the ark without losing a heart, two separate times.', 2, () => ms.flaw],
+    ['ark10', 'Ark Captain', 5, '⚓', 'Reach the ark 10 times.', 10, () => ms.ark]]],
   ['Perfect weeks', [
     ['pw1', 'Spotless', 0, '✨', 'Clear a week without losing a heart.', 1, () => ms.pw],
     ['pw5', 'Steady Wings', 0, '🪶', '5 perfect weeks.', 5, () => ms.pw],
@@ -3825,11 +4279,17 @@ const MEDAL_GROUPS = [
     ['pw20', 'Rock Solid', 2, '🪨', '20 perfect weeks.', 20, () => ms.pw],
     ['pw25', 'Silver Wings', 3, '🥈', '25 perfect weeks.', 25, () => ms.pw],
     ['pw30', 'Gold Wings', 4, '🥇', '30 perfect weeks.', 30, () => ms.pw],
-    ['pw50', 'Untouchable', 5, '👑', '50 perfect weeks.', 50, () => ms.pw]]],
+    ['pw50', 'Untouchable', 5, '👑', '50 perfect weeks.', 50, () => ms.pw],
+    ['pw100', 'Hundredfold', 5, '💎', '100 perfect weeks.', 100, () => ms.pw],
+    ['deep', 'Deep Water', 3, '🌊', 'Clear Week 4 or later without losing a heart.', 1, () => ms.hpw],
+    ['hat3', 'Hat Trick', 3, '🎩', 'Clear 3 perfect weeks in a row.', 3, () => ms.pwBest],
+    ['deep5', 'Eye of the Flood', 4, '🌪️', 'Clear Week 5 or Week 6 without losing a heart.', 1, () => ms.hpw5],
+    ['hat5', 'Fivefold Flight', 4, '🖐️', 'Clear 5 perfect weeks in a row.', 5, () => ms.pwBest]]],
   ['Power-ups', [
     ['pill1', 'First Pill', 0, '💊', 'Grab your first power-up.', 1, () => ms.pills],
     ['pill50', 'Collector', 1, '🎒', 'Grab 50 power-ups.', 50, () => ms.pills],
     ['pill250', 'Hoarder', 2, '🧺', 'Grab 250 power-ups.', 250, () => ms.pills],
+    ['pill500', 'Cup Overflowing', 4, '🏺', 'Grab 500 power-ups.', 500, () => ms.pills],
     ['stack3', 'Triple Stack', 1, '🔱', 'Run three power-ups at once.', 3, () => ms.stack],
     ['kinds6', 'Full Set', 2, '🌈', 'Use all six kinds of power-up in one week (solo).', 6, () => ms.kinds],
     ['chain3', 'Chain Starter', 0, '🔗', 'Grab the same power-up 3 times in a row.', 1, () => ms.chain3]]],
@@ -3837,6 +4297,7 @@ const MEDAL_GROUPS = [
     ['mega1', 'Mega Maker', 1, '🌟', 'Trigger your first Mega Boost.', 1, () => ms.megas],
     ['mega5', 'Power Surge', 2, '🔋', 'Trigger 5 Mega Boosts.', 5, () => ms.megas],
     ['mega25', 'Mega Master', 4, '👑', 'Trigger 25 Mega Boosts.', 25, () => ms.megas],
+    ['mega75', 'Mega Legend', 5, '🌠', 'Trigger 75 Mega Boosts.', 75, () => ms.megas],
     ['warp', 'Warp Speed', 2, '💨', 'Trigger a Mega Tailwind.', 1, () => ms.megaTail],
     ['saint', 'Saint', 3, '😇', 'Trigger a Mega Halo.', 1, () => ms.megaHalo]]],
   ['Close calls', [
@@ -3844,13 +4305,18 @@ const MEDAL_GROUPS = [
     ['cc25', 'Needle Thread', 1, '🧵', '25 close calls.', 25, () => ms.close],
     ['cc50', 'Daredevil', 2, '😎', '50 close calls.', 50, () => ms.close],
     ['cc100', 'Storm Dancer', 3, '⛈️', '100 close calls.', 100, () => ms.close],
-    ['cc250', 'Eye of the Storm', 4, '🌀', '250 close calls.', 250, () => ms.close]]],
+    ['cc250', 'Eye of the Storm', 4, '🌀', '250 close calls.', 250, () => ms.close],
+    ['cc500', 'Heart of the Storm', 5, '💠', '500 close calls.', 500, () => ms.close]]],
   ['Skill', [
     ['quick', 'Quick Wings', 1, '🦋', 'Clear a week 12% under its clock.', 1, () => ms.quick],
     ['hurry', 'Hurry Up', 2, '⏱️', 'Save 60 seconds with Tailwind in one week.', 1, () => ms.hurry],
     ['last', 'Last Heart Standing', 2, '❤️‍🩹', 'Clear a week on your last heart.', 1, () => ms.last],
     ['spark', 'Spark Dodger', 1, '🌩️', 'Dodge 10 lightning bolts in one week.', 10, () => ms.spark],
-    ['jonah', 'Jonah', 2, '🐋', 'Dodge 25 sea creatures in one flight.', 25, () => ms.jonah]]],
+    ['jonah', 'Jonah', 2, '🐋', 'Dodge 25 sea creatures in one flight.', 25, () => ms.jonah],
+    ['storm40', 'Storm Walker', 3, '🌩️', 'Dodge 40 lightning bolts in one week.', 40, () => ms.spark],
+    ['leviathan', 'Leviathan', 3, '🐳', 'Dodge 150 sea creatures in one flight.', 150, () => ms.jonah],
+    ['bolt500', 'Unstruck', 4, '☔', 'Dodge 500 lightning bolts, all flights together.', 500, () => ms.bolts],
+    ['creat1000', 'Tamer of the Deep', 4, '🦈', 'Dodge 1,000 sea creatures, all flights together.', 1000, () => ms.creat]]],
   ['Team', [
     ['tf1', 'Better Together', 0, '🤝', 'Take off in a team flight.', 1, () => ms.tflights],
     ['full', 'Full House', 3, '🏠', 'Fly with 10 players.', 1, () => ms.full],
@@ -3892,8 +4358,9 @@ function mev(k, a) {
     case 'chain': if (a >= 3) ms.chain3 = 1; break;
     case 'mega': ms.megas++; if (a === 'tail') ms.megaTail = 1; if (a === 'halo') ms.megaHalo = 1; break;
     case 'close': ms.close++; break;
-    case 'bolt': wkBolts++; ms.spark = Math.max(ms.spark, wkBolts); break;
-    case 'croc': runCreat++; ms.jonah = Math.max(ms.jonah, runCreat); break;
+    case 'bolt': wkBolts++; if (!practice) ms.bolts++; ms.spark = Math.max(ms.spark, wkBolts); break;
+    case 'croc': if (!practice) { runCreat++; ms.creat++; ms.jonah = Math.max(ms.jonah, runCreat); } break;
+    case 'hurt': if (!practice) ms.pwRun = 0; break;
     case 'rescued': ms.rescued++; break;
     case 'revived': ms.revives++; break;
     case 'ttail': ms.ttail++; break;
@@ -3901,7 +4368,8 @@ function mev(k, a) {
     case 'ranked': ms.ranked = 1; break;
     case 'clear': {
       ms.wc[week] = 1;
-      if (!wkLost) ms.pw++;
+      if (!wkLost) { ms.pw++; ms.pwRun++; ms.pwBest = Math.max(ms.pwBest, ms.pwRun); if (week >= 4) ms.hpw = 1; if (week >= 5) ms.hpw5 = 1; }
+      else ms.pwRun = 0;
       if (lives === 1 && wkLost && !wkRev) ms.last = 1;
       if (a.frac >= 0.12) ms.quick = 1;
       if (weekSaved >= 60) ms.hurry = 1;
@@ -4094,6 +4562,7 @@ function updateHomeTiles() {
   const a = $('#tStats'), b = $('#tWeekly');
   if (a) a.textContent = best > 0 ? 'Furthest: ' + fmtDay(best) : 'Your flights so far';
   if (b) b.textContent = wd.filter(v => v >= 8).length + ' of ' + NWEEKS + ' weeks cleared';
+  const j = $('#tJournal'); if (j) j.textContent = wd.filter(v => v >= 8).length + ' of ' + NWEEKS + ' verses found';
   updateMedalBtn();
 }
 function medalSummary() {
@@ -4131,9 +4600,31 @@ function openStats() {
   });
   body.append(g);
 }
+const JOURNAL_END = { title: 'Welcome home.', verse: 'And the dove came in to him in the evening; and, lo, in her mouth was an olive leaf pluckt off: so Noah knew that the waters were abated from off the earth.', ref: 'Genesis 8:11' };
+function openJournal() {
+  const body = infoOpen('Verse journal', 'Verses you have earned');
+  const p = document.createElement('p'); p.className = 'lede'; p.textContent = 'Every week you clear adds the verse from its ending. King James Version.';
+  const ol = document.createElement('ol'); ol.className = 'jlist';
+  for (let w = 1; w <= NWEEKS; w++) {
+    const got = (wd[w - 1] || 0) >= 8, e = w < NWEEKS ? ENDS[w] : JOURNAL_END;
+    const li = document.createElement('li'); if (!got) li.className = 'lock';
+    const sm = document.createElement('small'); sm.textContent = 'Week ' + w + ' \u00b7 ' + SCN[w].name;
+    li.append(sm);
+    if (got) {
+      const em = document.createElement('em'), q = document.createElement('q'), ci = document.createElement('cite');
+      em.textContent = e.title; q.textContent = e.verse; ci.textContent = e.ref;
+      li.append(em, q, ci);
+    } else {
+      const em = document.createElement('em'); em.textContent = 'Clear Week ' + w + ' to find this verse.';
+      li.append(em);
+    }
+    ol.append(li);
+  }
+  body.append(p, ol);
+}
 function openWeekly() {
   const body = infoOpen('Weekly best', 'Week by week');
-  const p = document.createElement('p'); p.className = 'lede'; p.textContent = 'Your furthest day and your fastest clear in each week. Week 2 is 5% harder than Week 1, then +7%, +15%, +7% and +15% on top of the week before.';
+  const p = document.createElement('p'); p.className = 'lede'; p.textContent = 'Your furthest day and your fastest clear in each week. Tap Practice on a cleared week to fly it again for a better time: it never changes your medals or saved progress. Week 2 is 5% harder than Week 1, then +7%, +15%, +7% and +15% on top of the week before.';
   const ol = document.createElement('ol'); ol.className = 'blist wkl';
   for (let w = 1; w <= NWEEKS; w++) {
     const v = wd[w - 1] || 0, tm = +wbest[w - 1] || 0;
@@ -4141,10 +4632,16 @@ function openWeekly() {
     const rk = document.createElement('b'); rk.textContent = String(w);
     const mid = document.createElement('span'), nm = document.createElement('em'), sm = document.createElement('small');
     nm.textContent = SCN[w].name;
-    sm.textContent = (v >= 8 ? 'Cleared' : v > 0 ? 'Reached Day ' + v + ' of ' + NDAYS : 'Not reached yet') + ' · ' + (w === 1 ? 'Starting pace' : '+' + Math.round(WK_STEP[w] * 100) + '% on Week ' + (w - 1));
+    sm.textContent = (v >= 8 ? 'Cleared' : v > 0 ? 'Reached Day ' + v + ' of ' + NDAYS : 'Not reached yet') + ' · ' + (w === 1 ? 'Starting pace' : '+' + Math.round(WK_STEP[w] * 100) + '% on Week ' + (w - 1)) + (NEW_HAZ[w] ? ' · New: ' + NEW_HAZ[w] : '');
     mid.append(nm, sm);
     const ti = document.createElement('i'); ti.textContent = tm > 0 ? mmss(tm) : '—';
-    li.append(rk, mid, ti); ol.append(li);
+    li.append(rk, mid, ti);
+    if (v >= 8) {
+      const pb = document.createElement('button'); pb.type = 'button'; pb.className = 'btn quiet pracbtn'; pb.textContent = 'Practice'; pb.setAttribute('aria-label', 'Practice Week ' + w);
+      pb.addEventListener('click', () => startPractice(w));
+      li.append(pb);
+    }
+    ol.append(li);
   }
   body.append(p, ol);
 }
@@ -4397,6 +4894,7 @@ function init() {
   $('#pBack').addEventListener('click', () => setPanels('home'));
   $('#openStats').addEventListener('click', openStats);
   $('#openWeekly').addEventListener('click', openWeekly);
+  $('#openJournal').addEventListener('click', openJournal);
   $('#openPlayers').addEventListener('click', openPlayers);
   $('#iClose').addEventListener('click', closeSide);
   homeInit();
@@ -4422,14 +4920,14 @@ function init() {
   $('#bClose').addEventListener('click', closeSide);
   updateMedalBtn();
   $('#startMp').addEventListener('click', () => { ensureAudio(); if (mp && mp.isHost) mpHostGo(1); });
-  $('#again').addEventListener('click', () => { if (mp) { if (mp.isHost) mpHostGo(week); } else beginReady(!cpBust && (week > 1 || !!cp)); });
+  $('#again').addEventListener('click', () => { if (mp) { if (mp.isHost) mpHostGo(week); } else if (practice) { if (cpBust || (week === 1 && !cp)) startPractice(practice); else beginReady(true); } else beginReady(!cpBust && (week > 1 || !!cp)); });
   cpb.addEventListener('mousedown', e => e.preventDefault());
   cpb.addEventListener('click', e => { e.stopPropagation(); plantCheckpoint(); try { cpb.blur(); } catch (er) { /* ignore */ } });
   $('#restart').addEventListener('click', () => beginReady(false));
   $('#swap').addEventListener('click', () => { if (mp) mpLeave(); else showMenu(true); });
-  $('#again2').addEventListener('click', () => { if (mp) mpToLobby(); else beginReady(false); });
+  $('#again2').addEventListener('click', () => { if (mp) mpToLobby(); else if (practice) startPractice(practice); else beginReady(false); });
   $('#swap2').addEventListener('click', () => { if (mp) mpLeave(); else showMenu(true); });
-  $('#endRun').addEventListener('click', goHome);
+  $('#endRun').addEventListener('click', () => { if (practice) startPractice(practice); else goHome(); });
   $('#overHome').addEventListener('click', goHome);
   $('#winHome').addEventListener('click', goHome);
   $('#goResume').addEventListener('click', () => { ensureAudio(); resumeFlight(); });
