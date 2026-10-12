@@ -187,6 +187,11 @@ body {
   padding: 0;
 }
 .mute svg { width: 1.2em; height: 1.2em; }
+.mute[hidden] { display: none; }
+.pausebtn { right: 3.7em; }
+.pausebtn svg { width: 1.05em; height: 1.05em; }
+.resumebox { display: flex; flex-direction: column; gap: .5em; padding: .8em .9em; border-radius: .9em; background: rgba(246, 201, 120, .1); border: 1px solid rgba(246, 201, 120, .45); }
+.resumebox .lede { margin: 0; font-size: .82em; }
 .mute .off { display: none; }
 .mute[aria-pressed="true"] .on { display: none; }
 .mute[aria-pressed="true"] .off { display: block; }
@@ -464,6 +469,10 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
       <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
     </button>
 
+    <button class="mute pausebtn" id="pauseBtn" type="button" aria-label="Pause" hidden>
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4.2" height="15" rx="1.2"/><rect x="13.8" y="4.5" width="4.2" height="15" rx="1.2"/></svg>
+    </button>
+
     <div id="hud" hidden>
       <div class="day"><small>Day</small><b id="dayN">1</b><span id="ofDays">of 7</span></div>
       <div class="track" id="track" aria-hidden="true">
@@ -503,6 +512,11 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
       <div>
         <div class="cards" id="cards"></div>
         <p class="birdinfo" id="birdInfo" aria-live="polite"></p>
+      </div>
+      <div class="resumebox" id="resumeBox" hidden>
+        <p class="eyebrow">Welcome back</p>
+        <p class="lede" id="resumeTxt"></p>
+        <button class="btn primary" id="goResume" type="button">Retry Week 2</button>
       </div>
       <button class="btn primary" id="go" type="button">Take flight</button>
       <p class="stats" id="stats"></p>
@@ -555,6 +569,7 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
         <button class="btn" id="swap" type="button">Change bird</button>
       </div>
       <button class="btn quiet" id="restart" type="button" hidden>Start over from Week 1</button>
+      <button class="btn quiet" id="overHome" type="button">Home</button>
     </section>
 
     <section class="sheet" id="rest" hidden>
@@ -584,6 +599,15 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
         <button class="btn primary" id="again2" type="button">Play again</button>
         <button class="btn" id="swap2" type="button">Change bird</button>
       </div>
+      <button class="btn quiet" id="winHome" type="button">Home</button>
+    </section>
+
+    <section class="panel" id="pauseP" hidden>
+      <p class="eyebrow">Paused</p>
+      <h2>Take a breath.</h2>
+      <p class="lede" id="pauseNote"></p>
+      <button class="btn primary" id="pResume" type="button">Resume</button>
+      <button class="btn" id="pHome" type="button">Save and go Home</button>
     </section>
 
     <section class="panel" id="medalsP" hidden>
@@ -1651,6 +1675,7 @@ function setPanels(which) {
   restP.hidden = which !== 'rest'; winP.hidden = which !== 'win';
   $('#medalsP').hidden = which !== 'medals'; $('#boardP').hidden = which !== 'board';
   $('#home').hidden = which !== 'home'; $('#infoP').hidden = which !== 'info';
+  if (which) { paused = false; $('#pauseP').hidden = true; }
   if (which === 'home') homeShow();
 }
 function setCap(text, ms) {
@@ -1821,17 +1846,69 @@ function resetWeek() {
   burn = 0; stunT = 0; fallT = 0; bounces = 0;
   bird = newBird(); flash = 0; shake = 0; capHide();
 }
+/* ---------- saved progress, Home button, pause ---------- */
+// leaving a run keeps the week you were in: next time you can retry it from Day 1 or start again from Week 1
+function getResume() { const r = store.get('resume', null); return r && r.w >= 2 && r.w <= NWEEKS && isFinite(r.t0) ? r : null; }
+function saveProgress() {
+  if (mp) return;
+  let r = null;
+  if (state === 'finale' && fin) { if (fin.kind === 'rest' && week < NWEEKS) r = { w: week + 1, t0: runTime }; }
+  else if (!cpBust && week > 1) r = { w: week, t0: weekT0 };
+  if (r) { r.l = runLost ? 1 : 0; r.c = runCreat | 0; }
+  store.set('resume', r);
+}
+function updateResumeUi() {
+  const r = getResume(), go = $('#go');
+  $('#resumeBox').hidden = !r;
+  go.textContent = r ? 'Start over from Week 1' : 'Take flight';
+  go.className = 'btn' + (r ? '' : ' primary');
+  if (r) {
+    $('#resumeTxt').textContent = 'Your flight is saved at Week ' + r.w + ' of ' + NWEEKS + '. Try it again from Day 1, or go back to Week 1.';
+    $('#goResume').textContent = 'Retry Week ' + r.w;
+  }
+  const gs = $('#goSolo'); if (gs) gs.textContent = r ? 'Solo flight \u00b7 Week ' + r.w + ' saved' : 'Solo flight';
+}
+function resumeFlight() {
+  const r = getResume();
+  if (!r) { beginReady(false); return; }
+  week = r.w; weekT0 = r.t0; runLost = !!r.l; runCreat = r.c | 0;
+  cp = null; cpUsed = false; cpFalls = 0; cpBust = false;
+  beginReady(true);
+}
+function goHome() {
+  if (mp) { mpLeave(); return; }
+  saveProgress();
+  showMenu();
+}
+let paused = false;
+const pauseBtn = $('#pauseBtn');
+const canPause = () => !mp && (state === 'play' || state === 'ready');
+function setPaused(v) {
+  v = !!v;
+  if (v === paused) return;
+  if (v && !canPause()) return;
+  paused = v;
+  $('#pauseP').hidden = !v;
+  if (v) {
+    $('#pauseNote').textContent = week > 1 ? 'Going Home saves Week ' + week + '. Next time you can retry it from Day 1 or start again from Week 1.' : 'Going Home ends this run. Week 1 has nothing to save yet.';
+    $('#pHome').textContent = week > 1 ? 'Save and go Home' : 'Go Home';
+    try { if (actx && actx.suspend) actx.suspend(); } catch (e) { /* ignore */ }
+    try { $('#pResume').focus({ preventScroll: true }); } catch (e) { /* ignore */ }
+  } else {
+    try { if (actx && actx.resume) actx.resume(); } catch (e) { /* ignore */ }
+  }
+}
 function showMenu(pick) {
   week = 1; runTime = 0; seed = newSeed();
   cp = null; cpUsed = false; cpFalls = 0; cpBust = false; cpArm = 0;
   resetWeek();
   state = 'menu';
   setPanels(pick ? 'menu' : 'home'); hud.hidden = true; matesEl.hidden = true; cpb.hidden = true;
-  renderCards(); updateStats(); updateHomeTiles();
+  renderCards(); updateStats(); updateHomeTiles(); updateResumeUi();
 }
 function beginReady(keepWeek) {
   ensureAudio(); cloudTip = false;
-  if (keepWeek === true) runTime = weekT0; else { week = 1; runTime = 0; cp = null; cpUsed = false; cpFalls = 0; cpBust = false; runLost = false; runCreat = 0; }
+  if (keepWeek === true) runTime = weekT0; else { week = 1; runTime = 0; cp = null; cpUsed = false; cpFalls = 0; cpBust = false; runLost = false; runCreat = 0; store.set('resume', null); }
   seed = newSeed();
   resetWeek();
   const resume = keepWeek === true && !mp && cp && !cpBust;
@@ -1854,6 +1931,7 @@ function startRun() {
 
 /* ---------- hazards ---------- */
 function flap() {
+  if (paused) return;
   if (state === 'finale') { continueTap(); return; }
   if (state === 'ready' && !mp) startRun();
   if (state !== 'play') return;
@@ -2247,6 +2325,7 @@ function showOver() {
   state = 'dead';
   const day = Math.min(NDAYS, dayIdx + 1), td = totalDays();
   markWeek(week, day);
+  saveProgress(); $('#overHome').hidden = false;
   if (td > best) { best = td; store.set('best3', best); }
   const pool = CAUSES[causeKind] || CAUSES.water;
   let qi; do { qi = Math.floor(Math.random() * pool.length); } while (pool.length > 1 && qi === lastQuip[causeKind]);
@@ -2357,6 +2436,7 @@ function startFinale() {
   hazards = []; strikes = []; orbs = []; pws = []; chain = { type: '', n: 0 }; updatePwHud();
   burn = 0; stunT = 0; causeKind = ''; landed = false; hint.hidden = true;
   fin = { t: 0, gx: W + 110, sx: bird.x, sy: bird.y, rain: 0, lit: false, ev: {}, cf: 0, newUnlock: first && !isEnd, shown: false, py: bird.y, kind: isEnd ? 'end' : 'rest', perched: false, tapAt: 0, stats: stats };
+  saveProgress();
   flash = reduceMotion ? 0 : 0.35;
   setCap('The sky clears.', 2000);
   tone(784, 0.2, 'triangle', 0.06); tone(1047, 0.3, 'triangle', 0.06, 0.12);
@@ -2407,7 +2487,7 @@ function showRest() {
   const nextLen = Math.round(45 * Math.max(0.45, Math.pow(0.88, week)));
   $('#nextInfo').textContent = 'Next, Week ' + (week + 1) + ': days run about ' + nextLen + ' seconds, the waves climb higher and the storm hits harder.';
   $('#tapNote').textContent = (mp && !mp.isHost) ? 'Waiting for the host to fly on.' : 'Rest as long as you like. Tap to fly on.';
-  $('#endRun').textContent = mp ? 'Leave room' : 'End run';
+  $('#endRun').textContent = mp ? 'Leave room' : 'Save and go Home';
   fillUnlocks($('#unlock'));
   setPanels('rest');
 }
@@ -2450,6 +2530,7 @@ function continueTap() {
   week++; seed = newSeed();
   cp = null; cpUsed = false; cpFalls = 0; cpBust = false;
   beginDepart();
+  saveProgress();
 }
 function beginDepart() {
   newWeekClock();
@@ -2712,7 +2793,7 @@ function showTeam() {
   $('#oWeek').textContent = week; $('#oDay').textContent = day; $('#oBest').textContent = teamBest; $('#oTime').textContent = mmss(runTime);
   $('#verse').textContent = VERSES[vi][0]; $('#vref').textContent = VERSES[vi][1];
   $('#swap').textContent = 'Leave room';
-  $('#restart').hidden = true;
+  $('#restart').hidden = true; $('#overHome').hidden = true;
   refreshTeamButtons();
   setPanels('over'); delayEnable(over);
   mpSet({ s: 'dead' });
@@ -3684,8 +3765,10 @@ function draw() {
 function frame(ts) {
   const dt = Math.min(0.033, (ts - lastTs) / 1000 || 0.016);
   lastTs = ts;
-  update(dt);
+  if (!paused) update(dt);
   draw();
+  const showP = !paused && canPause();
+  if (pauseBtn.hidden === showP) pauseBtn.hidden = !showP;
   if (!homeEl.hidden) homeTick(dt);
   requestAnimationFrame(frame);
 }
@@ -4308,7 +4391,7 @@ function init() {
   cards.addEventListener('click', e => { const b = e.target.closest('.card'); if (!b) return; if (isLocked(b.dataset.k)) { birdInfoText(b.dataset.k); return; } pickBird(b.dataset.k); });
   lcards.addEventListener('click', e => { const b = e.target.closest('.mini'); if (b && !b.disabled) pickBird(b.dataset.k); });
   $('#go').addEventListener('click', () => beginReady(false));
-  $('#goSolo').addEventListener('click', () => { ensureAudio(); setPanels('menu'); renderCards(); });
+  $('#goSolo').addEventListener('click', () => { ensureAudio(); setPanels('menu'); renderCards(); updateResumeUi(); });
   $('#pBack').addEventListener('click', () => setPanels('home'));
   $('#openStats').addEventListener('click', openStats);
   $('#openWeekly').addEventListener('click', openWeekly);
@@ -4344,16 +4427,29 @@ function init() {
   $('#swap').addEventListener('click', () => { if (mp) mpLeave(); else showMenu(true); });
   $('#again2').addEventListener('click', () => { if (mp) mpToLobby(); else beginReady(false); });
   $('#swap2').addEventListener('click', () => { if (mp) mpLeave(); else showMenu(true); });
-  $('#endRun').addEventListener('click', () => { if (mp) mpLeave(); else showMenu(); });
+  $('#endRun').addEventListener('click', goHome);
+  $('#overHome').addEventListener('click', goHome);
+  $('#winHome').addEventListener('click', goHome);
+  $('#goResume').addEventListener('click', () => { ensureAudio(); resumeFlight(); });
+  pauseBtn.addEventListener('click', e => { e.stopPropagation(); setPaused(true); });
+  pauseBtn.addEventListener('mousedown', e => e.preventDefault());
+  $('#pResume').addEventListener('click', () => setPaused(false));
+  $('#pHome').addEventListener('click', () => { setPaused(false); goHome(); });
+  try { document.addEventListener('visibilitychange', () => { if (document.hidden && canPause()) setPaused(true); }); } catch (e) { /* ignore */ }
 
   cv.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); flap(); });
   window.addEventListener('keydown', e => {
+    if ((e.code === 'Escape' || e.code === 'KeyP') && !(e.target && e.target.closest && e.target.closest('input'))) {
+      if (paused) setPaused(false); else if (canPause()) setPaused(true);
+      return;
+    }
+    if (paused) return;
     if (e.code !== 'Space' && e.code !== 'ArrowUp' && e.code !== 'KeyW') return;
     if (e.target && e.target.closest && (e.target.closest('button') || e.target.closest('input'))) return;
     e.preventDefault();
     if (e.repeat) return;
     ensureAudio();
-    if (state === 'menu') { if (!menu.hidden) beginReady(false); } else flap();
+    if (state === 'menu') { if (!menu.hidden) { if (getResume()) resumeFlight(); else beginReady(false); } } else flap();
   });
 
   showMenu();
