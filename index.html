@@ -809,7 +809,7 @@ function mkRng(seed) {
     return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
   };
 }
-let wR = mkRng(1), sR = mkRng(2), seed = 1;
+let wR = mkRng(1), sR = mkRng(2), pR = mkRng(3), seed = 1;   // pR deals the pills on its own, so when a phone picks up an orb a hair earlier or later it cannot shift the obstacles
 const wrand = (a, b) => a + wR() * (b - a);
 const srand = (a, b) => a + sR() * (b - a);
 const newSeed = () => (Math.random() * 2147483647) | 0;
@@ -1111,7 +1111,7 @@ let ach = store.get('ach', {}), unl = store.get('unl', {}), unlockQ = [];
 if (!ach || typeof ach !== 'object') ach = {};
 if (!unl || typeof unl !== 'object') unl = {};
 if (!BIRDS[charKey] || isLocked(charKey)) charKey = 'dove';
-let spawnDist = 0, lastEnc = '', encPassed = 0, orbDue = false, strikeT = 8, hid = 0, prevC = null, bag = [], lastPw = '', curSp = 125;
+let wDist = 0, spawnDist = 0, lastEnc = '', encPassed = 0, orbDue = false, strikeT = 8, hid = 0, prevC = null, bag = [], lastPw = '', curSp = 125;
 let hudDay = -1, hudPhase = '', capTimer = 0, hudCalm = false;
 let weekSaved = 0, hudSaved = -1, cloudTip = false;
 let wbest = store.get('wbest', []), jbest = store.get('jbest', 0);
@@ -1130,7 +1130,40 @@ const prog = () => clamp(elapsed / total, 0, 1);
 const dif = () => prog() + (week - 1) * 0.5;        // 0 at week 1 start, 3.5 at the end of week 6
 const dl = () => clamp(dif() - 1, 0, 2.5);
 const dayScale = () => Math.max(0.45, Math.pow(0.88, week - 1));
-const baseSpeed = () => lerp(125, 165, Math.min(1, dif())) + 18 * dl();
+const baseSpeed = () => lerp(125, 165, Math.min(1, sdif())) + 18 * sdl();
+// In team play every phone has to build the same sky, so what gets spawned and how fast the world scrolls follow the DISTANCE flown
+// (which the host keeps everybody in step on), not each phone's own clock. A table of distance against time tells us how far along the week that is.
+let dtab = null;
+function buildDtab() {
+  dtab = [0]; let d = 0;
+  const n = Math.ceil(total / 0.5);
+  for (let i = 0; i < n; i++) {
+    const df = Math.min(1, (i * 0.5) / total) + (week - 1) * 0.5;
+    d += (lerp(125, 165, Math.min(1, df)) + 18 * clamp(df - 1, 0, 2.5)) * 0.5;
+    dtab.push(d);
+  }
+}
+const shProgAt = D => {
+  if (!dtab || dtab.length < 2) return prog();
+  let lo = 0, hi = dtab.length - 1;
+  if (D >= dtab[hi]) return 1;
+  if (D <= 0) return 0;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (dtab[m] <= D) lo = m; else hi = m; }
+  const f = (D - dtab[lo]) / Math.max(1e-6, dtab[hi] - dtab[lo]);
+  return clamp((lo + f) * 0.5 / total, 0, 1);
+};
+const sdif = () => (mp ? shProgAt(wDist) : prog()) + (week - 1) * 0.5;   // for the scroll speed
+const sdl = () => clamp(sdif() - 1, 0, 2.5);
+// What gets spawned is decided from how far along the week the ENCOUNTER is (the running total of the gaps dealt so far), which is the same
+// number on every phone, so a pillar spawning a pixel earlier or later on one phone can never change what comes next.
+let encCum = 0;
+const edif = () => (mp ? shProgAt(encCum) : prog()) + (week - 1) * 0.5;
+const edl = () => clamp(edif() - 1, 0, 2.5);
+const distAtT = tt => {
+  if (!dtab || dtab.length < 2) return 0;
+  const x = clamp(tt / 0.5, 0, dtab.length - 1.001), i = Math.floor(x);
+  return dtab[i] + (dtab[i + 1] - dtab[i]) * (x - i);
+};
 const pwGet = k => { for (let i = 0; i < pws.length; i++) if (pws[i].type === k) return pws[i]; return null; };
 const pwHas = k => !!pwGet(k);
 const pwMega = k => { const p = pwGet(k); return !!(p && p.mega); };
@@ -1529,13 +1562,14 @@ function newWeekClock() {
   const kR = mkRng(seed * 13 + week * 977 + 5);
   wR = mkRng(seed * 31 + week * 7919 + 1);
   sR = mkRng(seed * 17 + week * 104729 + 3);
+  pR = mkRng(seed * 43 + week * 6007 + 9);
   dayLens = []; dayPre = [0];
   const sc = dayScale();
   for (let i = 0; i < NDAYS; i++) { const L = (DAY_MIN + kR() * (DAY_MAX - DAY_MIN)) * sc; dayLens.push(L); dayPre.push(dayPre[i] + L); }
-  total = dayPre[NDAYS];
+  total = dayPre[NDAYS]; buildDtab();
   dayIdx = 0; dayT = 0; elapsed = 0; weekT0 = runTime; weekSaved = 0; hudSaved = -1;
   hazards = []; strikes = []; orbs = []; pws = []; chain = { type: '', n: 0 }; weekPicks = 0;
-  spawnDist = 0; lastSpace = 0; lastEnc = ''; encPassed = 0; orbDue = false; strikeT = 8; prevC = null; hid = 0; bag = []; lastPw = '';
+  wDist = 0; encCum = 0; spawnDist = 0; lastSpace = 0; lastEnc = ''; encPassed = 0; orbDue = false; strikeT = 8; prevC = null; hid = 0; bag = []; lastPw = '';
   lives = LIVES; iT = 0; hurtT = 0; panelAt = 0; hideOops();
   cq = week === 1 ? planClouds() : [];
   updateLivesHud();
@@ -1554,14 +1588,35 @@ function planClouds() {
   }
   return q;
 }
-function spawnScheduledClouds() {
-  while (cq.length && elapsed >= cq[0].t) {
+// In team play a scheduled cloud is due at a fixed DISTANCE and sets the next spawn point in absolute terms, and pillars and clouds are dealt
+// in the order of those distances, so every phone builds the same sky however its frames happened to fall.
+function cloudDueD() {
+  if (!cq.length) return Infinity;
+  const dueD = distAtT(cq[0].t), gateD = wDist + spawnDist - lastSpace + 150;   // gateD: 150px after the last obstacle
+  return Math.max(dueD, Math.min(gateD, dueD + 700));
+}
+function spawnCloud(Dc) {
+  const c = cq.shift();
+  const cx = W + 60 - (mp ? Math.max(0, wDist - Dc) : 0);
+  const amp = c.mv ? c.amp : 0, y0 = clamp(c.y, 70 + amp, WATER - 110 - amp);
+  const nh = { type: 'cloud', x: cx, w: 92, h: 48, y: y0, y0: y0, x0: cx, amp: amp, wl: c.wl, ph: c.ph, id: hid++, lead: true, sched: true, charged: c.charged, delay: c.delay, age: 0, zapped: false, day: c.day };
+  hazards.push(nh); tipCloud(nh);
+  if (mp) { const Sn = Math.max(wDist + spawnDist, Dc + 190); spawnDist = Sn - wDist; lastSpace = Sn - Dc; }
+  else { spawnDist = Math.max(spawnDist, 190); lastSpace = spawnDist; }
+}
+function spawnScheduledClouds() {   // solo: by the day clock
+  while (cq.length) {
+    if (elapsed < cq[0].t) return;
     if (lastSpace - spawnDist < 150 && elapsed - cq[0].t < 5) return;   // let the last obstacle clear first
-    const c = cq.shift();
-    const amp = c.mv ? c.amp : 0, y0 = clamp(c.y, 70 + amp, WATER - 110 - amp);
-    const nh = { type: 'cloud', x: W + 60, w: 92, h: 48, y: y0, y0: y0, x0: W + 60, amp: amp, wl: c.wl, ph: c.ph, id: hid++, lead: true, sched: true, charged: c.charged, delay: c.delay, age: 0, zapped: false, day: c.day };
-    hazards.push(nh); tipCloud(nh);
-    spawnDist = Math.max(spawnDist, 190); lastSpace = spawnDist;
+    spawnCloud(0);
+  }
+}
+function spawnDue() {
+  if (!mp) { if (spawnDist <= 0) spawnEncounter(); if (cq.length) spawnScheduledClouds(); return; }
+  for (let g = 0; g < 6; g++) {
+    const Dc = cloudDueD(), cd = wDist >= Dc, ed = spawnDist <= 0;
+    if (!ed && !cd) return;
+    if (ed && (!cd || wDist + spawnDist <= Dc)) spawnEncounter(); else spawnCloud(Dc);
   }
 }
 function zapCloud(h) {
@@ -1695,7 +1750,7 @@ function pushCloud(x) {
   const amp = moves ? wrand(26, 40 + 8 * Math.min(4, week - 1)) : 0;
   const y0 = clamp(wrand(95, 430), 70 + amp, WATER - 110 - amp);
   const nh = { type: 'cloud', x: x, w: 92, h: 48, y: y0, y0: y0, x0: x, amp: amp, wl: wrand(320, 520), ph: wrand(0, TAU), id: hid++, lead: true,
-    charged: wrand(0, 1) < 0.55 + 0.08 * Math.min(2.5, dl()), delay: 0.6 + wrand(0, 1.7), age: 0, zapped: false };
+    charged: wrand(0, 1) < 0.55 + 0.08 * Math.min(2.5, edl()), delay: 0.6 + wrand(0, 1.7), age: 0, zapped: false };
   hazards.push(nh); tipCloud(nh);
 }
 function tipCloud(h) {
@@ -1726,12 +1781,12 @@ function chooseEnc(d) {
 function nextPower() {
   // while a chain is alive the same pill keeps coming most of the time, so a Mega Boost is something you can go and get
   // (in team play the repeat is dealt the same way on every phone, so a run of one pill is there for whoever wants to chain it)
-  if (mp) { if (lastPw && wR() < CHAIN_BIAS) return lastPw; }
-  else if (chain.n > 0 && chain.type && wR() < CHAIN_BIAS) return chain.type;
+  if (mp) { if (lastPw && pR() < CHAIN_BIAS) return lastPw; }
+  else if (chain.n > 0 && chain.type && pR() < CHAIN_BIAS) return chain.type;
   if (!bag.length) {
     const keys = mp ? PW_TEAM : PW_KEYS;
     bag = keys.slice();
-    for (let i = bag.length - 1; i > 0; i--) { const j = Math.floor(wR() * (i + 1)); const tmp = bag[i]; bag[i] = bag[j]; bag[j] = tmp; }
+    for (let i = bag.length - 1; i > 0; i--) { const j = Math.floor(pR() * (i + 1)); const tmp = bag[i]; bag[i] = bag[j]; bag[j] = tmp; }
     if (bag[bag.length - 1] === lastPw && bag.length > 1) { const tmp = bag[0]; bag[0] = bag[bag.length - 1]; bag[bag.length - 1] = tmp; }
   }
   const pick = bag.pop();
@@ -1771,9 +1826,10 @@ function tickTeamPw(dt) {
   if (changed) updatePwHud(); else tickPwHud();
 }
 function spawnEncounter() {
-  const d = dif(), x = W + 60, sp = baseSpeed() * speedMult();
-  const spacing = lerp(250, 200, Math.min(1, d)) - 12 * dl() + wrand(-18, 22);
-  spawnDist = spacing; lastSpace = spacing;
+  const d = edif(), x = W + 60 + Math.min(0, spawnDist), sp = baseSpeed() * speedMult();   // carry the bit of distance flown past the spawn point, so frame timing cannot shift the spacing
+  const spacing = lerp(250, 200, Math.min(1, d)) - 12 * edl() + wrand(-18, 22);
+  encCum += spacing;
+  spawnDist = Math.min(0, spawnDist) + spacing; lastSpace = spacing;
   const kind = chooseEnc(d);
   lastEnc = kind;
   if (kind === 'rock') pushRock(x, true);
@@ -1784,11 +1840,11 @@ function spawnEncounter() {
   else pushCreature(kind, x, sp);
   if (orbDue) {
     orbDue = false;
-    orbs.push({ x: x - spacing * 0.5, y: wrand(150, 410), type: nextPower(), bob: wrand(0, 6), got: false });
+    orbs.push({ x: x - spacing * 0.5, y: 150 + pR() * 260, type: nextPower(), bob: pR() * 6, got: false });
   }
 }
 function spawnStrike() {
-  const d = dif(), p = Math.min(1.5, d);
+  const d = edif(), p = Math.min(1.5, d);
   strikeT = srand(7, 11) * (1 - 0.4 * p);
   const n = (d > 0.6 && sR() < 0.35 + 0.1 * Math.min(2, d - 0.6)) ? 2 : 1;
   const ys = [];
@@ -2423,7 +2479,7 @@ function mpOnGo(wk, sd) {
   if (wk === 1) runTime = 0;
   else if (!resting && wk === week) runTime = weekT0;
   week = wk; seed = sd;
-  mp.cd = null;
+  mp.cd = null; mp.hw = null;
   if (resting) {
     beginDepart();
   } else {
@@ -2486,6 +2542,12 @@ function showTeam() {
   mpSet({ s: 'dead' });
   tone(440, 0.3, 'triangle', 0.06); tone(349, 0.3, 'triangle', 0.06, 0.18); tone(294, 0.55, 'triangle', 0.06, 0.36);
 }
+// slide the whole scrolling world a little: a phone that fell behind (slow frames) catches up with the host's world
+function shiftWorld(d) {
+  for (const h of hazards) { h.x -= d; if (h.x0 !== undefined) h.x0 -= d; if (h.launchX !== undefined) h.launchX -= d; }
+  for (const o of orbs) o.x -= d;
+  spawnDist -= d; wDist += d;
+}
 function mpTick(dt) {
   if (!mp) return;
   // onPeers only fires when something changes, so a room with no host re-checks on a timer
@@ -2519,6 +2581,18 @@ function mpTick(dt) {
       const est = (+H0.p.dt || 0) + ((Date.now() - H0.at) / 1000 + 0.05) * clockMult();   // the host's clock runs at the team's rate
       if (Math.abs(dayT - est) > 0.4 && est < dayLens[dayIdx] - 0.01) dayT = est;
     }
+    // follow the host's world too: everyone scrolls past the same pillars at the same moment, even on a slower phone
+    const wd = H0.p.wd;
+    if (wd != null) {
+      if (!mp.hw || mp.hw.v !== wd) mp.hw = { v: wd, at: Date.now() };
+      if (state !== 'ready' && speedMult() === 1 && Date.now() - mp.hw.at < 1500) {
+        const err = mp.hw.v + (Date.now() - mp.hw.at) / 1000 * curSp - wDist;
+        if (Math.abs(err) > 3) {
+          const cap = (Math.abs(err) > 120 ? 4 : 1.5) * dt * 60;
+          shiftWorld(clamp(err * Math.min(1, dt * 1.5), -cap, cap));
+        }
+      }
+    }
   }
   mp.sendT -= dt;
   if (mp.sendT <= 0) {
@@ -2532,7 +2606,7 @@ function mpTick(dt) {
       if (mp.sent.ph !== ph) { patch.ph = ph; mp.sent.ph = ph; }
       if (playing) {
         mp.clkT -= 0.08;
-        if (mp.clkT <= 0) { mp.clkT = 0.4; patch.wk = week; patch.di = dayIdx; patch.dt = Math.round(dayT * 100) / 100; }
+        if (mp.clkT <= 0) { mp.clkT = 0.4; patch.wk = week; patch.di = dayIdx; patch.dt = Math.round(dayT * 100) / 100; patch.wd = Math.round(wDist); }
       }
     } else { mp.sent.ph = null; }
     for (const k in patch) { mpSet(patch); break; }
@@ -2636,12 +2710,11 @@ function worldStep(dt, pick) {
   runTime += dt;
   if (ds > 1) weekSaved += dt * (ds - 1);   // real seconds the boost cuts from this week
   if (!advanceClock(dt * ds)) return false;
-  spawnDist -= sp * dt;
-  if (spawnDist <= 0) spawnEncounter();
-  if (cq.length) spawnScheduledClouds();
+  spawnDist -= sp * dt; wDist += sp * dt;
+  spawnDue();
   const wdt = pwMega('calm') ? dt * 0.3 : dt;   // Mega Calm Waters slows the lightning too
   strikeT -= wdt;
-  if (week > 1 && strikeT <= 0 && dif() > 0.04) spawnStrike();
+  if (week > 1 && strikeT <= 0 && edif() > 0.04) spawnStrike();
   updateHazards(dt, sp);
   updateOrbs(dt, sp, hitR(), pick);
   updateStrikes(wdt);
