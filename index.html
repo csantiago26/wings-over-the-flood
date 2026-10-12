@@ -1289,9 +1289,11 @@ const prog = () => clamp(elapsed / total, 0, 1);
 const dif = () => prog() + (week - 1) * 0.5;        // 0 at week 1 start, 3.5 at the end of week 6
 const dl = () => clamp(dif() - 1, 0, 2.5);
 const dayScale = () => Math.max(0.45, Math.pow(0.88, week - 1));
-// Each week adds 15% of Week 1's difficulty (Week 6 is about 1.75x Week 1), shared out between scroll speed, tighter spacing and lightning.
+// Each week is a set percentage harder than the week before it: +5%, +7%, +15%, +7%, +15% (Week 6 is about 1.59x Week 1),
+// shared out between scroll speed, tighter spacing and lightning.
 // Inside a week the ramp is the same shape as Week 1, so every week starts a little easier than the last one ended.
-const wkM = wk => 1 + 0.15 * ((wk === undefined ? week : wk) - 1);
+const WK_STEP = [0, 0, 0.05, 0.07, 0.15, 0.07, 0.15];   // index = week; the step is on top of the week before
+const wkM = wk => { let m = 1; const w = wk === undefined ? week : wk; for (let i = 2; i <= w && i < WK_STEP.length; i++) m *= 1 + WK_STEP[i]; return m; };
 const spdAt = (p, wk) => lerp(125, 165, p) * Math.pow(wkM(wk), 0.4);
 const spacingAt = (p, wk) => lerp(250, 200, p) / Math.pow(wkM(wk), 0.35);
 const baseSpeed = () => spdAt(mp ? shProgAt(wDist) : prog(), week);
@@ -4131,7 +4133,7 @@ function openStats() {
 }
 function openWeekly() {
   const body = infoOpen('Weekly best', 'Week by week');
-  const p = document.createElement('p'); p.className = 'lede'; p.textContent = 'Your furthest day and your fastest clear in each week. Each week is about 15% harder than the one before.';
+  const p = document.createElement('p'); p.className = 'lede'; p.textContent = 'Your furthest day and your fastest clear in each week. Week 2 is 5% harder than Week 1, then +7%, +15%, +7% and +15% on top of the week before.';
   const ol = document.createElement('ol'); ol.className = 'blist wkl';
   for (let w = 1; w <= NWEEKS; w++) {
     const v = wd[w - 1] || 0, tm = +wbest[w - 1] || 0;
@@ -4139,7 +4141,7 @@ function openWeekly() {
     const rk = document.createElement('b'); rk.textContent = String(w);
     const mid = document.createElement('span'), nm = document.createElement('em'), sm = document.createElement('small');
     nm.textContent = SCN[w].name;
-    sm.textContent = (v >= 8 ? 'Cleared' : v > 0 ? 'Reached Day ' + v + ' of ' + NDAYS : 'Not reached yet') + ' · ' + (w === 1 ? 'Starting pace' : '+' + Math.round((wkM(w) - 1) * 100) + '% harder');
+    sm.textContent = (v >= 8 ? 'Cleared' : v > 0 ? 'Reached Day ' + v + ' of ' + NDAYS : 'Not reached yet') + ' · ' + (w === 1 ? 'Starting pace' : '+' + Math.round(WK_STEP[w] * 100) + '% on Week ' + (w - 1));
     mid.append(nm, sm);
     const ti = document.createElement('i'); ti.textContent = tm > 0 ? mmss(tm) : '—';
     li.append(rk, mid, ti); ol.append(li);
