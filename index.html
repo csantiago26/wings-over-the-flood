@@ -711,10 +711,11 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
   'use strict';
   const PRES_GAP = 40;        // ms between presence sends (about 25 a second)
   const KA_EVERY = 2000;      // keepalive and gossip
-  const DEAD_AFTER = 10000;   // silence before a teammate is treated as gone
+  const DEAD_AFTER = 15000;   // silence before a teammate is treated as gone (a backgrounded phone sends nothing for a while)
   const GRACE = 1500;         // a closed link may be replaced by a duplicate; wait before announcing "left"
   const MAX_REMOTES = 9;   // nine others plus you: ten players
-  const OPEN_TIMEOUT = 12000;
+  const OPEN_TIMEOUT = 15000;
+  const REDIAL_EVERY = 5000;  // a phone that lost every link keeps knocking on the room code until the team lets it back in
   const MAX_PRES = 4096;
 
   const OPTS = () => Object.assign({ debug: 0 }, window.WOTF_PEER_OPTS || {});
@@ -726,6 +727,12 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
     let s = '';
     for (let i = 0; i < n; i++) s += ALPHA[a[i] & 31];
     return s;
+  }
+  let netState = 'ok';
+  function setNet(st) {
+    if (st === netState) return;
+    netState = st;
+    try { window.dispatchEvent(new CustomEvent('wotf-net', { detail: { state: st } })); } catch (e) { /* ignore */ }
   }
   function fail(code, message) { const e = new Error(message || code); e.code = code; return e; }
   const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
@@ -853,7 +860,7 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
       const first = !old;
       const r = old || { pid: d.pid, pr: null, prJson: '', at: 0, seen: 0, obj: null, graceT: 0, conn: null, pj: '' };
       clearTimeout(r.graceT);
-      r.conn = conn; r.pj = d.pj; r.seen = Date.now(); conn._rpid = d.pid;
+      r.conn = conn; r.pj = d.pj; r.seen = Date.now(); conn._rpid = d.pid; linked = true;
       remotes.set(d.pid, r);
       setRemotePresence(r, d.pr, first);
       learn(d.known);
@@ -918,10 +925,26 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
         conn.on('close', () => fin(fail('closed')));
       });
     }
+    let rcT = 0, rcN = 0;
+    function scheduleReconnect(p) {
+      if (left || p.destroyed || rcT) return;
+      const wait = Math.min(10000, 1000 * Math.pow(2, Math.min(rcN, 4)));
+      rcT = setTimeout(() => {
+        rcT = 0;
+        if (left || p.destroyed || !p.disconnected) return;
+        rcN++;
+        try { p.reconnect(); } catch (e) { /* try again next round */ }
+        scheduleReconnect(p);
+      }, wait);
+    }
     function wirePeer(p) {
       p.on('connection', c => { if (left) { try { c.close(); } catch (e) { /* ignore */ } return; } attach(c, false); });
-      p.on('disconnected', () => { setTimeout(() => { try { if (!left && p.disconnected && !p.destroyed) p.reconnect(); } catch (e) { /* ignore */ } }, 1000); });
+      // the signalling server can blink (phone changes network, server restarts): keep knocking with a growing pause until it answers
+      p.on('disconnected', () => { if (!left) { setNet('reconnecting'); scheduleReconnect(p); } });
+      p.on('open', () => { rcN = 0; if (!left) setNet('ok'); });
+      p.on('close', () => { if (!left) setNet('lost'); });
       p.on('error', e => {
+        if (e && (e.type === 'network' || e.type === 'socket-error' || e.type === 'socket-closed' || e.type === 'server-error') && !left && p.disconnected) { setNet('reconnecting'); scheduleReconnect(p); }
         if (e && e.type === 'peer-unavailable') {
           const m = /(\S+)$/.exec(String(e.message || ''));
           const fin = m && dialWait.get(m[1]);
@@ -931,18 +954,32 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
     }
     wirePeer(mainPeer);
 
+    let redialAt = 0, linked = false;   // only a room we have really been part of knocks again
     kaT = setInterval(() => {
       if (left) return;
       sendAll({ t: 'ka', known: known() });
       const now = Date.now();
       remotes.forEach((r, rp) => { if (now - r.seen > DEAD_AFTER) { const c = r.conn; removeRemote(rp, c); if (c) drop(c); } });
+      // lost every link (phone slept, network changed)? knock on the room code again so the team can take us back
+      if (linked && !holdsCode && remotes.size === 0 && !dialWait.has(name) && !mainPeer.disconnected && now - redialAt > REDIAL_EVERY) { redialAt = now; dial(name).catch(() => { /* the host may be gone; try again later */ }); }
     }, KA_EVERY);
+    // back from the background: nothing was heard while the phone slept, so do not count that silence against anyone
+    function wake() {
+      if (left) return;
+      const now = Date.now();
+      remotes.forEach(r => { r.seen = now; });
+      peerList.forEach(p => { if (p.disconnected && !p.destroyed) { rcN = 0; try { p.reconnect(); } catch (e) { /* ignore */ } } });
+    }
+    const onVis = () => { if (document.visibilityState === 'visible') wake(); };
+    document.addEventListener('visibilitychange', onVis);
+    window.addEventListener('online', wake);
 
     function leave() {
       if (left) return Promise.resolve();
       sendAll({ t: 'bye' });
       left = true;
-      clearInterval(kaT); clearTimeout(flushT); clearTimeout(notifyT); clearTimeout(claimT);
+      clearInterval(kaT); clearTimeout(flushT); clearTimeout(notifyT); clearTimeout(claimT); clearTimeout(rcT);
+      document.removeEventListener('visibilitychange', onVis); window.removeEventListener('online', wake);
       listeners.clear();
       const conns = []; remotes.forEach(r => { clearTimeout(r.graceT); if (r.conn) conns.push(r.conn); });
       remotes.clear(); snap = null;
@@ -963,6 +1000,7 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
       return () => { listeners.delete(handler); };
     }
     const api = Object.freeze({ name, presence, peers: peersNow, onPeers, leave, connected: () => !left });
+    try { const hk = window.WOTF_PEER_OPTS && window.WOTF_PEER_OPTS.debugHook; if (hk) hk({ dropLinks: () => remotes.forEach(r => { if (r.conn) { try { r.conn.close(); } catch (e) { /* ignore */ } } }), peer: mainPeer, links: () => remotes.size }); } catch (e) { /* ignore */ }
     return { api, dial, remotes };
   }
 
@@ -977,7 +1015,7 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
       // give the host's hello a moment so the lobby shows the players straight away
       await new Promise(res => { const t0 = Date.now(); (function chk() { if (R.remotes.size || Date.now() - t0 > 3000) res(); else setTimeout(chk, 40); })(); });
     }
-    window.addEventListener('pagehide', () => { R.api.leave(); });
+    window.addEventListener('pagehide', ev => { if (!ev.persisted) R.api.leave(); });   // a page frozen for the back-forward cache is not gone
     return R.api;
   }
 
@@ -3265,16 +3303,18 @@ async function mpJoinRoom(code, creating) {
   lmsg('Connecting...');
   $('#mkRoom').disabled = true; $('#joinRoom').disabled = true;
   let r = null;
+  let lastErr = '';
   for (let tries = 0; tries < 5; tries++) {
     try { r = await roomNs.join('wotf-' + code.toLowerCase(), { create: creating }); break; }
     catch (e) {
-      r = null;
-      if (creating && e && e.code === 'taken') { code = ''; for (let i = 0; i < 4; i++) code += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]; continue; }
+      r = null; lastErr = (e && e.code) || 'server';
+      if (creating && lastErr === 'taken') { code = ''; for (let i = 0; i < 4; i++) code += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]; continue; }
+      if ((lastErr === 'server' || lastErr === 'timeout') && tries < 3) { lmsg('Connecting... (try ' + (tries + 2) + ')'); await new Promise(res => setTimeout(res, 1200 * (tries + 1))); continue; }
       break;
     }
   }
   $('#mkRoom').disabled = false; $('#joinRoom').disabled = false;
-  if (!r) { lmsg('Could not reach that room. Check the code and try again.'); return; }
+  if (!r) { lmsg(lastErr === 'missing' ? 'No room with that code. Check the code, and make sure the host still has the room open.' : (lastErr === 'server' || lastErr === 'timeout') ? 'Could not reach the connection server. Check your signal or Wi-Fi, then try again.' : 'Could not reach that room. Check the code and try again.'); return; }
   mp = { room: r, code: code, creating: creating, jn: Date.now(), unsub: [], cd: null, lastRid: 0, entered: false, isHost: false, slot: -1, list: [], vis: {}, sendT: 0, clkT: 0, sent: {}, joinedAt: Date.now(), tw: 0, twSeen: {}, sSeen: {}, rkSeen: {}, peakN: 0, rk: 0, twAt: undefined, mg: 0, mgSeen: {}, diff: null, dsel: diff };
   mp.unsub.push(r.onPeers(mpOnPeers, () => {}));
   mpSet({ mp: 1, n: myName(), c: charKey, s: 'lobby', jn: mp.jn, h: creating ? 1 : 0, ph: creating ? 'lobby' : null, rid: 0, wk: 1, seed: 0, l: LIVES, tw: 0, mg: 0, mt: '', rk: 0, tb: teamBest, tt: teamBestT, df: creating ? diff : '', ck: 0 });
@@ -4982,7 +5022,7 @@ function updateMedalBtn() { const b = $('#tMedals'); if (b) b.textContent = MEDA
 const DB_URL = 'https://wings-over-the-flood-default-rtdb.firebaseio.com';
 const BOARDS = [['b14', '1 to 4 players'], ['b57', '5 to 7 players'], ['b810', '8 to 10 players']];
 const boardFor = n => n <= 4 ? 'b14' : n <= 7 ? 'b57' : 'b810';
-let rkPending = null;
+let rkPending = null, rankDOk = null;
 function rankId() {
   const H = mpHost(), tag = ((H && H.p && +H.p.jn) || mp.jn || 0).toString(36);
   return (mp.code + '-' + tag).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
@@ -4995,10 +5035,15 @@ async function rankSubmit(days, tSec) {
   if (mp.rkScore !== undefined && score <= mp.rkScore) return;
   if (mp.rkAt && Date.now() - mp.rkAt < 5000) { clearTimeout(rkPending); const d = days, tt = tSec; rkPending = setTimeout(() => rankSubmit(d, tt), 5200 - (Date.now() - mp.rkAt)); return; }
   mp.rkAt = Date.now();
-  const tag = ' - ' + DIFFS[mp.diff || 'hard'].name;
-  const names = mp.list.map(m => cleanName(m.p.n) || 'Player').join(', ').slice(0, 118 - tag.length) + tag;
+  const dk = mp.diff || 'hard', tag = ' - ' + DIFFS[dk].name;
+  const plain = mp.list.map(m => cleanName(m.p.n) || 'Player').join(', ').slice(0, 118);
   try {
-    const r = await fetch(DB_URL + '/boards/' + boardFor(n) + '/' + rankId() + '.json', { method: 'PUT', body: JSON.stringify({ score: score, day: day, t: t, n: n, names: names, ts: { '.sv': 'timestamp' } }) });
+    const put = body => fetch(DB_URL + '/boards/' + boardFor(n) + '/' + rankId() + '.json', { method: 'PUT', body: JSON.stringify(body) });
+    const base = { score: score, day: day, t: t, n: n, ts: { '.sv': 'timestamp' } };
+    let r = null;
+    // the server's rules may or may not know the "d" (difficulty) field yet: try it, and if refused carry the difficulty at the end of the names instead
+    if (rankDOk !== false) { r = await put(Object.assign({ names: plain, d: dk }, base)); if (r.ok) rankDOk = true; else if (r.status === 401) rankDOk = false; }
+    if (!r || !r.ok) r = await put(Object.assign({ names: plain.slice(0, 118 - tag.length) + tag }, base));
     if (r.ok && mp) { mp.rkScore = score; mp.rk = (mp.rk | 0) + 1; mpSet({ rk: mp.rk }); mev('ranked'); }
   } catch (e) { /* offline: the ranking just misses this one */ }
 }
@@ -5006,7 +5051,7 @@ async function rankLoad(b) {
   const r = await fetch(DB_URL + '/boards/' + b + '.json?orderBy=%22score%22&limitToLast=20', { cache: 'no-store' });
   if (!r.ok) throw new Error('rank');
   const o = await r.json(), out = [];
-  for (const id in (o || {})) { const v = o[id]; if (v && typeof v.score === 'number' && !/^zz-/.test(id)) { let nm = String(v.names || ''), dk = ''; const mt = /\s-\s(Normal|Hard|Impossible)$/.exec(nm); if (mt) { dk = mt[1]; nm = nm.slice(0, mt.index); } out.push({ id: id, day: v.day | 0, t: +v.t || 0, n: v.n | 0, names: nm, dk: dk, score: v.score }); } }
+  for (const id in (o || {})) { const v = o[id]; if (v && typeof v.score === 'number' && !/^zz-/.test(id)) { let nm = String(v.names || ''), dk = DIFFS[v.d] ? DIFFS[v.d].name : ''; const mt = /\s-\s(Normal|Hard|Impossible)$/.exec(nm); if (mt) { if (!dk) dk = mt[1]; nm = nm.slice(0, mt.index); } out.push({ id: id, day: v.day | 0, t: +v.t || 0, n: v.n | 0, names: nm, dk: dk, score: v.score }); } }
   out.sort((a, b2) => b2.score - a.score);
   return out;
 }
@@ -5486,6 +5531,16 @@ try {
       lmsg('Type your name, then tap Join.');
     }
   } catch (e) { /* ignore */ }
+  // the connection to the room server blinked: say so, and say when it is back
+  let netWas = 'ok';
+  window.addEventListener('wotf-net', ev => {
+    const st = ev && ev.detail && ev.detail.state;
+    if (!mp || !st || st === netWas) return;
+    const was = netWas; netWas = st;
+    if (st === 'reconnecting') { setCap('Connection dropped. Reconnecting...', 4000); lmsg('Connection dropped. Reconnecting...'); }
+    else if (st === 'ok' && was !== 'ok') { setCap('Back online.', 2200); lmsg(''); }
+    else if (st === 'lost') { setCap('Lost the connection to the server. Leave the room and rejoin at the next rest stop.', 7000); lmsg('Lost the connection to the server. Leave the room and rejoin.'); }
+  });
   try { if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) { /* ignore */ }
 })();
 
