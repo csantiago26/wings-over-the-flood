@@ -151,7 +151,7 @@ body {
   color: var(--text); font: 700 .78em/1 var(--body); letter-spacing: .04em;
 }
 .cpb svg { width: 1.1em; height: 1.1em; }
-.cpb[disabled] { opacity: .55; cursor: default; }
+.cpb { pointer-events: none; cursor: default; }
 .cpb.set { border-color: var(--gold); color: var(--gold); }
 .cpb.warn { border-color: #ff8a7a; color: #ffb4a8; }
 .hint {
@@ -202,6 +202,14 @@ body {
 .mute[hidden] { display: none; }
 .pausebtn { right: 3.7em; }
 .pausebtn svg { width: 1.05em; height: 1.05em; }
+.diffbox { display: flex; flex-direction: column; gap: .4em; }
+.diffbox .eyebrow { margin: 0; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: .35em; }
+.segb { appearance: none; padding: .55em .3em; border-radius: .8em; border: 1px solid rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .06); color: var(--text); font: 700 .84em/1.1 var(--body); cursor: pointer; }
+.segb.on { border-color: var(--gold); background: rgba(246, 201, 120, .16); color: var(--gold); }
+.segb[data-d="impossible"].on { border-color: #ff8a7a; background: rgba(255, 138, 122, .14); color: #ffb4a8; }
+.segb:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.diffnote { margin: 0; min-height: 3.4em; font-size: .78em; line-height: 1.4; color: var(--muted); }
 .resumebox { display: flex; flex-direction: column; gap: .5em; padding: .8em .9em; border-radius: .9em; background: rgba(246, 201, 120, .1); border: 1px solid rgba(246, 201, 120, .45); }
 .resumebox .lede { margin: 0; font-size: .82em; }
 .mute .off { display: none; }
@@ -535,6 +543,15 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
       <div>
         <div class="cards" id="cards"></div>
         <p class="birdinfo" id="birdInfo" aria-live="polite"></p>
+      </div>
+      <div class="diffbox">
+        <p class="eyebrow">Difficulty</p>
+        <div class="seg" id="diffSeg" role="radiogroup" aria-label="Difficulty">
+          <button type="button" class="segb" role="radio" data-d="normal">Normal</button>
+          <button type="button" class="segb" role="radio" data-d="hard">Hard</button>
+          <button type="button" class="segb" role="radio" data-d="impossible">Impossible</button>
+        </div>
+        <p class="diffnote" id="diffNote" aria-live="polite"></p>
       </div>
       <div class="resumebox" id="resumeBox" hidden>
         <p class="eyebrow">Welcome back</p>
@@ -1259,7 +1276,7 @@ const MEGA = {
   float: { need: 5, dur: 12, name: 'MEGA Updraft',       line: 'You hardly weigh a thing.' },
   halo:  { need: 7, dur: 14, name: 'MEGA Halo',          line: 'All hearts restored. You shatter what you touch.' }
 };
-const MAX_PW = 3, CHAIN_BIAS = 0.75, CP_RETRIES = 3;
+const MAX_PW = 3, CHAIN_BIAS = 0.75;
 // Team play uses the personal pills plus Tailwind. Tailwind is shared: when anybody takes it, the whole team speeds up together
 // (see remoteTail), so everyone's world and the day clock stay in step. Calm Waters stays solo-only.
 const PW_TEAM = ['halo', 'ghost', 'tail', 'tiny', 'float'];
@@ -1289,7 +1306,15 @@ let dayLens = [], dayPre = [0], dayIdx = 0, dayT = 0, elapsed = 0, total = 1, ru
 let leaves = [], leafNext = 0, wkLeaves = 0, lR = mkRng(5);
 let hazards = [], strikes = [], orbs = [], parts = [], pws = [], chain = { type: '', n: 0 }, fin = null, bird = newBird();
 let pwSig = '', pwRows = [];
-let cp = null, cpUsed = false, cpFalls = 0, cpBust = false, cpArm = 0, weekPicks = 0;
+let cp = null, weekPicks = 0;
+// difficulty: Normal plants a checkpoint on Day 3 of every week, Hard keeps only the week start, Impossible keeps nothing at all
+const DIFFS = {
+  normal: { name: 'Normal', note: 'A checkpoint saves itself when Day 3 begins. Fall after that and you restart on Day 3 of the same week.' },
+  hard: { name: 'Hard', note: 'No Day 3 checkpoint. Only the start of each week counts: fall and you retry that week from Day 1.' },
+  impossible: { name: 'Impossible', note: 'No checkpoints at all, not even weeks. Fall anywhere and it is Week 1 again. Nothing is saved.' }
+};
+const CP_DAY = 2;   // Day 3
+let diff = store.get('diff', 'normal'); if (!DIFFS[diff]) diff = 'normal';
 let ach = store.get('ach', {}), unl = store.get('unl', {}), unlockQ = [];
 if (!ach || typeof ach !== 'object') ach = {};
 if (!unl || typeof unl !== 'object') unl = {};
@@ -1889,32 +1914,34 @@ function zapCloud(h) {
   const q = newStrike(lerp(1.6, 1.3, Math.min(1, dif())), strikes.filter(v => v.state === 'warn').map(v => v.y));
   if (q) strikes.push(q);
 }
-// ---- checkpoint: once a week you may plant a flag; after that, four falls before the next rest stop send you back to Week 1
-function cpLeft() { return Math.max(0, CP_RETRIES - cpFalls); }
+// ---- difficulty and the Day 3 checkpoint
+// practice and the daily flight are one week long, so Impossible plays like Hard there
+const eff = () => (practice || daily) && diff === 'impossible' ? 'hard' : diff;
+const weekSaves = () => diff !== 'impossible';
 const cpShow = () => !mp && state === 'play' && !hud.hidden;
 function updateCpHud() {
   const show = cpShow();
   cpb.hidden = !show;
   if (!show) return;
+  const e = eff();
   cpb.classList.toggle('set', !!cp);
-  cpb.classList.toggle('warn', !!cp && cpLeft() <= 1 || cpArm > 0);
-  cpb.disabled = false;
-  if (cpArm > 0) cpbT.textContent = 'Tap again to set';
-  else if (cp) cpbT.textContent = 'Day ' + (cp.dayIdx + 1) + ' \u00b7 ' + cpLeft() + (cpLeft() === 1 ? ' retry' : ' retries');
-  else if (cpUsed) cpbT.textContent = 'Checkpoint used';
-  else cpbT.textContent = 'Checkpoint';
-  if (!cp && cpUsed) cpb.disabled = true;
+  cpb.classList.toggle('warn', e === 'impossible');
+  cpbT.textContent = e === 'normal' ? (cp ? 'Checkpoint \u00b7 Day ' + (cp.dayIdx + 1) : 'Checkpoint on Day ' + (CP_DAY + 1)) : e === 'hard' ? 'Hard \u00b7 no checkpoint' : 'Impossible';
 }
-function plantCheckpoint() {
-  if (mp || state !== 'play' || cp || cpUsed) return;
-  if (cpArm <= 0) { cpArm = 3; updateCpHud(); return; }   // first tap only arms it, so a stray tap cannot commit you
-  cpArm = 0;
-  cp = { dayIdx: dayIdx, u: uNow(), runTime: runTime, weekT0: weekT0, saved: weekSaved, picks: weekPicks, leaves: wkLeaves, lnext: leafNext };
-  cpUsed = true; cpFalls = 0; cpBust = false;
+function autoCheckpoint() {
+  if (mp || cp || eff() !== 'normal' || dayIdx !== CP_DAY || state !== 'play') return;
+  cp = { dayIdx: dayIdx, u: 0, runTime: runTime, weekT0: weekT0, saved: weekSaved, picks: weekPicks, leaves: wkLeaves, lnext: leafNext };
   updateCpHud();
   flash = reduceMotion ? 0 : 0.2;
-  setCap('Checkpoint set on Day ' + (dayIdx + 1) + '. You can fall ' + CP_RETRIES + ' times and resume here. A 4th fall sends you back to Week 1.', 5200);
+  setCap('Checkpoint saved. Fall and you restart here on Day ' + (dayIdx + 1) + '.', 3200);
   tone(523, 0.15, 'triangle', 0.06); tone(784, 0.2, 'triangle', 0.06, 0.1); tone(1047, 0.3, 'triangle', 0.06, 0.2);
+}
+function setDiff(d) {
+  if (!DIFFS[d]) return;
+  diff = d; store.set('diff', d);
+  document.querySelectorAll('#diffSeg .segb').forEach(b => { const on = b.dataset.d === d; b.classList.toggle('on', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); });
+  $('#diffNote').textContent = DIFFS[d].note;
+  updateResumeUi();
 }
 function applyCheckpoint() {
   const c = cp;
@@ -1932,12 +1959,12 @@ function resetWeek() {
 }
 /* ---------- saved progress, Home button, pause ---------- */
 // leaving a run keeps the week you were in: next time you can retry it from Day 1 or start again from Week 1
-function getResume() { const r = store.get('resume', null); return r && r.w >= 2 && r.w <= NWEEKS && isFinite(r.t0) ? r : null; }
+function getResume() { if (!weekSaves()) return null; const r = store.get('resume', null); return r && r.w >= 2 && r.w <= NWEEKS && isFinite(r.t0) ? r : null; }
 function saveProgress() {
-  if (mp || practice) return;
+  if (mp || practice || !weekSaves()) return;   // Impossible keeps nothing: leave and the run is over
   let r = null;
   if (state === 'finale' && fin) { if (fin.kind === 'rest' && week < NWEEKS) r = { w: week + 1, t0: runTime }; }
-  else if (!cpBust && week > 1) r = { w: week, t0: weekT0 };
+  else if (week > 1) r = { w: week, t0: weekT0 };
   if (r) { r.l = runLost ? 1 : 0; r.c = runCreat | 0; }
   store.set('resume', r);
 }
@@ -1957,7 +1984,7 @@ function resumeFlight() {
   if (!r) { beginReady(false); return; }
   practice = 0; daily = null;
   week = r.w; weekT0 = r.t0; runLost = !!r.l; runCreat = r.c | 0;
-  cp = null; cpUsed = false; cpFalls = 0; cpBust = false;
+  cp = null;
   beginReady(true);
 }
 // fly a week you have already cleared again, for fun or for a better time. Nothing but that week's best time can change.
@@ -1965,7 +1992,7 @@ function startPractice(w) {
   if (mp || !(wd[w - 1] >= 8)) return;
   ensureAudio();
   practice = w; week = w; weekT0 = 0; runLost = false; runCreat = 0;
-  cp = null; cpUsed = false; cpFalls = 0; cpBust = false;
+  cp = null;
   beginReady(true);
 }
 /* ---------- dry land: the epilogue ----------
@@ -1979,7 +2006,7 @@ function startEpilogue() {
   if (mp || !(wd && wd[NWEEKS - 1] >= 8)) return;
   ensureAudio();
   practice = NWEEKS; daily = null; week = NWEEKS; weekT0 = 0; runTime = 0; runLost = false; runCreat = 0;
-  cp = null; cpUsed = false; cpFalls = 0; cpBust = false; cpArm = 0;
+  cp = null;
   seed = newSeed(); resetWeek();
   leaves = []; epi = { t: 0, got: 0, n: 0, dist: 0, phase: 'wait', pt: 0, perched: false, rb: 0, flame: 0, ev: {}, shown: false, bx0: 0, by0: 0, time: 0 };
   state = 'dry'; bird = newBird();
@@ -2138,7 +2165,7 @@ function startDaily() {
   ensureAudio();
   daily = dailyToday();
   practice = daily.week; week = daily.week; weekT0 = 0; runLost = false; runCreat = 0;
-  cp = null; cpUsed = false; cpFalls = 0; cpBust = false;
+  cp = null;
   beginReady(true);
 }
 // the same numbers a week gives you, kept against today's date instead of your weekly bests
@@ -2163,8 +2190,8 @@ function setPaused(v) {
   paused = v;
   $('#pauseP').hidden = !v;
   if (v) {
-    $('#pauseNote').textContent = state === 'dry' ? 'This is the epilogue. Going Home leaves your saved progress as it is.' : daily ? 'This is the daily flight. Going Home leaves your saved progress as it is.' : practice ? 'This is a practice flight. Going Home leaves your saved progress as it is.' : week > 1 ? 'Going Home saves Week ' + week + '. Next time you can retry it from Day 1 or start again from Week 1.' : 'Going Home ends this run. Week 1 has nothing to save yet.';
-    $('#pHome').textContent = week > 1 && !practice ? 'Save and go Home' : 'Go Home';
+    $('#pauseNote').textContent = state === 'dry' ? 'This is the epilogue. Going Home leaves your saved progress as it is.' : daily ? 'This is the daily flight. Going Home leaves your saved progress as it is.' : practice ? 'This is a practice flight. Going Home leaves your saved progress as it is.' : diff === 'impossible' ? 'Impossible keeps no saves. Going Home ends this run and the next flight starts at Week 1.' : week > 1 ? 'Going Home saves Week ' + week + '. Next time you can retry it from Day 1 or start again from Week 1.' : 'Going Home ends this run. Week 1 has nothing to save yet.';
+    $('#pHome').textContent = week > 1 && !practice && weekSaves() ? 'Save and go Home' : 'Go Home';
     try { if (actx && actx.suspend) actx.suspend(); } catch (e) { /* ignore */ }
     try { $('#pResume').focus({ preventScroll: true }); } catch (e) { /* ignore */ }
   } else {
@@ -2174,7 +2201,7 @@ function setPaused(v) {
 function showMenu(pick) {
   practice = 0; daily = null; epi = null;
   week = 1; runTime = 0; seed = newSeed();
-  cp = null; cpUsed = false; cpFalls = 0; cpBust = false; cpArm = 0;
+  cp = null;
   resetWeek();
   state = 'menu';
   setPanels(pick ? 'menu' : 'home'); hud.hidden = true; matesEl.hidden = true; cpb.hidden = true;
@@ -2182,20 +2209,20 @@ function showMenu(pick) {
 }
 function beginReady(keepWeek) {
   ensureAudio(); cloudTip = false;
-  if (keepWeek === true) runTime = weekT0; else { practice = 0; daily = null; week = 1; runTime = 0; cp = null; cpUsed = false; cpFalls = 0; cpBust = false; runLost = false; runCreat = 0; ms.pwRun = 0; store.set('resume', null); }
+  if (keepWeek === true) runTime = weekT0; else { practice = 0; daily = null; week = 1; runTime = 0; cp = null; runLost = false; runCreat = 0; ms.pwRun = 0; if (weekSaves()) store.set('resume', null); }
   seed = daily ? daily.seed : newSeed();   // the daily flight deals the same sky every time you try it today
   resetWeek();
-  const resume = keepWeek === true && !mp && cp && !cpBust;
+  const resume = keepWeek === true && !mp && !!cp;
   if (resume) applyCheckpoint();
   state = 'ready';
   setHintWeek(resume);
   $('#hintS').textContent = resume ? 'Resuming from your checkpoint. Tap to take off' : daily ? 'Daily flight. Tap to take off' : practice ? 'Practice flight. Tap to take off' : week > 1 ? 'Tap to take off' : 'Space or Up Arrow works too';
   setPanels(''); hud.hidden = false; hint.hidden = false; matesEl.hidden = true;
-  cpArm = 0; updateCpHud();
+  updateCpHud();
 }
 function startRun() {
   state = 'play'; hint.hidden = true;
-  setCap(cp ? 'Week ' + week + ', Day ' + (dayIdx + 1) + ' \u00b7 ' + cpLeft() + (cpLeft() === 1 ? ' retry' : ' retries') + ' left' : week > 1 ? 'Week ' + week + ', Day 1' : 'Day 1', 1800);
+  setCap(cp ? 'Week ' + week + ', Day ' + (dayIdx + 1) + ' \u00b7 from your checkpoint' : week > 1 ? 'Week ' + week + ', Day 1' : 'Day 1', 1800);
   musicForce(); updateCpHud();
   if (mp) { mpSet({ s: 'alive', l: lives }); }
   if (mp) mp.runT0 = t;
@@ -2760,7 +2787,6 @@ function die(kind) {
   state = 'dying'; deadT = 0; fallT = 0; bounces = 0; causeKind = kind; chain = { type: '', n: 0 };
   pws = mp ? pws.filter(p => p.team) : [];   // a shared team pill keeps running for you while you fall
   updatePwHud();
-  if (!mp && cp) { cpFalls++; if (cpFalls > CP_RETRIES) cpBust = true; }
   deathX = bird.x; zapY = bird.y; burn = 0; stunT = 0;
   const fl = BIRDS[charKey].fall;
   flash = reduceMotion ? 0 : 0.45; shake = reduceMotion ? 0 : 8;
@@ -2846,24 +2872,25 @@ function showOver() {
   $('#overT').textContent = pool[qi];
   $('#oWeek').textContent = week; $('#oDay').textContent = day; $('#oBest').textContent = best; $('#oTime').textContent = mmss(runTime);
   $('#verse').textContent = VERSES[vi][0]; $('#vref').textContent = VERSES[vi][1];
-  $('#again').textContent = week > 1 ? 'Retry Week ' + week : 'Fly again';
+  const e = eff(), wipe = e === 'impossible' && !mp;
+  $('#again').textContent = wipe ? (week > 1 ? 'Start over from Week 1' : 'Fly again') : week > 1 ? 'Retry Week ' + week : 'Fly again';
   $('#again').disabled = false;
   $('#swap').textContent = 'Change bird';
-  $('#restart').hidden = week <= 1 || !!practice;
+  $('#restart').hidden = week <= 1 || !!practice || wipe;
   const ci = $('#cpInfo');
   ci.hidden = true;
-  if (!mp && cp) {
+  if (!mp) {
     ci.hidden = false;
-    if (cpBust) {
-      ci.textContent = practice ? 'That was the 4th fall since your checkpoint. This practice week starts again from Day 1.' : 'That was the 4th fall since your checkpoint. The flood carries you all the way back to Week 1.';
-      $('#again').textContent = practice ? 'Retry Week ' + week : 'Start over from Week 1';
-      $('#restart').hidden = true;
-      $('#overEye').textContent = practice ? 'Practice' : 'Back to Week 1';
+    if (cp) {
+      ci.textContent = 'Your Day ' + (cp.dayIdx + 1) + ' checkpoint holds. Resume there as many times as you need.';
+      $('#again').textContent = 'Resume Day ' + (cp.dayIdx + 1);
+    } else if (e === 'normal') {
+      ci.textContent = 'You fell before the Day ' + (CP_DAY + 1) + ' checkpoint, so this week starts again from Day 1.';
+    } else if (e === 'hard') {
+      ci.textContent = 'Hard: no checkpoint. This week starts again from Day 1.';
     } else {
-      ci.textContent = cpLeft() > 0
-        ? 'Your checkpoint on Day ' + (cp.dayIdx + 1) + ' holds. After this try you still have ' + cpLeft() + (cpLeft() === 1 ? ' retry' : ' retries') + '. Fall past that and it is Week 1 again.'
-        : 'Last chance: if you fall again after resuming, the flood takes you back to Week 1.';
-      $('#again').textContent = 'Resume Day ' + (cp.dayIdx + 1) + ' \u00b7 ' + cpLeft() + (cpLeft() === 1 ? ' retry' : ' retries') + ' left';
+      ci.textContent = week > 1 ? 'Impossible: no checkpoints at all. The flood carries you all the way back to Week 1.' : 'Impossible: no checkpoints at all.';
+      if (week > 1) $('#overEye').textContent = 'Back to Week 1';
     }
   }
   fillUnlocks($('#overUnlock'));
@@ -2936,7 +2963,7 @@ function startFinale() {
   if (!mp) {   // butterfly: finish a week well inside its own clock
     const frac = clamp(1 - stats.wt / Math.max(1, total), 0, 1);
     if (!practice && frac > (ach.fast || 0)) { ach.fast = frac; store.set('ach', ach); }
-    cp = null; cpUsed = false; cpFalls = 0; cpBust = false; updateCpHud();
+    cp = null; updateCpHud();
     if (!practice) checkUnlocks();
   }
   if (!practice) mev('clear', { isEnd: isEnd, frac: clamp(1 - (runTime - weekT0) / Math.max(1, total), 0, 1) });
@@ -3137,7 +3164,7 @@ function continueTap() {
   ensureAudio();
   if (practice) { showMenu(); return; }
   week++; seed = newSeed();
-  cp = null; cpUsed = false; cpFalls = 0; cpBust = false;
+  cp = null;
   beginDepart();
   saveProgress();
 }
@@ -3581,6 +3608,7 @@ function advanceClock(d) {
     dayT -= L; dayIdx++;
     if (dayIdx >= NDAYS) { dayIdx = NDAYS - 1; dayT = dayLens[NDAYS - 1]; elapsed = total; startFinale(); return false; }
     onNewDay();
+    if (!mp) autoCheckpoint();
   }
   elapsed = dayPre[dayIdx] + dayT;
   return true;
@@ -3697,7 +3725,6 @@ function updatePlay(dt) {
 }
 function update(dt) {
   t += dt;
-  if (cpArm > 0) { cpArm -= dt; if (cpArm <= 0) { cpArm = 0; updateCpHud(); } }
   if (cpb.hidden === cpShow()) updateCpHud();
   if (mp) mpTick(dt);
   const calmSky = state === 'finale' || state === 'dry';
@@ -5320,6 +5347,8 @@ function init() {
   muteBtn.addEventListener('click', () => setMuted(!muted));
   cards.addEventListener('click', e => { const b = e.target.closest('.card'); if (!b) return; if (isLocked(b.dataset.k)) { birdInfoText(b.dataset.k); return; } pickBird(b.dataset.k); });
   lcards.addEventListener('click', e => { const b = e.target.closest('.mini'); if (b && !b.disabled) pickBird(b.dataset.k); });
+  document.querySelectorAll('#diffSeg .segb').forEach(b => b.addEventListener('click', () => setDiff(b.dataset.d)));
+  setDiff(diff);
   $('#go').addEventListener('click', () => beginReady(false));
   $('#goSolo').addEventListener('click', () => { ensureAudio(); setPanels('menu'); renderCards(); updateResumeUi(); });
   $('#pBack').addEventListener('click', () => setPanels('home'));
@@ -5351,9 +5380,7 @@ function init() {
   $('#bClose').addEventListener('click', closeSide);
   updateMedalBtn();
   $('#startMp').addEventListener('click', () => { ensureAudio(); if (mp && mp.isHost) mpHostGo(1); });
-  $('#again').addEventListener('click', () => { if (mp) { if (mp.isHost) mpHostGo(week); } else if (practice) { if (cpBust || (week === 1 && !cp)) { if (daily) startDaily(); else startPractice(practice); } else beginReady(true); } else beginReady(!cpBust && (week > 1 || !!cp)); });
-  cpb.addEventListener('mousedown', e => e.preventDefault());
-  cpb.addEventListener('click', e => { e.stopPropagation(); plantCheckpoint(); try { cpb.blur(); } catch (er) { /* ignore */ } });
+  $('#again').addEventListener('click', () => { if (mp) { if (mp.isHost) mpHostGo(week); } else if (practice) { if (week === 1 && !cp) { if (daily) startDaily(); else startPractice(practice); } else beginReady(true); } else beginReady(eff() !== 'impossible' && (week > 1 || !!cp)); });
   $('#restart').addEventListener('click', () => beginReady(false));
   $('#swap').addEventListener('click', () => { if (mp) mpLeave(); else showMenu(true); });
   $('#again2').addEventListener('click', () => { if (mp) mpToLobby(); else if (daily) startDaily(); else if (practice) startPractice(practice); else beginReady(false); });
