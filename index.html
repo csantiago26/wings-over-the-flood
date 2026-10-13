@@ -208,6 +208,7 @@ body {
 .segb { appearance: none; padding: .55em .3em; border-radius: .8em; border: 1px solid rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .06); color: var(--text); font: 700 .84em/1.1 var(--body); cursor: pointer; }
 .segb.on { border-color: var(--gold); background: rgba(246, 201, 120, .16); color: var(--gold); }
 .segb[data-d="impossible"].on { border-color: #ff8a7a; background: rgba(255, 138, 122, .14); color: #ffb4a8; }
+.segb[disabled] { cursor: default; opacity: .75; }
 .segb:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .diffnote { margin: 0; min-height: 3.4em; font-size: .78em; line-height: 1.4; color: var(--muted); }
 .resumebox { display: flex; flex-direction: column; gap: .5em; padding: .8em .9em; border-radius: .9em; background: rgba(246, 201, 120, .1); border: 1px solid rgba(246, 201, 120, .45); }
@@ -565,7 +566,7 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
     <section class="panel" id="lobby" hidden>
       <p class="eyebrow">Team flight &middot; up to 10</p>
       <h2>Fly together</h2>
-      <p class="lede">Everyone flies the same sky. If you fall, you come back at the next day as long as one of you is still flying. If everyone falls, the week starts over.</p>
+      <p class="lede">Everyone flies the same sky. If you fall, you come back at the next day as long as one of you is still flying. If everyone falls, the host&rsquo;s difficulty decides how far back you go.</p>
       <div id="lSetup" class="field">
         <label class="label" for="pname" style="margin:0">Your name</label>
         <input type="text" id="pname" maxlength="12" autocomplete="off" placeholder="Name">
@@ -582,6 +583,13 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
         <ul class="plist" id="plist"></ul>
         <p class="label" style="margin:.3em 0 0">Your bird</p>
         <div class="minis" id="lcards"></div>
+        <p class="label" style="margin:.3em 0 0">Difficulty</p>
+        <div class="seg" id="mpSeg" role="radiogroup" aria-label="Team difficulty">
+          <button type="button" class="segb" role="radio" data-d="normal">Normal</button>
+          <button type="button" class="segb" role="radio" data-d="hard">Hard</button>
+          <button type="button" class="segb" role="radio" data-d="impossible">Impossible</button>
+        </div>
+        <p class="diffnote" id="mpDiffNote" aria-live="polite"></p>
         <button class="btn primary" id="startMp" type="button">Start flight</button>
         <p class="stats" id="lwait">Waiting for the host to start.</p>
         <button class="btn quiet" id="leaveRoom" type="button">Leave room</button>
@@ -1916,7 +1924,13 @@ function zapCloud(h) {
 }
 // ---- difficulty and the Day 3 checkpoint
 // practice and the daily flight are one week long, so Impossible plays like Hard there
-const eff = () => (practice || daily) && diff === 'impossible' ? 'hard' : diff;
+const curDiff = () => mp ? (mp.diff || 'hard') : diff;   // a team flies the host's choice; a room from before this existed flew like Hard
+const eff = () => (practice || daily) && curDiff() === 'impossible' ? 'hard' : curDiff();
+const MP_NOTE = {
+  normal: 'A team checkpoint saves when Day 3 begins. If everyone falls after that, the team restarts on Day 3 of the same week.',
+  hard: 'No checkpoint. If everyone falls, the week starts over from Day 1.',
+  impossible: 'No checkpoints at all. If everyone falls, the whole team goes back to Week 1.'
+};
 const weekSaves = () => diff !== 'impossible';
 const cpShow = () => !mp && state === 'play' && !hud.hidden;
 function updateCpHud() {
@@ -1929,11 +1943,12 @@ function updateCpHud() {
   cpbT.textContent = e === 'normal' ? (cp ? 'Checkpoint \u00b7 Day ' + (cp.dayIdx + 1) : 'Checkpoint on Day ' + (CP_DAY + 1)) : e === 'hard' ? 'Hard \u00b7 no checkpoint' : 'Impossible';
 }
 function autoCheckpoint() {
-  if (mp || cp || eff() !== 'normal' || dayIdx !== CP_DAY || state !== 'play') return;
+  if (cp || eff() !== 'normal' || dayIdx !== CP_DAY) return;
+  if (!(state === 'play' || (mp && (state === 'dying' || state === 'spectate')))) return;   // a fallen teammate keeps the team checkpoint too
   cp = { dayIdx: dayIdx, u: 0, runTime: runTime, weekT0: weekT0, saved: weekSaved, picks: weekPicks, leaves: wkLeaves, lnext: leafNext };
   updateCpHud();
   flash = reduceMotion ? 0 : 0.2;
-  setCap('Checkpoint saved. Fall and you restart here on Day ' + (dayIdx + 1) + '.', 3200);
+  setCap(mp ? 'Team checkpoint saved. If everyone falls, the team restarts on Day ' + (dayIdx + 1) + '.' : 'Checkpoint saved. Fall and you restart here on Day ' + (dayIdx + 1) + '.', 3200);
   tone(523, 0.15, 'triangle', 0.06); tone(784, 0.2, 'triangle', 0.06, 0.1); tone(1047, 0.3, 'triangle', 0.06, 0.2);
 }
 function setDiff(d) {
@@ -3260,9 +3275,9 @@ async function mpJoinRoom(code, creating) {
   }
   $('#mkRoom').disabled = false; $('#joinRoom').disabled = false;
   if (!r) { lmsg('Could not reach that room. Check the code and try again.'); return; }
-  mp = { room: r, code: code, creating: creating, jn: Date.now(), unsub: [], cd: null, lastRid: 0, entered: false, isHost: false, slot: -1, list: [], vis: {}, sendT: 0, clkT: 0, sent: {}, joinedAt: Date.now(), tw: 0, twSeen: {}, sSeen: {}, rkSeen: {}, peakN: 0, rk: 0, twAt: undefined, mg: 0, mgSeen: {} };
+  mp = { room: r, code: code, creating: creating, jn: Date.now(), unsub: [], cd: null, lastRid: 0, entered: false, isHost: false, slot: -1, list: [], vis: {}, sendT: 0, clkT: 0, sent: {}, joinedAt: Date.now(), tw: 0, twSeen: {}, sSeen: {}, rkSeen: {}, peakN: 0, rk: 0, twAt: undefined, mg: 0, mgSeen: {}, diff: null, dsel: diff };
   mp.unsub.push(r.onPeers(mpOnPeers, () => {}));
-  mpSet({ mp: 1, n: myName(), c: charKey, s: 'lobby', jn: mp.jn, h: creating ? 1 : 0, ph: creating ? 'lobby' : null, rid: 0, wk: 1, seed: 0, l: LIVES, tw: 0, mg: 0, mt: '', rk: 0, tb: teamBest, tt: teamBestT });
+  mpSet({ mp: 1, n: myName(), c: charKey, s: 'lobby', jn: mp.jn, h: creating ? 1 : 0, ph: creating ? 'lobby' : null, rid: 0, wk: 1, seed: 0, l: LIVES, tw: 0, mg: 0, mt: '', rk: 0, tb: teamBest, tt: teamBestT, df: creating ? diff : '', ck: 0 });
   lmsg('');
   renderLobby();
 }
@@ -3275,7 +3290,7 @@ function mpLeave(msg) {
   if (msg) { $('#stats').textContent = msg; $('#homeMsg').textContent = msg; }
 }
 function mpToLobby() {
-  state = 'menu'; week = 1; runTime = 0; seed = newSeed();
+  state = 'menu'; week = 1; runTime = 0; seed = newSeed(); cp = null;
   resetWeek();
   hud.hidden = true; matesEl.hidden = true;
   setPanels('lobby'); renderLobby();
@@ -3301,6 +3316,9 @@ function renderLobby() {
   });
   $('#startMp').hidden = !mp.isHost;
   const h = mpHost();
+  const shown = mp.isHost ? mp.dsel : (h && DIFFS[h.p.df] ? h.p.df : mp.diff || 'normal');
+  document.querySelectorAll('#mpSeg .segb').forEach(b => { const on = b.dataset.d === shown; b.classList.toggle('on', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); b.disabled = !mp.isHost; });
+  $('#mpDiffNote').textContent = (mp.isHost ? '' : 'The host chooses. ') + MP_NOTE[shown];
   const inRun = h && (h.p.ph === 'rest' || h.p.ph === 'wipe') && h.p.rid;
   $('#lwait').hidden = mp.isHost;
   $('#lwait').textContent = inRun ? 'A run is resting. You will join when the host flies on.' : 'Waiting for the host to start.';
@@ -3340,6 +3358,8 @@ function mpOnPeers() {
   const wasHost = mp.isHost;
   mp.isHost = !!(H && H.me);
   if (!mp.isHost && mp.list[me].p.h === 1) mpSet({ h: 0 });
+  if (H && !H.me && DIFFS[H.p.df]) mp.diff = H.p.df;
+  if (!wasHost && mp.isHost && mp.diff) { mp.dsel = mp.diff; mpSet({ df: mp.diff }); }   // a new host keeps the team's difficulty
   if (wasHost !== mp.isHost && state === 'finale' && fin && fin.shown && fin.kind === 'rest') $('#tapNote').textContent = mp.isHost ? 'Rest as long as you like. Tap to fly on.' : 'Waiting for the host to fly on.';
   if (H && !mp.entered) {
     mp.entered = true;
@@ -3347,7 +3367,7 @@ function mpOnPeers() {
     if (!H.me && (H.p.ph === 'play' || H.p.ph === 'go')) { mpLeave('That flight is already underway. Join at the next rest stop.'); return; }
   } else if (H && !H.me && H.p.rid && H.p.rid !== mp.lastRid) {
     mp.lastRid = H.p.rid;
-    mpOnGo(H.p.wk | 0 || 1, H.p.seed | 0);
+    mpOnGo(H.p.wk | 0 || 1, H.p.seed | 0, H.p.df, H.p.ck | 0);
   }
   if (H && !H.me && H.p.ph === 'rest' && (H.p.wk | 0) === week && (state === 'play' || state === 'dying' || state === 'spectate') && mp.entered) startFinale();
   if (!lobbyP.hidden) renderLobby();
@@ -3359,13 +3379,19 @@ function mpHostGo(wk) {
   if (!mp || !mp.isHost) return;
   mp.lastRid = (mp.lastRid | 0) + 1;
   const sd = newSeed();
-  mpSet({ rid: mp.lastRid, seed: sd, wk: wk, ph: 'go' });
-  mpOnGo(wk, sd);
+  const df = state === 'menu' || !mp.diff ? mp.dsel : mp.diff;
+  const ck = df === 'normal' && wk === week && state === 'dead' && !!cp ? 1 : 0;   // retry from the team checkpoint
+  mpSet({ rid: mp.lastRid, seed: sd, wk: wk, ph: 'go', df: df, ck: ck });
+  mpOnGo(wk, sd, df, ck);
 }
 // every phone runs this at the same moment: same week, same seed, same sky
-function mpOnGo(wk, sd) {
+function mpOnGo(wk, sd, df, ck) {
   ensureAudio();
   const resting = (state === 'finale' || state === 'depart');
+  mp.diff = DIFFS[df] ? df : 'hard';
+  if (resting || wk !== week) cp = null;
+  const useCp = !!ck && !!cp && wk === week && !resting && mp.diff === 'normal';
+  if (!useCp) cp = null;
   if (wk === 1) runTime = 0;
   else if (!resting && wk === week) runTime = weekT0;
   week = wk; seed = sd;
@@ -3374,9 +3400,10 @@ function mpOnGo(wk, sd) {
     beginDepart();
   } else {
     resetWeek();
+    if (useCp) applyCheckpoint();
     state = 'ready';
-    setHintWeek(false);
-    $('#hintS').textContent = 'Get ready';
+    setHintWeek(useCp);
+    $('#hintS').textContent = useCp ? 'Resuming from the team checkpoint. Get ready' : 'Get ready';
     $('#hintT').hidden = true;
     setPanels(''); hud.hidden = false; hint.hidden = false;
     mpSet({ s: 'alive', l: lives });
@@ -3411,8 +3438,9 @@ function mpCheckWipe() {
 }
 function refreshTeamButtons() {
   const host = !!(mp && mp.isHost);
+  const d = eff();
   $('#again').disabled = !host;
-  $('#again').textContent = host ? 'Retry Week ' + week : 'Waiting for the host';
+  $('#again').textContent = !host ? 'Waiting for the host' : d === 'impossible' && week > 1 ? 'Start over from Week 1' : d === 'normal' && cp ? 'Resume Day ' + (cp.dayIdx + 1) : 'Retry Week ' + week;
 }
 function showTeam() {
   state = 'dead';
@@ -3423,7 +3451,10 @@ function showTeam() {
   let vi; do { vi = Math.floor(Math.random() * VERSES.length); } while (vi === lastVerse);
   lastVerse = vi;
   $('#overEye').textContent = rec ? 'Team down \u00b7 New team record!' : 'Team down';
-  $('#overT').textContent = 'Everyone fell. The week starts over.';
+  const dn = eff();
+  $('#overT').textContent = dn === 'impossible' ? (week > 1 ? 'Everyone fell. The flood takes the team back to Week 1.' : 'Everyone fell. Week 1 starts over.') : dn === 'normal' && cp ? 'Everyone fell. The team resumes at Day ' + (cp.dayIdx + 1) + '.' : 'Everyone fell. The week starts over.';
+  const ci = $('#cpInfo'); ci.hidden = false;
+  ci.textContent = dn === 'normal' ? (cp ? 'Team checkpoint on Day ' + (cp.dayIdx + 1) + ' holds. The team can resume there as many times as it needs.' : 'The team fell before the Day ' + (CP_DAY + 1) + ' checkpoint, so this week starts again from Day 1.') : dn === 'hard' ? 'Hard: no checkpoint. This week starts again from Day 1.' : 'Impossible: no checkpoints at all.';
   $('#oBestL').textContent = 'Team best';
   $('#oWeek').textContent = week; $('#oDay').textContent = day; $('#oBest').textContent = teamBest; $('#oTime').textContent = mmss(runTime);
   $('#verse').textContent = VERSES[vi][0]; $('#vref').textContent = VERSES[vi][1];
@@ -3477,7 +3508,7 @@ function mpTick(dt) {
   const H0 = mpHost();
   if (playing && H0 && !H0.me && (H0.p.wk | 0) === week && H0.p.ph === 'play') {
     const di = H0.p.di | 0;
-    while (dayIdx < di && dayIdx < NDAYS - 1) { dayIdx++; dayT = 0; onNewDay(); }
+    while (dayIdx < di && dayIdx < NDAYS - 1) { dayIdx++; dayT = 0; onNewDay(); autoCheckpoint(); }
     if (dayIdx === di) {
       const est = (+H0.p.dt || 0) + ((Date.now() - H0.at) / 1000 + 0.05) * clockMult();   // the host's clock runs at the team's rate
       if (Math.abs(dayT - est) > 0.4 && est < dayLens[dayIdx] - 0.01) dayT = est;
@@ -3608,7 +3639,7 @@ function advanceClock(d) {
     dayT -= L; dayIdx++;
     if (dayIdx >= NDAYS) { dayIdx = NDAYS - 1; dayT = dayLens[NDAYS - 1]; elapsed = total; startFinale(); return false; }
     onNewDay();
-    if (!mp) autoCheckpoint();
+    autoCheckpoint();
   }
   elapsed = dayPre[dayIdx] + dayT;
   return true;
@@ -4964,7 +4995,8 @@ async function rankSubmit(days, tSec) {
   if (mp.rkScore !== undefined && score <= mp.rkScore) return;
   if (mp.rkAt && Date.now() - mp.rkAt < 5000) { clearTimeout(rkPending); const d = days, tt = tSec; rkPending = setTimeout(() => rankSubmit(d, tt), 5200 - (Date.now() - mp.rkAt)); return; }
   mp.rkAt = Date.now();
-  const names = mp.list.map(m => cleanName(m.p.n) || 'Player').join(', ').slice(0, 118);
+  const tag = ' - ' + DIFFS[mp.diff || 'hard'].name;
+  const names = mp.list.map(m => cleanName(m.p.n) || 'Player').join(', ').slice(0, 118 - tag.length) + tag;
   try {
     const r = await fetch(DB_URL + '/boards/' + boardFor(n) + '/' + rankId() + '.json', { method: 'PUT', body: JSON.stringify({ score: score, day: day, t: t, n: n, names: names, ts: { '.sv': 'timestamp' } }) });
     if (r.ok && mp) { mp.rkScore = score; mp.rk = (mp.rk | 0) + 1; mpSet({ rk: mp.rk }); mev('ranked'); }
@@ -4974,7 +5006,7 @@ async function rankLoad(b) {
   const r = await fetch(DB_URL + '/boards/' + b + '.json?orderBy=%22score%22&limitToLast=20', { cache: 'no-store' });
   if (!r.ok) throw new Error('rank');
   const o = await r.json(), out = [];
-  for (const id in (o || {})) { const v = o[id]; if (v && typeof v.score === 'number' && !/^zz-/.test(id)) out.push({ id: id, day: v.day | 0, t: +v.t || 0, n: v.n | 0, names: String(v.names || ''), score: v.score }); }
+  for (const id in (o || {})) { const v = o[id]; if (v && typeof v.score === 'number' && !/^zz-/.test(id)) { let nm = String(v.names || ''), dk = ''; const mt = /\s-\s(Normal|Hard|Impossible)$/.exec(nm); if (mt) { dk = mt[1]; nm = nm.slice(0, mt.index); } out.push({ id: id, day: v.day | 0, t: +v.t || 0, n: v.n | 0, names: nm, dk: dk, score: v.score }); } }
   out.sort((a, b2) => b2.score - a.score);
   return out;
 }
@@ -4993,7 +5025,7 @@ async function showBoard(b) {
   rows.forEach((e, i) => {
     const li = document.createElement('li'); if (e.id === mine) li.className = 'me';
     const rk = document.createElement('b'); rk.textContent = String(i + 1);
-    const mid = document.createElement('span'); const nm = document.createElement('em'); nm.textContent = cleanNames(e.names); const dd = document.createElement('small'); dd.textContent = fmtDay(e.day) + ' · ' + e.n + (e.n === 1 ? ' player' : ' players');
+    const mid = document.createElement('span'); const nm = document.createElement('em'); nm.textContent = cleanNames(e.names); const dd = document.createElement('small'); dd.textContent = fmtDay(e.day) + ' · ' + e.n + (e.n === 1 ? ' player' : ' players') + (e.dk ? ' · ' + e.dk : '');
     mid.append(nm, dd);
     const tm = document.createElement('i'); tm.textContent = mmss(e.t);
     li.append(rk, mid, tm); list.append(li);
@@ -5379,8 +5411,9 @@ function init() {
   $('#mClose').addEventListener('click', closeSide);
   $('#bClose').addEventListener('click', closeSide);
   updateMedalBtn();
+  document.querySelectorAll('#mpSeg .segb').forEach(b => b.addEventListener('click', () => { if (!mp || !mp.isHost || !DIFFS[b.dataset.d]) return; mp.dsel = b.dataset.d; mpSet({ df: mp.dsel }); renderLobby(); }));
   $('#startMp').addEventListener('click', () => { ensureAudio(); if (mp && mp.isHost) mpHostGo(1); });
-  $('#again').addEventListener('click', () => { if (mp) { if (mp.isHost) mpHostGo(week); } else if (practice) { if (week === 1 && !cp) { if (daily) startDaily(); else startPractice(practice); } else beginReady(true); } else beginReady(eff() !== 'impossible' && (week > 1 || !!cp)); });
+  $('#again').addEventListener('click', () => { if (mp) { if (mp.isHost) mpHostGo(eff() === 'impossible' ? 1 : week); } else if (practice) { if (week === 1 && !cp) { if (daily) startDaily(); else startPractice(practice); } else beginReady(true); } else beginReady(eff() !== 'impossible' && (week > 1 || !!cp)); });
   $('#restart').addEventListener('click', () => beginReady(false));
   $('#swap').addEventListener('click', () => { if (mp) mpLeave(); else showMenu(true); });
   $('#again2').addEventListener('click', () => { if (mp) mpToLobby(); else if (daily) startDaily(); else if (practice) startPractice(practice); else beginReady(false); });
