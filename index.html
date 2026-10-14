@@ -474,6 +474,8 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
 .tile.daily[disabled] { opacity: .55; cursor: default; border-color: rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .06); }
 .tile:hover { border-color: rgba(246, 201, 120, .6); }
 .tile:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.pcbox { width: 100%; box-sizing: border-box; margin-top: .5em; padding: .5em .6em; border-radius: .7em; border: 1px solid rgba(255,255,255,.2); background: rgba(0,0,0,.25); color: var(--text); font: 600 .7em/1.3 monospace; resize: none; word-break: break-all; }
+.pcmsg { min-height: 1.4em; margin-top: .4em; }
 .sgrid { display: grid; grid-template-columns: 1fr 1fr; gap: .4em; }
 .sgrid div { display: flex; flex-direction: column; gap: .3em; padding: .55em .7em; border-radius: .7em; background: rgba(255, 255, 255, .07); }
 .sgrid small { font: 700 .62em/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
@@ -2787,6 +2789,7 @@ function startRun() {
   musicForce(); updateCpHud();
   if (mp) { mpSet({ s: 'alive', l: lives }); }
   if (mp) mp.runT0 = t;
+  if (mp && week === 1 && dayIdx === 0 && mp.list) mp.crew0 = mp.list.map(m => m.peer).sort();   // who took off together
   mev('fly');
   if (!mp && !practice && !daily) bumpStat(charKey, 'f');
 }
@@ -3621,6 +3624,19 @@ function wkItems(st, end) {
   if (end) { if (st.jNew) items.push({ badge: 'Fastest journey' }); items.push({ k: 'Journey record', v: mmss(jbest) }); }
   return items;
 }
+// who is in the room as the ark comes into view: the same crew that took off, and whether every teammate is still flying
+function teamFinish() {
+  const ids = mp.list.map(m => m.peer).sort(), n = ids.length;
+  const same = n >= 2 && !!mp.crew0 && mp.crew0.length === n && ids.every((v, i) => v === mp.crew0[i]);
+  const allUp = n >= 2 && mp.list.every(m => m.me ? lives > 0 : (m.p.s === 'alive' || m.p.s === 'rest'));
+  return { n: n, same: same, allUp: allUp, diff: curDiff() };
+}
+// each team ark is kept as its own small record (last 20) so the stats can show them
+function logTeamArk(T) {
+  let a = store.get('tfin', []); if (!Array.isArray(a)) a = [];
+  a.push({ t: Date.now(), n: T.n, d: T.diff, s: T.same ? 1 : 0, a: T.allUp ? 1 : 0 });
+  store.set('tfin', a.slice(-20));
+}
 function startFinale() {
   const isEnd = week >= NWEEKS;
   const first = !practice && wins < 1;
@@ -3639,7 +3655,9 @@ function startFinale() {
     cp = null; updateCpHud();
     if (!practice) checkUnlocks();
   }
-  if (!practice) mev('clear', { isEnd: isEnd, frac: clamp(1 - (runTime - weekT0) / Math.max(1, total), 0, 1) });
+  const teamFin = mp ? teamFinish() : null;
+  if (!practice) mev('clear', { isEnd: isEnd, frac: clamp(1 - (runTime - weekT0) / Math.max(1, total), 0, 1), diff: curDiff(), picks: weekPicks, team: teamFin });
+  if (mp && isEnd && !practice && teamFin) logTeamArk(teamFin);
   if (!practice) checkUnlocks();   // Week 3 brings the Golden Dove, a flawless Week 3 or later the Butterfly
   if (mp) rankSubmit(isEnd ? NWEEKS * NDAYS : week * NDAYS, runTime);
   state = 'finale'; boss = null; bossHud(false);
@@ -6067,10 +6085,11 @@ const TIERS = [
   { k: 'obsidian', name: 'Obsidian', c: ['#5a4580', '#241a35', '#07050b'], f: ['#2d2142', '#0a0710'], rib: ['#3b1d6e', '#6b34c9'], tx: '#b58cff' },
   { k: 'diamond',  name: 'Diamond',  c: ['#ffffff', '#bfe6ff', '#8fa8ff'], f: ['#f4fcff', '#9cc6ff'], rib: ['#e0488b', '#8a5cff'], tx: '#ffffff' }
 ];
-const MS0 = { fly: 0, day1: 0, wc: {}, ark: 0, flaw: 0, pw: 0, pills: 0, stack: 0, kinds: 0, chain3: 0, megas: 0, megaTail: 0, megaHalo: 0, close: 0, quick: 0, hurry: 0, last: 0, spark: 0, jonah: 0, tflights: 0, full: 0, rescued: 0, revives: 0, ttail: 0, tmega: 0, tark: 0, ranked: 0, hpw3: 0, hpw: 0, hpw5: 0, pwRun: 0, pwBest: 0, bolts: 0, creat: 0, leaves: 0, leafWk: 0, leafDeep: 0, dry: 0, dryAll: 0, dn: 0, dstreak: 0, days: [] };
+const MS0 = { fly: 0, day1: 0, wc: {}, ark: 0, flaw: 0, pw: 0, pills: 0, stack: 0, kinds: 0, chain3: 0, megas: 0, megaTail: 0, megaHalo: 0, close: 0, quick: 0, hurry: 0, last: 0, spark: 0, jonah: 0, tflights: 0, full: 0, rescued: 0, revives: 0, ttail: 0, tmega: 0, tark: 0, tarkN: 0, sameBoat: 0, noBehind: 0, fullArk: 0, perfectPair: 0, loneHard: 0, loneImp: 0, soloSpot: 0, bareWings: 0, ranked: 0, hpw3: 0, hpw: 0, hpw5: 0, pwRun: 0, pwBest: 0, bolts: 0, creat: 0, leaves: 0, leafWk: 0, leafDeep: 0, dry: 0, dryAll: 0, dn: 0, dstreak: 0, days: [] };
 let ms = Object.assign({}, MS0, store.get('ms', {}));
 if (!ms.wc || typeof ms.wc !== 'object') ms.wc = {};
 if (!Array.isArray(ms.days)) ms.days = [];
+if (ms.tark && !ms.tarkN) ms.tarkN = 1;   // a team ark from before arks were counted counts once
 let md = store.get('md', null), mseen = store.get('mseen', []);
 if (!Array.isArray(mseen)) mseen = [];
 const mq = [];
@@ -6157,7 +6176,17 @@ const MEDAL_GROUPS = [
     ['ttail', 'Team Tailwind', 1, '🌬️', 'Start a Tailwind for the team.', 1, () => ms.ttail],
     ['tmega', 'Team Mega', 2, '🏅', 'Earn a Mega Boost for the team.', 1, () => ms.tmega],
     ['tark', 'Team Ark', 3, '🏔️', 'Reach the ark as a team.', 1, () => ms.tark],
-    ['ranked', 'Ranked', 1, '📈', 'Get your team on the server ranking.', 1, () => ms.ranked]]],
+    ['ranked', 'Ranked', 1, '📈', 'Get your team on the server ranking.', 1, () => ms.ranked],
+    ['sameboat', 'Same Boat', 3, '⛵', 'Reach the ark with the same crew you took off with.', 1, () => ms.sameBoat],
+    ['nobehind', 'Leave No One Behind', 4, '🫶', 'Reach the ark with every teammate still flying.', 1, () => ms.noBehind],
+    ['fullark', 'Full Ark', 4, '🛳️', 'Reach the ark with 10 players on board.', 1, () => ms.fullArk],
+    ['tark3', 'Crew Captain', 4, '🧭', 'Reach the ark as a team 3 times.', 3, () => ms.tarkN],
+    ['pair', 'Perfect Pair', 5, '💞', 'Two players reach the ark together on Impossible.', 1, () => ms.perfectPair]]],
+  ['Solo', [
+    ['lone', 'Lone Dove', 3, '🕊️', 'Reach the ark on your own on Hard.', 1, () => ms.loneHard],
+    ['solospot', 'Solitary Spotless', 4, '✨', 'Reach the ark on your own, on Hard or Impossible, without losing a heart.', 1, () => ms.soloSpot],
+    ['bare', 'Bare Wings', 4, '🪽', 'Clear Week 4 or later on your own without grabbing a single power-up.', 1, () => ms.bareWings],
+    ['against', 'Against the Flood', 5, '🌊', 'Reach the ark on your own on Impossible.', 1, () => ms.loneImp]]],
   ['Birds and habits', [
     ['bird1', 'New Friend', 0, '🐦', 'Unlock a new bird.', 1, () => Math.max(0, birdsOpen() - 4)],
     ['aviary', 'Aviary', 4, '🦜', 'Unlock all 9 birds.', 9, () => birdsOpen()],
@@ -6209,7 +6238,23 @@ function mev(k, a) {
       if (lives === 1 && wkLost && !wkRev) ms.last = 1;
       if (a.frac >= 0.12) ms.quick = 1;
       if (weekSaved >= 60) ms.hurry = 1;
-      if (a.isEnd) { ms.ark++; if (!runLost) ms.flaw++; if (mp) ms.tark = 1; }
+      if (!mp && week >= 4 && a.picks === 0) ms.bareWings = 1;   // solo: a whole week without a power-up
+      if (a.isEnd) {
+        ms.ark++; if (!runLost) ms.flaw++;
+        if (mp) {
+          ms.tark = 1; ms.tarkN = (ms.tarkN | 0) + 1;
+          const T = a.team || {};
+          if (T.same) ms.sameBoat = 1;
+          if (T.allUp) ms.noBehind = 1;
+          if (T.n >= 10) ms.fullArk = 1;
+          if (T.n === 2 && T.diff === 'impossible') ms.perfectPair = 1;
+        } else {
+          const hard = a.diff === 'hard' || a.diff === 'impossible';
+          if (hard) ms.loneHard = 1;
+          if (hard && !runLost) ms.soloSpot = 1;
+          if (a.diff === 'impossible') ms.loneImp = 1;
+        }
+      }
       break;
     }
     default: break;
@@ -6419,6 +6464,97 @@ function infoOpen(eye, title) {
   setPanels('info');
   return $('#iBody');
 }
+function teamArkNote() {
+  let a = store.get('tfin', []); if (!Array.isArray(a) || !a.length) return '';
+  let big = 0; a.forEach(r => { big = Math.max(big, +r.n || 0); });
+  return big >= 2 ? ' · crew of ' + big : '';
+}
+/* ---------- progress code ----------
+   Progress lives in each phone's browser (there are no accounts). The code is a copy of it as one line of text: copy it on one phone, paste it on
+   another. Pasting only ever ADDS: it never lowers a number, takes a medal away, locks anything, or touches your name or your public player id. */
+const PC_NUM = ['best3', 'wins', 'journeys', 'teambest', 'l2-best3', 'l2-wins', 'l2-journeys', 'unl2'];
+const PC_MIN = ['jbest', 'teambestt', 'l2-jbest'];
+const PC_ARRMAX = ['wd', 'l2-wd'];
+const PC_ARRMIN = ['wbest', 'l2-wbest'];
+const PC_OBJ = ['unl', 'lvu', 'ms', 'md', 'mseen', 'ach', 'cs', 'look', 'tfin'];
+const PC_ALL = PC_NUM.concat(PC_MIN, PC_ARRMAX, PC_ARRMIN, PC_OBJ);
+const pcFnv = t => { let h = 0x811c9dc5; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h.toString(36); };
+function pcB64(t) { const b = new TextEncoder().encode(t); let r = ''; for (let i = 0; i < b.length; i++) r += String.fromCharCode(b[i]); return btoa(r).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+function pcUnB64(t) { t = t.replace(/-/g, '+').replace(/_/g, '/'); while (t.length % 4) t += '='; const r = atob(t), b = new Uint8Array(r.length); for (let i = 0; i < r.length; i++) b[i] = r.charCodeAt(i); return new TextDecoder().decode(b); }
+function pcMake() {
+  const o = {};
+  PC_ALL.forEach(k => { const v = store.get(k, null); if (v !== null && v !== undefined) o[k] = v; });
+  if (o.md && typeof o.md === 'object') o.md = Object.keys(o.md);   // which medals, not when
+  const p = pcB64(JSON.stringify(o));
+  return 'WOTF1-' + p + '-' + pcFnv(p);
+}
+function pcRead(raw) {
+  const c = String(raw || '').replace(/\s+/g, '');
+  const m = /^WOTF1-([A-Za-z0-9_-]+)-([a-z0-9]+)$/.exec(c);
+  if (!m) return { err: 'That does not look like a progress code. It starts with WOTF1-.' };
+  if (m[1].length > 90000) return { err: 'That code is too big.' };
+  if (pcFnv(m[1]) !== m[2]) return { err: 'The code looks damaged (part of it is missing or changed). Copy it again.' };
+  let d; try { d = JSON.parse(pcUnB64(m[1])); } catch (e) { return { err: 'The code could not be read.' }; }
+  if (!d || typeof d !== 'object' || Array.isArray(d)) return { err: 'The code could not be read.' };
+  return { d: d };
+}
+function pcMerge(d) {
+  const num = v => (typeof v === 'number' && isFinite(v) && v >= 0 && v < 1e9) ? v : 0;
+  const isObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+  const had = {};
+  PC_NUM.forEach(k => { const a = num(d[k]), b = num(store.get(k, 0)); if (a > b) store.set(k, a); });
+  PC_MIN.forEach(k => { const a = num(d[k]), b = num(store.get(k, 0)); if (a > 0 && (!b || a < b)) store.set(k, a); });
+  PC_ARRMAX.forEach(k => { if (!Array.isArray(d[k])) return; const l = store.get(k, null), o = Array.isArray(l) ? l.slice() : []; d[k].slice(0, 12).forEach((v, i) => { o[i] = Math.max(num(o[i]), num(v)); }); for (let i = 0; i < o.length; i++) o[i] = num(o[i]); store.set(k, o); });
+  PC_ARRMIN.forEach(k => { if (!Array.isArray(d[k])) return; const l = store.get(k, null), o = Array.isArray(l) ? l.slice() : []; d[k].slice(0, 12).forEach((v, i) => { const a = num(v), b = num(o[i]); o[i] = a > 0 && (!b || a < b) ? a : b; }); for (let i = 0; i < o.length; i++) o[i] = num(o[i]); store.set(k, o); });
+  if (isObj(d.unl)) { const o = store.get('unl', {}) || {}; ORDER.forEach(k => { if (d.unl[k] === true) o[k] = true; }); store.set('unl', o); }
+  if (isObj(d.lvu)) { const o = store.get('lvu', null); const r = isObj(o) ? o : {}; ['2'].forEach(n => { const a = isObj(d.lvu[n]) ? d.lvu[n] : null; if (!a) return; r[n] = isObj(r[n]) ? r[n] : { normal: false, hard: false, impossible: false }; ['normal', 'hard', 'impossible'].forEach(k => { if (a[k] === true) r[n][k] = true; }); }); store.set('lvu', r); }
+  if (isObj(d.ms)) {
+    const o = Object.assign({}, MS0, store.get('ms', {}) || {});
+    Object.keys(MS0).forEach(k => { if (typeof MS0[k] === 'number') o[k] = Math.max(num(o[k]), num(d.ms[k])); });
+    o.wc = isObj(o.wc) ? o.wc : {}; if (isObj(d.ms.wc)) for (let w = 1; w <= 6; w++) if (d.ms.wc[w]) o.wc[w] = 1;
+    o.days = Array.isArray(o.days) ? o.days : []; if (Array.isArray(d.ms.days)) d.ms.days.slice(0, 60).forEach(x => { if (typeof x === 'string' && x.length <= 12 && o.days.indexOf(x) < 0) o.days.push(x); }); o.days = o.days.slice(-60);
+    store.set('ms', o);
+  }
+  if (Array.isArray(d.md)) { const o = store.get('md', null), r = isObj(o) ? o : {}; const ok = {}; MEDALS.forEach(m => { ok[m.id] = 1; }); d.md.slice(0, 400).forEach(id => { if (typeof id === 'string' && ok[id] && !r[id]) r[id] = Date.now(); }); store.set('md', r); }
+  if (Array.isArray(d.mseen)) { const o = store.get('mseen', []), r = Array.isArray(o) ? o.slice() : []; const ok = {}; MEDALS.forEach(m => { ok[m.id] = 1; }); d.mseen.slice(0, 400).forEach(id => { if (typeof id === 'string' && ok[id] && r.indexOf(id) < 0) r.push(id); }); store.set('mseen', r); }
+  if (isObj(d.ach)) { const o = store.get('ach', {}) || {}; Object.keys(d.ach).forEach(k => { if (/^[a-z0-9]{1,12}$/i.test(k) && typeof d.ach[k] === 'number') o[k] = Math.max(num(o[k]), num(d.ach[k])); }); store.set('ach', o); }
+  if (isObj(d.cs)) {
+    const o = store.get('cs', null), r = isObj(o) ? o : {}; r.cs = isObj(r.cs) ? r.cs : {}; r.lk = isObj(r.lk) ? r.lk : {};
+    ORDER.forEach(k => {
+      if (isObj(d.cs.cs) && isObj(d.cs.cs[k])) { r.cs[k] = isObj(r.cs[k]) ? r.cs[k] : {}; ['f', 'c', 'fl'].forEach(st => { r.cs[k][st] = Math.max(num(r.cs[k][st]), Math.min(num(d.cs.cs[k][st]), 1e6)); }); }
+      if (isObj(d.cs.lk) && isObj(d.cs.lk[k])) { r.lk[k] = isObj(r.lk[k]) ? r.lk[k] : {}; for (let i = 1; i < NLOOK; i++) if (d.cs.lk[k][i]) r.lk[k][i] = 1; }
+    });
+    store.set('cs', r);
+  }
+  if (isObj(d.look)) { const o = store.get('look', {}), r = isObj(o) ? o : {}; ORDER.forEach(k => { const v = d.look[k]; if (r[k] === undefined && Number.isInteger(v) && v >= 0 && v < NLOOK) r[k] = v; }); store.set('look', r); }
+  if (Array.isArray(d.tfin)) { const o = store.get('tfin', []), r = Array.isArray(o) ? o.slice() : []; const seen = {}; r.forEach(x => { seen[x.t] = 1; }); d.tfin.slice(-20).forEach(x => { if (isObj(x) && num(x.t) && !seen[x.t]) r.push({ t: num(x.t), n: Math.min(10, num(x.n)), d: ['normal', 'hard', 'impossible'].indexOf(x.d) >= 0 ? x.d : 'normal', s: x.s ? 1 : 0, a: x.a ? 1 : 0 }); }); r.sort((p, q) => p.t - q.t); store.set('tfin', r.slice(-20)); }
+}
+function openProgressCode() {
+  const body = infoOpen('Progress code', 'Move to another phone');
+  const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt) e.textContent = txt; return e; };
+  const p = mk('p', 'lede', 'Your progress is saved on this phone only (no accounts). Copy your code here, then paste it into the game on your other phone. Pasting only adds progress: it never lowers anything or takes a medal away. Your name is not included.');
+  const my = mk('textarea', 'pcbox'); my.readOnly = true; my.rows = 3; my.value = pcMake(); my.setAttribute('aria-label', 'Your progress code');
+  const cp = mk('button', 'btn primary', 'Copy my code'); cp.type = 'button';
+  const msg = mk('p', 'lede pcmsg', '');
+  cp.addEventListener('click', () => {
+    my.value = pcMake(); my.select();
+    let ok = false; try { ok = document.execCommand && document.execCommand('copy'); } catch (e) { ok = false; }
+    const done = () => { msg.textContent = 'Copied. Paste it on the other phone, under Stats, then Progress code.'; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(my.value).then(done, () => { msg.textContent = ok ? 'Copied.' : 'Select the code and copy it by hand.'; }); else msg.textContent = ok ? 'Copied. Paste it on the other phone.' : 'Select the code and copy it by hand.';
+  });
+  const h = mk('p', 'lede', 'Got a code from your other phone? Paste it here:'); h.style.marginTop = '.9em';
+  const inp = mk('textarea', 'pcbox'); inp.rows = 3; inp.placeholder = 'WOTF1-...'; inp.setAttribute('aria-label', 'Paste a progress code');
+  const rs = mk('button', 'btn', 'Add this progress'); rs.type = 'button';
+  const msg2 = mk('p', 'lede pcmsg', '');
+  rs.addEventListener('click', () => {
+    const r = pcRead(inp.value);
+    if (r.err) { msg2.textContent = r.err; return; }
+    try { pcMerge(r.d); } catch (e) { msg2.textContent = 'Something went wrong, and nothing was changed.'; return; }
+    msg2.textContent = 'Progress added. Reloading…';
+    setTimeout(() => { try { location.reload(); } catch (e) { /* ignore */ } }, 700);
+  });
+  body.append(p, my, cp, msg, h, inp, rs, msg2);
+}
 function openStats() {
   const body = infoOpen('Stats', 'Personal stats'), sm = medalSummary();
   const rows = [
@@ -6428,6 +6564,7 @@ function openStats() {
     ['Weeks cleared', String(wins)],
     ['Total flights', String(ms.fly)],
     ['Team flights', String(ms.tflights)],
+    ['Team arks', String(ms.tarkN | 0) + teamArkNote()],
     ['Power-ups grabbed', String(ms.pills)],
     ['Olive leaves', String(ms.leaves)],
     ['MEGA boosts', String(ms.megas)],
@@ -6443,6 +6580,8 @@ function openStats() {
     d.append(sl, bb); g.append(d);
   });
   body.append(g);
+  const pb = document.createElement('button'); pb.className = 'btn'; pb.type = 'button'; pb.textContent = 'Progress code'; pb.style.cssText = 'margin-top:.35em;padding:.4em 1.2em;font-size:.85em';
+  pb.addEventListener('click', openProgressCode); body.append(pb);
 }
 const JOURNAL_END = { title: 'Welcome home.', verse: 'And the dove came in to him in the evening; and, lo, in her mouth was an olive leaf pluckt off: so Noah knew that the waters were abated from off the earth.', ref: 'Genesis 8:11' };
 function openJournal() {
