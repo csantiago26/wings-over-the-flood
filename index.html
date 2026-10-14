@@ -208,6 +208,13 @@ body {
 .segb { appearance: none; padding: .55em .3em; border-radius: .8em; border: 1px solid rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .06); color: var(--text); font: 700 .84em/1.1 var(--body); cursor: pointer; }
 .segb.on { border-color: var(--gold); background: rgba(246, 201, 120, .16); color: var(--gold); }
 .segb[data-d="impossible"].on { border-color: #ff8a7a; background: rgba(255, 138, 122, .14); color: #ffb4a8; }
+.seg.two { grid-template-columns: repeat(2, 1fr); }
+.segb.lk { opacity: .5; }
+.segb.lk::after { content: ' \00b7  locked'; font-weight: 500; font-size: .8em; }
+.bossbar { position: absolute; right: 1.1em; top: 5.5em; width: 50%; display: flex; flex-direction: column; gap: .25em; text-shadow: 0 1px 6px rgba(0, 0, 0, .7); }
+.bossbar span { font: 700 .62em/1 var(--body); letter-spacing: .18em; text-transform: uppercase; color: #ffb4a8; text-align: right; }
+.bossbar i { display: block; height: .5em; border-radius: 1em; background: rgba(255, 255, 255, .18); overflow: hidden; }
+.bossbar b { display: block; height: 100%; width: 100%; border-radius: inherit; background: linear-gradient(90deg, #ff8a3a, #e5484d); }
 .segb[disabled] { cursor: default; opacity: .75; }
 .segb:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .diffnote { margin: 0; min-height: 3.4em; font-size: .78em; line-height: 1.4; color: var(--muted); }
@@ -218,6 +225,7 @@ body {
 .mute[aria-pressed="true"] .off { display: block; }
 
 /* at a rest stop the scene is the star: drop the day counter so the sheet can sit up top and the bird stays visible */
+#hud.boss .phase { visibility: hidden; }
 #hud.calm .day, #hud.calm .track, #hud.calm .phase, #hud.calm .pws, #hud.calm .leafhud, #hud.calm .cpb, #hud.calm .mates, #hud.calm .lives { display: none; }
 
 /* three lives */
@@ -293,14 +301,14 @@ h2.gold { color: var(--gold); font-size: 1.7em; }
 .wk .badge { background: var(--gold); color: var(--ink-on-gold); border-radius: 1em; padding: .12em .65em; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; font-size: .9em; }
 .lede { margin: 0; font-size: .82em; line-height: 1.45; color: var(--muted); max-width: 30em; }
 .label { margin: 0 0 .5em; font: 700 .72em/1 var(--body); letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
-.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: .45em; }
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4em; }
 .card {
   min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: .05em;
-  padding: .3em .3em .4em;
+  padding: .17em .3em .2em;
   border-radius: .8em;
   background: rgba(255, 255, 255, .07);
   border: 1px solid rgba(255, 255, 255, .15);
@@ -309,14 +317,15 @@ h2.gold { color: var(--gold); font-size: 1.7em; }
   font: inherit;
   cursor: pointer;
 }
-.card canvas { width: 3.5em; height: 2.85em; flex: none; }
+.card canvas { width: 2.75em; height: 2.25em; flex: none; }
 .card strong { display: block; font: 800 .74em/1.15 var(--display); white-space: nowrap; }
 .card span { display: block; font-size: .64em; line-height: 1.2; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; min-height: 1.2em; }
 .card[aria-pressed="true"] { border-color: var(--gold); background: rgba(246, 201, 120, .15); }
 .card.locked { cursor: help; }
-.birdinfo { margin: .5em 0 0; min-height: 2.9em; font-size: .78em; line-height: 1.4; color: var(--muted); }
+#menu { gap: .66em; padding-block: 1.1em; }   /* twelve characters now: keep the pick screen on one phone screen */
+.birdinfo { margin: .35em 0 0; min-height: 2.5em; font-size: .78em; line-height: 1.4; color: var(--muted); }
 .birdinfo b { color: var(--text); }
-.minis { display: grid; grid-template-columns: repeat(5, 1fr); gap: .4em; }
+.minis { display: grid; grid-template-columns: repeat(6, 1fr); gap: .4em; }   /* 12 characters in two rows, as the 9 used to be */
 .mini {
   flex: 1;
   min-width: 0;
@@ -515,6 +524,7 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
       <div class="leafhud" id="leafHud" hidden aria-label="Olive leaves this week"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20C3 10 9 4 21 3c0 11-6 17-16 17z" fill="#8fbf5a" stroke="#d9e8a8" stroke-width="1.4"/><path d="M3.5 20.5C9 14 13 10.5 18 6.5" fill="none" stroke="#3f6b2a" stroke-width="1.4" stroke-linecap="round"/></svg><b id="leafN">0</b><span id="leafMax">/5</span></div>
       <button class="cpb" id="cpb" type="button" tabindex="-1" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></svg><span id="cpbT">Checkpoint</span></button>
       <div class="hint" id="hint"><b id="hintB">Tap to flap</b><span id="hintS">Space or Up Arrow works too</span><span class="hintV" id="hintV"></span><span id="hintT">Grab glowing orbs for power-ups. Grab the same one again and again for a MEGA boost.</span></div>
+      <div class="bossbar" id="bossBar" hidden><span>The great red dragon</span><i><b id="bossFill"></b></i></div>
       <div class="oops" id="oops" aria-live="assertive"><b id="oopsB"></b><span id="oopsS"></span></div>
       <div class="cap" id="cap" aria-live="polite"></div>
     </div>
@@ -544,6 +554,12 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
       <div>
         <div class="cards" id="cards"></div>
         <p class="birdinfo" id="birdInfo" aria-live="polite"></p>
+      </div>
+      <div class="diffbox" id="lvlBox">
+        <div class="seg two" id="lvlSeg" role="radiogroup" aria-label="Level">
+          <button type="button" class="segb" role="radio" data-l="1">1 &middot; The Flood</button>
+          <button type="button" class="segb" role="radio" data-l="2">2 &middot; The Fire</button>
+        </div>
       </div>
       <div class="diffbox">
         <p class="eyebrow">Difficulty</p>
@@ -632,12 +648,12 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
     </section>
 
     <section class="sheet" id="win" hidden>
-      <p class="eyebrow">Week 6 of 6 complete</p>
-      <h2 class="gold">Welcome home.</h2>
+      <p class="eyebrow" id="winEye">Week 6 of 6 complete</p>
+      <h2 class="gold" id="winTitle">Welcome home.</h2>
       <p class="lede" id="winLede">Noah was waiting with his arm out. You carried the olive leaf all the way.</p>
       <p class="wk" id="winStats" hidden></p>
       <div class="unlocks" id="winUnlock" hidden></div>
-      <blockquote>And the dove came in to him in the evening; and, lo, in her mouth was an olive leaf pluckt off: so Noah knew that the waters were abated from off the earth.<cite>Genesis 8:11</cite></blockquote>
+      <blockquote><span id="winVerse">And the dove came in to him in the evening; and, lo, in her mouth was an olive leaf pluckt off: so Noah knew that the waters were abated from off the earth.</span><cite id="winRef">Genesis 8:11</cite></blockquote>
       <div class="nums">
         <div><small>Days flown</small><b id="wDays">42</b></div>
         <div><small>Time</small><b id="wTime">0:00</b></div>
@@ -1071,6 +1087,10 @@ const store = {
   set(k, v) { try { localStorage.setItem('wotf-' + k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
 };
 
+let lvl = 1;   // 1 = The Flood, 2 = The Fire
+let boss = null;   // the dragon at the end of Level 2, while the fight is on
+const sk = k => (lvl === 2 ? 'l2-' + k : k);   // each level keeps its own records, so Level 2 never touches Level 1's
+
 document.querySelectorAll('.nd').forEach(n => { n.textContent = NDAYS; });
 document.querySelectorAll('.nw').forEach(n => { n.textContent = NWEEKS; });
 $('#ofDays').textContent = 'of ' + NDAYS;
@@ -1086,27 +1106,125 @@ const BIRDS = {
   butterfly:   { name: 'Butterfly',   desc: 'Floaty. Soft flaps, wide wings.',  r: 14, g: 1180, flap: -365, fall: 'leaf',   insect: 'butterfly', body: '#2b1d12', belly: '#f28c28', wing: '#f28c28', wingTip: '#2b1d12', beak: '#2b1d12', eye: '#ffffff' },
   bee:         { name: 'Bee',         desc: 'Smallest hitbox, but heavy.',      r: 8,  g: 1760, flap: -450, fall: 'spiral', insect: 'bee',       body: '#f5c518', belly: '#f5c518', wing: '#d8ecff', wingTip: '#2b2118', beak: '#2b2118', eye: '#ffffff' },
   ladybug:     { name: 'Ladybug',     desc: 'Lucky: grabs power-ups from farther.', r: 11, g: 1450, flap: -410, fall: 'bounce', insect: 'ladybug', mag: 22, body: '#d62828', belly: '#15110d', wing: '#e6f0ff', wingTip: '#15110d', beak: '#15110d', eye: '#ffffff' },
-  hummingbird: { name: 'Hummingbird', desc: 'Quick little hovering hops.',      r: 9,  g: 1250, flap: -345, fall: 'tumble', buzz: true, long: true, throat: '#e63946', body: '#2f9e6f', belly: '#eaf3e4', wing: '#cfeaf7', wingTip: '#7fb0c8', beak: '#26262b', eye: '#10151c', head: '#1f8a5d', tail: '#1b6a49', wingK: 0.9 }
+  hummingbird: { name: 'Hummingbird', desc: 'Quick little hovering hops.',      r: 9,  g: 1250, flap: -345, fall: 'tumble', buzz: true, long: true, throat: '#e63946', body: '#2f9e6f', belly: '#eaf3e4', wing: '#cfeaf7', wingTip: '#7fb0c8', beak: '#26262b', eye: '#10151c', head: '#1f8a5d', tail: '#1b6a49', wingK: 0.9, card: { k: 1.7, cx: 44 } },
+  // Level 2 characters: earned in Level 2, solo only until the multiplayer update (older copies of the game would not know them)
+  dragonfly:   { name: 'Dragonfly',   desc: 'Heat Sense: a flying brand’s glowing lane stays lit all the way to you.',   r: 9,  g: 1300, flap: -372, fall: 'spiral', insect: 'dragonfly', body: '#e2452b', belly: '#ffb347', wing: '#ffecc8', wingTip: '#8a3a12', beak: '#2b1208', eye: '#ffb02e', solo: true, card: { k: 1.55, cx: 66 } },
+  phoenix:     { name: 'Phoenix',     desc: 'Rebirth: once a week, it rises from a lost last heart.',       r: 14, g: 1390, flap: -420, fall: 'spiral', phoenix: true, glow: true, glowRGB: '255,138,50', body: '#e8452a', belly: '#ffb347', wing: '#ff7a2a', wingTip: '#ffd23a', beak: '#f6c244', eye: '#2a0f08', head: '#ff5a2e', tail: '#ff9d1a', wingK: 1.15, solo: true, verse: '“For a just man falleth seven times, and riseth up again…” Proverbs 24:16', card: { k: 0.8, cx: 70, cy: 50 } },
+  babydragon:  { name: 'Baby Dragon', desc: 'Ember Puff: every 15 s it burns away the next flying brand.', r: 15, g: 1360, flap: -405, fall: 'bounce', creature: 'dragonet', body: '#63b872', belly: '#f3dca0', wing: '#ff9a3c', wingTip: '#c25a1a', beak: '#f3dca0', eye: '#1a1208', solo: true, card: { k: 0.76, cx: 62, cy: 54 } }
 };
-const ORDER = ['dove', 'sparrow', 'raven', 'eagle', 'butterfly', 'bee', 'ladybug', 'hummingbird', 'golden'];
-// how the four extra birds are earned; lifetime numbers live in `ach`
+const ORDER = ['dove', 'sparrow', 'raven', 'eagle', 'butterfly', 'bee', 'ladybug', 'hummingbird', 'golden', 'dragonfly', 'phoenix', 'babydragon'];
+// how the extra birds are earned; lifetime numbers live in `ach`
+// Level 2 keeps its own week records (wotf-l2-wd); a week counts as cleared at 8
+const l2Cleared = w => { let a = null; try { a = store.get('l2-wd', []); } catch (e) { /* ignore */ } return Array.isArray(a) && (a[w - 1] || 0) >= 8; };
 const UNLOCKS = {
   golden:      { need: 3,    text: 'Clear Week 3.',                                 prog: () => [1, 2, 3].filter(w => ms.wc[w]).length + '/3 weeks' },
   ladybug:     { need: 100,  text: 'Slip past 100 lightning bolts by a hair.',      prog: () => Math.min(100, ach.close || 0) + '/100' },
   bee:         { need: 250,  text: 'Collect 250 power-ups, all flights together.',  prog: () => Math.min(250, ms.pills || 0) + '/250' },
   hummingbird: { need: 10,   text: 'Trigger 10 Mega Boosts.',                       prog: () => Math.min(10, ach.mega || 0) + '/10' },
-  butterfly:   { need: 1,    text: 'Clear Week 3 or later without losing a heart.', prog: () => (ms.hpw3 ? 1 : 0) + '/1' }
+  butterfly:   { need: 1,    text: 'Clear Week 3 or later without losing a heart.', prog: () => (ms.hpw3 ? 1 : 0) + '/1' },
+  dragonfly:   { need: 1,    text: 'Clear Week 2 of Level 2, The Fire.',            prog: () => (l2Cleared(2) ? 1 : 0) + '/1' },
+  phoenix:     { need: 1,    text: 'Clear Week 5 of Level 2, The Fire.',            prog: () => (l2Cleared(5) ? 1 : 0) + '/1' },
+  babydragon:  { need: 1,    text: 'Beat the dragon at the end of Level 2.',        prog: () => (l2Cleared(6) ? 1 : 0) + '/1' }
 };
+const soloOnly = k => !!(BIRDS[k] && BIRDS[k].solo);
+
+/* ---------- color looks ----------
+   Every character has 4 looks (0 = Classic). In solo the other three are earned with that character; in team play all of them are free,
+   so two players who pick the same bird can still tell each other apart. A look is a recolor (hue / saturation / lightness, or a tint for
+   white birds), sometimes a pattern on the body, sometimes a glow. Colors only: hitboxes and abilities never change. */
+const SKINS = {
+  dove:        [{ n: 'Classic' }, { n: 'Rose', tint: '#f4a3bd', ta: 0.6 }, { n: 'Sky', tint: '#7fb9f5', ta: 0.6, pat: 'band', pc: 'rgba(60,120,210,.4)', glow: '127,185,245' }, { n: 'Midnight', tint: '#232f63', ta: 0.85, pat: 'spots', pc: 'rgba(255,255,255,.6)', glow: '110,130,255' }],
+  sparrow:     [{ n: 'Classic' }, { n: 'Ember', h: -22, s: 1.25, l: 0.02 }, { n: 'Willow', h: 55, s: 0.9, l: 0.03 }, { n: 'Stormy', h: 200, s: 0.7, pat: 'stripes', pc: 'rgba(255,255,255,.25)' }],
+  raven:       [{ n: 'Classic' }, { n: 'Violet', sat: 1, h: 55, s: 2.4, l: 0.07, glow: '150,110,255' }, { n: 'Frost', sat: 1, s: 1.4, l: 0.36 }, { n: 'Crimson', sat: 1, h: 125, s: 3.2, l: 0.04, glow: '255,80,90' }],
+  eagle:       [{ n: 'Classic' }, { n: 'Golden', h: 12, s: 1.3, l: 0.1 }, { n: 'Storm', h: 170, s: 0.8 }, { n: 'Ember', h: -18, s: 1.4, l: -0.02, glow: '255,120,60' }],
+  butterfly:   [{ n: 'Classic' }, { n: 'Azure', h: 170 }, { n: 'Rose', h: -50 }, { n: 'Emerald', h: 100, glow: '110,230,150' }],
+  bee:         [{ n: 'Classic' }, { n: 'Honey', h: -12, s: 1.2, l: -0.04 }, { n: 'Mint', h: 105 }, { n: 'Royal', h: 200, glow: '160,140,255' }],
+  ladybug:     [{ n: 'Classic' }, { n: 'Sunny', h: 48 }, { n: 'Berry', h: -35 }, { n: 'Jade', h: 130 }],
+  hummingbird: [{ n: 'Classic' }, { n: 'Sapphire', h: 80 }, { n: 'Sunset', h: -110 }, { n: 'Violet', h: 140, glow: '190,140,255' }],
+  golden:      [{ n: 'Classic' }, { n: 'Rose Gold', h: -35, s: 0.85, l: 0.04 }, { n: 'Sunrise', h: -14, s: 1.2 }, { n: 'Pearl', s: 0.15, l: 0.14, glow: '255,255,255' }],
+  dragonfly:   [{ n: 'Classic' }, { n: 'Azure', h: 190 }, { n: 'Emerald', h: 120 }, { n: 'Violet', h: -60, glow: '200,140,255' }],
+  phoenix:     [{ n: 'Classic' }, { n: 'Blue Flame', h: 195 }, { n: 'Green Flame', h: 120 }, { n: 'Moonfire', h: 255, s: 0.9, l: 0.08, glow: '190,160,255' }],
+  babydragon:  [{ n: 'Classic' }, { n: 'Ember', h: -95 }, { n: 'Frost', h: 75 }, { n: 'Violet', h: 145, glow: '190,140,255' }]
+};
+const NLOOK = 4;
+// how a look is earned in solo (the stats are kept per character in ach.cs)
+const LOOK_GOALS = [null,
+  { key: 'f',  need: 15, text: 'Fly 15 times with it.' },
+  { key: 'c',  need: 1,  text: 'Clear a week with it.' },
+  { key: 'fl', need: 1,  text: 'Clear a week with it without losing a heart.' }];
+let looks = store.get('look', {}); if (!looks || typeof looks !== 'object') looks = {};
+let skinQ = [];
+// per-character stats live under their own save key (wotf-cs), so flying Level 2 never edits Level 1's records in `ach`
+let cst = store.get('cs', null); if (!cst || typeof cst !== 'object') cst = {}; cst.cs = cst.cs || {}; cst.lk = cst.lk || {};
+const charStat = (k, st) => (cst.cs[k] && cst.cs[k][st]) || 0;
+const lookOpen = (k, i) => i === 0 || !!mp || charStat(k, LOOK_GOALS[i].key) >= LOOK_GOALS[i].need;
+const lookIdx = k => { const i = looks[k] | 0; return i > 0 && i < NLOOK && SKINS[k] && lookOpen(k, i) ? i : 0; };
+const lookName = (k, i) => (SKINS[k] && SKINS[k][i] ? SKINS[k][i].n : 'Classic');
+function lookProg(k, i) { const g = LOOK_GOALS[i]; return g ? Math.min(g.need, charStat(k, g.key)) + '/' + g.need : ''; }
+function bumpStat(k, st) {
+  if (!SKINS[k]) return;
+  const o = cst.cs[k] = cst.cs[k] || {};
+  o[st] = (o[st] || 0) + 1;
+  const got = cst.lk[k] = cst.lk[k] || {};
+  for (let i = 1; i < NLOOK; i++) {
+    if (!got[i] && o[LOOK_GOALS[i].key] >= LOOK_GOALS[i].need) {
+      got[i] = 1; skinQ.push(k + ':' + i);
+      setCap('New look: ' + lookName(k, i) + ' ' + BIRDS[k].name + '!', 3400);
+      [523, 659, 784, 1047].forEach((f, j) => tone(f, 0.22, 'triangle', 0.05, j * 0.08));
+    }
+  }
+  store.set('cs', cst);
+}
+// the recolor itself
+let LOOKSK = null, LOOKID = '';
+const LKMEMO = new Map();
+function lk(col) {
+  const sk = LOOKSK;
+  if (!sk || typeof col !== 'string') return col;
+  const id = LOOKID + col, hit = LKMEMO.get(id);
+  if (hit !== undefined) return hit;
+  let r, g, b, a = null, m;
+  if ((m = /^#([0-9a-f]{3})$/i.exec(col))) { r = parseInt(m[1][0] + m[1][0], 16); g = parseInt(m[1][1] + m[1][1], 16); b = parseInt(m[1][2] + m[1][2], 16); }
+  else if ((m = /^#([0-9a-f]{6})$/i.exec(col))) { r = parseInt(m[1].slice(0, 2), 16); g = parseInt(m[1].slice(2, 4), 16); b = parseInt(m[1].slice(4, 6), 16); }
+  else if ((m = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)$/i.exec(col))) { r = +m[1]; g = +m[2]; b = +m[3]; a = m[4] === undefined ? null : m[4]; }
+  else { LKMEMO.set(id, col); return col; }
+  const mx = Math.max(r, g, b) / 255, mn = Math.min(r, g, b) / 255, L = (mx + mn) / 2, d = mx - mn;
+  let S = d === 0 ? 0 : d / (1 - Math.abs(2 * L - 1)), H = 0;
+  if (d) { const R = r / 255, G = g / 255, B = b / 255; H = mx === R ? ((G - B) / d) % 6 : mx === G ? (B - R) / d + 2 : (R - G) / d + 4; H *= 60; if (H < 0) H += 360; }
+  let out;
+  const neutral = d < 0.09;   // whites, greys and near-blacks have almost no colour to rotate
+  if (neutral && sk.tint && L > 0.45) {   // white and pale grey feathers take a tint
+    const T = [parseInt(sk.tint.slice(1, 3), 16), parseInt(sk.tint.slice(3, 5), 16), parseInt(sk.tint.slice(5, 7), 16)], ta = sk.ta == null ? 0.6 : sk.ta;
+    out = [r + (T[0] - r) * ta, g + (T[1] - g) * ta, b + (T[2] - b) * ta];
+  } else if (neutral && !sk.sat) {
+    out = [r, g, b];
+  } else {
+    H = (H + (sk.h || 0) + 360) % 360; S = Math.max(0, Math.min(1, S * (sk.s == null ? 1 : sk.s))); const L2 = Math.max(0, Math.min(1, L + (sk.l || 0)));
+    const C = (1 - Math.abs(2 * L2 - 1)) * S, X = C * (1 - Math.abs((H / 60) % 2 - 1)), M = L2 - C / 2;
+    const q = H < 60 ? [C, X, 0] : H < 120 ? [X, C, 0] : H < 180 ? [0, C, X] : H < 240 ? [0, X, C] : H < 300 ? [X, 0, C] : [C, 0, X];
+    out = [(q[0] + M) * 255, (q[1] + M) * 255, (q[2] + M) * 255];
+  }
+  const R2 = Math.round(Math.max(0, Math.min(255, out[0]))), G2 = Math.round(Math.max(0, Math.min(255, out[1]))), B2 = Math.round(Math.max(0, Math.min(255, out[2])));
+  const res = a === null && col[0] === '#' ? '#' + [R2, G2, B2].map(v => v.toString(16).padStart(2, '0')).join('') : 'rgba(' + R2 + ',' + G2 + ',' + B2 + ',' + (a === null ? 1 : a) + ')';
+  LKMEMO.set(id, res);
+  return res;
+}
+// a swatch color for lists and dots
+function lookBody(k, i) { const prev = LOOKSK, pid = LOOKID; LOOKSK = SKINS[k] ? SKINS[k][i] || null : null; LOOKID = k + ':' + i + ':'; const c = lk(BIRDS[k].body); LOOKSK = prev; LOOKID = pid; return c; }
+
 const isLocked = k => !!UNLOCKS[k] && !unl[k];
 function lockText(k) { return 'Locked: ' + UNLOCKS[k].text + ' (' + UNLOCKS[k].prog() + ')'; }
 function grantUnlock(k) {
   if (!UNLOCKS[k] || unl[k]) return;
   unl[k] = true; store.set('unl', unl); unlockQ.push(k); setTimeout(() => checkMedals(), 0);
-  setCap('New bird unlocked: ' + BIRDS[k].name + '!', 3600);
+  setCap((BIRDS[k].solo ? 'New character unlocked: ' : 'New bird unlocked: ') + BIRDS[k].name + '!', 3600);
   [659, 784, 988, 1319].forEach((f, i) => tone(f, 0.25, 'triangle', 0.06, i * 0.09));
 }
 function checkUnlocks() {
   if (mp) return;
+  if (l2Cleared(2)) grantUnlock('dragonfly');
+  if (l2Cleared(5)) grantUnlock('phoenix');
+  if (l2Cleared(6)) grantUnlock('babydragon');
   if (ms.wc[3]) grantUnlock('golden');
   if ((ms.pills || 0) >= UNLOCKS.bee.need) grantUnlock('bee');
   if ((ach.close || 0) >= UNLOCKS.ladybug.need) grantUnlock('ladybug');
@@ -1121,10 +1239,38 @@ function fillUnlocks(box) {
   keys.forEach(k => {
     const d = document.createElement('div'), cvs = document.createElement('canvas'), w = document.createElement('div'), b = document.createElement('b'), sp = document.createElement('span');
     d.className = 'unlock'; cvs.width = 108; cvs.height = 88; cvs.setAttribute('aria-hidden', 'true');
-    b.textContent = 'New bird unlocked'; sp.textContent = BIRDS[k].name + ' is ready on the bird list.';
-    w.append(b, sp); d.append(cvs, w); box.append(d);
-    drawCardBird(cvs.getContext('2d'), k, false);
+    b.textContent = BIRDS[k].solo ? 'New character unlocked' : 'New bird unlocked'; sp.textContent = BIRDS[k].name + ' is ready on the bird list.' + (BIRDS[k].solo ? ' (Solo only for now.)' : '');
+    w.append(b, sp);
+    if (BIRDS[k].verse) { const q = document.createElement('i'); q.textContent = BIRDS[k].verse; q.style.cssText = 'display:block;margin-top:4px;font-size:.86em;opacity:.92'; w.append(q); } d.append(cvs, w); box.append(d);
+    drawCardBird(cvs.getContext('2d'), k, false, 0, true);
   });
+  const sq = skinQ.splice(0, skinQ.length);
+  if (sq.length) box.hidden = false;
+  sq.forEach(e => {
+    const k = e.split(':')[0], i = +e.split(':')[1];
+    const d = document.createElement('div'), cvs = document.createElement('canvas'), w = document.createElement('div'), b = document.createElement('b'), sp = document.createElement('span');
+    d.className = 'unlock'; cvs.width = 108; cvs.height = 88; cvs.setAttribute('aria-hidden', 'true');
+    b.textContent = 'New look unlocked'; sp.textContent = lookName(k, i) + ' ' + BIRDS[k].name + '. Tap the bird again on the bird list to wear it.';
+    w.append(b, sp); d.append(cvs, w); box.append(d);
+    drawCardBird(cvs.getContext('2d'), k, false, i, true);
+  });
+  const lv = lvQ.splice(0, lvQ.length);
+  if (lv.length) box.hidden = false;
+  lv.forEach(txt => {
+    const d = document.createElement('div'), cvs = document.createElement('canvas'), w = document.createElement('div'), b = document.createElement('b'), sp = document.createElement('span');
+    d.className = 'unlock'; cvs.width = 108; cvs.height = 88; cvs.setAttribute('aria-hidden', 'true');
+    b.textContent = 'New level'; sp.textContent = txt;
+    w.append(b, sp); d.append(cvs, w); box.append(d);
+    drawFlameIcon(cvs.getContext('2d'));
+  });
+}
+function drawFlameIcon(c) {
+  const g = c.createLinearGradient(0, 8, 0, 80);
+  g.addColorStop(0, '#ffd27a'); g.addColorStop(0.5, '#ff8a3a'); g.addColorStop(1, '#d6361f');
+  c.fillStyle = g; c.beginPath();
+  c.moveTo(54, 8); c.bezierCurveTo(70, 30, 86, 44, 80, 62); c.bezierCurveTo(76, 76, 64, 82, 54, 82); c.bezierCurveTo(42, 82, 30, 76, 28, 62); c.bezierCurveTo(26, 50, 38, 44, 42, 30); c.bezierCurveTo(46, 38, 50, 40, 54, 8);
+  c.closePath(); c.fill();
+  c.fillStyle = 'rgba(255,240,190,.9)'; c.beginPath(); c.ellipse(54, 66, 9, 13, 0, 0, TAU); c.fill();
 }
 
 function drawSprig(c, x, y, r) {
@@ -1147,7 +1293,7 @@ function drawSprig(c, x, y, r) {
 function drawInsect(c, key, x, y, rot, wing, k, sprig, alpha, fx) {
   const B = BIRDS[key], r = B.r * k;
   const bu = fx && fx.burn ? fx.burn : 0, fl = !!(fx && fx.flash);
-  const cl = col => fl ? '#ffffff' : (bu > 0 ? mix(col, '#15110d', Math.min(1, bu) * 0.88) : col);
+  const cl = col => fl ? '#ffffff' : (bu > 0 ? mix(lk(col), '#15110d', Math.min(1, bu) * 0.88) : lk(col));
   const fk = clamp(0.5 + wing * 0.9, 0.2, 1.2);   // how far the wings are spread
   c.save(); c.translate(x, y); c.rotate(rot);
   c.globalAlpha = alpha == null ? 1 : alpha;
@@ -1197,6 +1343,30 @@ function drawInsect(c, key, x, y, rot, wing, k, sprig, alpha, fx) {
     feelers(hx + r * 0.15, hy - r * 0.38, r * 0.85);
     c.fillStyle = cl('#ffffff'); c.beginPath(); c.arc(hx + r * 0.2, hy - r * 0.08, r * 0.17, 0, TAU); c.fill();
     c.fillStyle = cl('#15110d'); c.beginPath(); c.arc(hx + r * 0.25, hy - r * 0.07, r * 0.08, 0, TAU); c.fill();
+  } else if (key === 'dragonfly') {
+    const wv = clamp(wing, -0.4, 1.0);
+    c.fillStyle = cl('rgba(255,236,200,.55)'); c.strokeStyle = cl('rgba(160,95,40,.85)'); c.lineWidth = r * 0.05;
+    for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) {   // two pairs of long see-through wings
+      c.save(); c.translate(r * (0.55 - i * 0.6), -r * 0.28); c.rotate(-0.5 - j * 0.42 + wv * 0.7);
+      c.beginPath(); c.ellipse(-r * 1.0, 0, r * 1.25, r * 0.23, 0, 0, TAU); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(-r * 0.1, 0); c.lineTo(-r * 2.0, 0); c.stroke();
+      c.fillStyle = cl('#8a3a12'); c.beginPath(); c.ellipse(-r * 1.95, 0, r * 0.12, r * 0.05, 0, 0, TAU); c.fill(); c.fillStyle = cl('rgba(255,236,200,.55)');
+      c.restore();
+    }
+    c.strokeStyle = cl('#2b1208'); c.lineWidth = r * 0.06;   // legs
+    c.beginPath(); for (let i = 0; i < 3; i++) { const lx = r * (0.5 - i * 0.22); c.moveTo(lx, r * 0.25); c.lineTo(lx + r * 0.18, r * 0.7); } c.stroke();
+    // long tapering tail, banded
+    c.fillStyle = cl('#e2452b');
+    c.beginPath(); c.moveTo(r * 0.5, -r * 0.3); c.bezierCurveTo(-r * 0.6, -r * 0.2, -r * 1.6, -r * 0.12, -r * 3.0, -r * 0.02); c.lineTo(-r * 3.0, r * 0.07); c.bezierCurveTo(-r * 1.6, r * 0.14, -r * 0.6, r * 0.3, r * 0.5, r * 0.34); c.closePath(); c.fill();
+    c.strokeStyle = cl('#2b1208'); c.lineWidth = r * 0.07;
+    c.beginPath(); for (let i = 0; i < 6; i++) { const bx = -r * (0.35 + i * 0.45), hh = r * (0.2 - i * 0.025); c.moveTo(bx, -hh); c.lineTo(bx, hh + r * 0.05); } c.stroke();
+    c.fillStyle = cl('#ffb347'); c.beginPath(); c.ellipse(r * 0.28, r * 0.02, r * 0.55, r * 0.42, 0, 0, TAU); c.fill();   // chest
+    hx = r * 1.05; hy = -r * 0.02;
+    c.fillStyle = cl('#c2331c'); c.beginPath(); c.arc(hx, hy, r * 0.4, 0, TAU); c.fill();
+    c.fillStyle = cl('#ffb02e'); c.strokeStyle = cl('#7a2a0c'); c.lineWidth = r * 0.05;   // big bulging eyes
+    c.beginPath(); c.ellipse(hx + r * 0.1, hy - r * 0.18, r * 0.34, r * 0.3, 0, 0, TAU); c.fill(); c.stroke();
+    c.fillStyle = cl('#2b1208'); c.beginPath(); c.arc(hx + r * 0.2, hy - r * 0.15, r * 0.13, 0, TAU); c.fill();
+    c.fillStyle = cl('#ffffff'); c.beginPath(); c.arc(hx + r * 0.24, hy - r * 0.2, r * 0.05, 0, TAU); c.fill();
   } else {   // ladybug
     hx = r * 1.0; hy = r * 0.15;
     c.save(); c.translate(-r * 0.2, -r * 0.3); c.rotate(-0.1 - Math.max(0, wing) * 1.0);
@@ -1217,20 +1387,217 @@ function drawInsect(c, key, x, y, rot, wing, k, sprig, alpha, fx) {
   c.restore();
 }
 
-// fx: { burn: 0..1 charred look, flash: true for a white-hot frame }
-function drawBird(c, key, x, y, rot, wing, k, sprig, alpha, fx) {
-  if (BIRDS[key].insect) { drawInsect(c, key, x, y, rot, wing, k, sprig, alpha, fx); return; }
+// a real hummingbird: slim and long, tilted like it is hovering, needle bill, forked tail, wings that are only a blur
+function drawHummer(c, key, x, y, rot, wing, k, sprig, alpha, fx) {
+  const B = BIRDS[key], r = B.r * k;
+  const bu = fx && fx.burn ? fx.burn : 0, fl = !!(fx && fx.flash), plain = fl || bu > 0;
+  const cl = col => fl ? '#ffffff' : (bu > 0 ? mix(lk(col), '#15110d', Math.min(1, bu) * 0.88) : lk(col));
+  c.save(); c.translate(x, y); c.rotate(rot - 0.22);
+  c.globalAlpha = alpha == null ? 1 : alpha;
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  const wings = (a0, aa) => {   // a long narrow wing, swept back and up, drawn three times at once so it blurs
+    c.save(); c.translate(r * 0.15, -r * 0.3);
+    for (let i = 0; i < 3; i++) {
+      c.save(); c.rotate(a0 + (i - 1) * 0.5); c.globalAlpha *= aa * (i === 1 ? 1 : 0.6);
+      c.fillStyle = cl('#d9ecf7'); c.strokeStyle = cl('#8fb8cf'); c.lineWidth = r * 0.04;
+      c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(-r * 1.1, -r * 0.5, -r * 2.5, -r * 0.1); c.quadraticCurveTo(-r * 1.2, r * 0.22, 0, r * 0.1); c.closePath(); c.fill(); c.stroke();
+      c.restore();
+    }
+    c.restore();
+  };
+  c.save(); wings(wing * 0.9 + 0.5, 0.42); c.restore();   // far wing
+  // forked tail
+  c.fillStyle = cl('#1b6a49');
+  c.beginPath(); c.moveTo(-r * 0.9, -r * 0.05); c.lineTo(-r * 2.35, -r * 0.3); c.lineTo(-r * 1.75, r * 0.04); c.lineTo(-r * 2.25, r * 0.5); c.lineTo(-r * 0.9, r * 0.2); c.closePath(); c.fill();
+  // slim body: green back, pale belly
+  c.fillStyle = plain ? cl('#2f9e6f') : (() => { const g = c.createLinearGradient(0, -r * 0.5, 0, r * 0.5); g.addColorStop(0, lk('#1f8a5d')); g.addColorStop(0.55, lk('#35b27a')); g.addColorStop(1, lk('#8fd3a8')); return g; })();
+  c.beginPath(); c.ellipse(0, 0, r * 1.3, r * 0.5, 0, 0, TAU); c.fill();
+  c.fillStyle = cl('#f1f5ec'); c.beginPath(); c.ellipse(r * 0.1, r * 0.2, r * 1.0, r * 0.26, 0.04, 0, TAU); c.fill();
+  // head, red throat, needle bill
+  const hx = r * 1.2, hy = -r * 0.32;
+  c.fillStyle = cl('#1f8a5d'); c.beginPath(); c.arc(hx, hy, r * 0.42, 0, TAU); c.fill();
+  c.fillStyle = cl(B.throat || '#e63946'); c.beginPath(); c.ellipse(hx - r * 0.02, hy + r * 0.3, r * 0.34, r * 0.2, 0.45, 0, TAU); c.fill();
+  if (!plain) { c.fillStyle = 'rgba(255,200,200,.6)'; c.beginPath(); c.ellipse(hx - r * 0.1, hy + r * 0.24, r * 0.1, r * 0.05, 0.45, 0, TAU); c.fill(); }
+  c.strokeStyle = cl('#26262b'); c.lineWidth = r * 0.13;
+  c.beginPath(); c.moveTo(hx + r * 0.36, hy + r * 0.04); c.lineTo(hx + r * 2.5, hy + r * 0.26); c.stroke();
+  if (bu > 0.4) {
+    c.strokeStyle = '#efe6d2'; c.lineWidth = r * 0.1;
+    const ex = hx + r * 0.14, ey = hy - r * 0.06, d = r * 0.11;
+    c.beginPath(); c.moveTo(ex - d, ey - d); c.lineTo(ex + d, ey + d); c.moveTo(ex + d, ey - d); c.lineTo(ex - d, ey + d); c.stroke();
+  } else {
+    c.fillStyle = fl ? '#ffffff' : '#10151c'; c.beginPath(); c.arc(hx + r * 0.14, hy - r * 0.06, r * 0.1, 0, TAU); c.fill();
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(hx + r * 0.17, hy - r * 0.09, r * 0.035, 0, TAU); c.fill();
+  }
+  if (sprig) drawSprig(c, hx + r * 2.2, hy + r * 0.2, r);
+  c.save(); wings(wing * 1.1 + 0.15, 0.8); c.restore();   // near wing on top
+  c.restore();
+}
+
+function drawPhoenix(c, key, x, y, rot, wing, k, sprig, alpha, fx) {
+  const B = BIRDS[key], r = B.r * k;
+  const bu = fx && fx.burn ? fx.burn : 0, fl = !!(fx && fx.flash), plain = fl || bu > 0;
+  const cl = col => fl ? '#ffffff' : (bu > 0 ? mix(lk(col), '#15110d', Math.min(1, bu) * 0.88) : lk(col));
+  c.save(); c.translate(x, y); c.rotate(rot);
+  c.globalAlpha = alpha == null ? 1 : alpha;
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  if (bu < 0.4 && !fl) {   // halo of heat
+    const g = c.createRadialGradient(0, 0, r * 0.5, 0, 0, r * 3.6);
+    g.addColorStop(0, lk('rgba(255,150,50,.55)')); g.addColorStop(0.5, lk('rgba(255,110,30,.2)')); g.addColorStop(1, lk('rgba(255,110,30,0)'));
+    c.fillStyle = g; c.beginPath(); c.arc(0, 0, r * 3.6, 0, TAU); c.fill();
+  }
+  // one flame feather, root at (px, py), pointing along ang, with a gentle S curl
+  const feather = (px, py, ang, len, w, curl, a0, a1, a2) => {
+    c.save(); c.translate(px, py); c.rotate(ang);
+    let f;
+    if (plain) f = cl(a1);
+    else { f = c.createLinearGradient(0, 0, len, 0); f.addColorStop(0, lk(a0)); f.addColorStop(0.55, lk(a1)); f.addColorStop(1, lk(a2)); }
+    c.fillStyle = f; c.beginPath();
+    c.moveTo(0, -w);
+    c.bezierCurveTo(len * 0.3, -w * 1.5 + curl * 0.3, len * 0.7, -w * 0.9 + curl, len, curl * 1.3);
+    c.bezierCurveTo(len * 0.74, w * 0.4 + curl, len * 0.36, w * 1.6 + curl * 0.2, 0, w);
+    c.closePath(); c.fill(); c.restore();
+  };
+  // long flowing tail: five feathers, the middle ones longest
+  const tailSpec = [[-0.62, 2.3, 0.17, 0.45], [-0.32, 3.1, 0.2, -0.5], [0, 3.9, 0.24, 0.4], [0.32, 3.3, 0.2, -0.45], [0.62, 2.5, 0.17, 0.35]];
+  tailSpec.forEach(t => feather(-r * 0.75, r * 0.12, Math.PI + t[0] * 0.55, r * t[1], r * t[2], r * t[3], '#c4251a', '#ff6a1f', '#ffd23a'));
+  feather(-r * 0.75, r * 0.12, Math.PI, r * 2.8, r * 0.09, r * 0.2, '#ff9d1a', '#ffd23a', '#fff3b0');
+  // far wing, a little darker, a beat behind
+  const wfan = (wv, dark) => {
+    c.globalAlpha = (alpha == null ? 1 : alpha) * (dark ? 0.78 : 1);
+    const spec = [[0.22, 2.7], [0.0, 2.7], [-0.22, 2.4], [-0.44, 2.0], [-0.66, 1.6]];
+    spec.forEach((p, i) => feather(-r * 0.1, -r * 0.28, Math.PI + wv * 1.05 + p[0], r * p[1], r * 0.3, r * (i % 2 ? -0.14 : 0.14), dark ? '#a8200f' : '#d6361f', dark ? '#e0561a' : '#ff7a2a', dark ? '#f2a02a' : '#ffd23a'));
+  };
+  wfan(wing * 0.8 - 0.12, true);
+  // body, neck and head
+  c.fillStyle = plain ? cl('#e8452a') : (() => { const g = c.createLinearGradient(0, -r * 0.8, 0, r * 0.8); g.addColorStop(0, lk('#d6361f')); g.addColorStop(0.6, lk('#ff6a1f')); g.addColorStop(1, lk('#ffb347')); return g; })();
+  c.beginPath(); c.ellipse(0, 0, r * 1.15, r * 0.74, 0, 0, TAU); c.fill();
+  c.strokeStyle = cl('#e8452a'); c.lineWidth = r * 0.62;   // neck
+  c.beginPath(); c.moveTo(r * 0.5, -r * 0.1); c.quadraticCurveTo(r * 1.05, -r * 0.15, r * 1.0, -r * 0.62); c.stroke();
+  c.fillStyle = cl('#ffb347'); c.beginPath(); c.ellipse(r * 0.28, r * 0.25, r * 0.75, r * 0.4, 0.1, 0, TAU); c.fill();
+  c.strokeStyle = cl('#ff8a2a'); c.lineWidth = r * 0.06;   // chest feather scallops
+  c.beginPath(); for (let i = 0; i < 3; i++) { const sx = r * (-0.1 + i * 0.35); c.moveTo(sx, r * 0.18); c.quadraticCurveTo(sx + r * 0.12, r * 0.4, sx + r * 0.3, r * 0.2); } c.stroke();
+  const hx = r * 1.05, hy = -r * 0.72;
+  c.fillStyle = cl('#ff5a2e'); c.beginPath(); c.arc(hx, hy, r * 0.46, 0, TAU); c.fill();
+  // flame crest streaming back from the head
+  feather(hx - r * 0.1, hy - r * 0.32, -Math.PI / 2 - 1.15, r * 1.5, r * 0.11, r * 0.2, '#e8452a', '#ff7a2a', '#ffd23a');
+  feather(hx + r * 0.05, hy - r * 0.38, -Math.PI / 2 - 0.7, r * 1.9, r * 0.13, r * -0.25, '#e8452a', '#ff9d1a', '#ffe27a');
+  feather(hx + r * 0.2, hy - r * 0.36, -Math.PI / 2 - 0.25, r * 1.4, r * 0.1, r * 0.2, '#ff7a2a', '#ffd23a', '#fff3b0');
+  // beak (a small golden hook)
+  c.fillStyle = cl('#f6c244'); c.beginPath();
+  c.moveTo(hx + r * 0.36, hy - r * 0.2); c.quadraticCurveTo(hx + r * 0.95, hy - r * 0.12, hx + r * 1.02, hy + r * 0.2); c.quadraticCurveTo(hx + r * 0.8, hy + r * 0.02, hx + r * 0.34, hy + r * 0.08); c.closePath(); c.fill();
+  if (bu > 0.4) {
+    c.strokeStyle = '#efe6d2'; c.lineWidth = r * 0.1;
+    const ex = hx + r * 0.15, ey = hy - r * 0.1, d = r * 0.13;
+    c.beginPath(); c.moveTo(ex - d, ey - d); c.lineTo(ex + d, ey + d); c.moveTo(ex + d, ey - d); c.lineTo(ex - d, ey + d); c.stroke();
+  } else {
+    c.fillStyle = fl ? '#ffffff' : '#ffd23a'; c.beginPath(); c.arc(hx + r * 0.15, hy - r * 0.1, r * 0.17, 0, TAU); c.fill();
+    c.fillStyle = fl ? '#ffffff' : B.eye; c.beginPath(); c.arc(hx + r * 0.19, hy - r * 0.09, r * 0.09, 0, TAU); c.fill();
+  }
+  // near wing on top
+  wfan(wing, false);
+  c.globalAlpha = alpha == null ? 1 : alpha;
+  // a few embers drifting off the tail
+  if (bu < 0.4 && !fl) {
+    c.fillStyle = 'rgba(255,214,120,.9)';
+    [[-3.2, -0.5, 0.07], [-4.0, 0.5, 0.06], [-4.8, -0.2, 0.05], [-2.6, 0.9, 0.05]].forEach(e => { c.beginPath(); c.arc(r * e[0], r * e[1], r * e[2], 0, TAU); c.fill(); });
+  }
+  if (sprig) drawSprig(c, hx + r * 0.8, hy + r * 0.15, r);
+  c.restore();
+}
+
+function drawDragonet(c, key, x, y, rot, wing, k, sprig, alpha, fx) {
   const B = BIRDS[key], r = B.r * k;
   const bu = fx && fx.burn ? fx.burn : 0, fl = !!(fx && fx.flash);
-  const cl = col => fl ? '#ffffff' : (bu > 0 ? mix(col, '#15110d', Math.min(1, bu) * 0.88) : col);
+  const cl = col => fl ? '#ffffff' : (bu > 0 ? mix(lk(col), '#15110d', Math.min(1, bu) * 0.88) : lk(col));
+  const tri = (x1, y1, x2, y2, x3, y3) => { c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.lineTo(x3, y3); c.closePath(); c.fill(); };
+  c.save(); c.translate(x, y); c.rotate(rot);
+  c.globalAlpha = alpha == null ? 1 : alpha;
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  // thick tail ending in a spade
+  c.strokeStyle = cl('#4fa05f'); c.lineWidth = r * 0.5;
+  c.beginPath(); c.moveTo(-r * 0.7, r * 0.2); c.quadraticCurveTo(-r * 1.7, r * 0.75, -r * 2.3, -r * 0.05); c.stroke();
+  c.fillStyle = cl('#ff9a3c');
+  c.beginPath(); c.moveTo(-r * 2.2, -r * 0.05); c.quadraticCurveTo(-r * 2.4, -r * 0.55, -r * 2.9, -r * 0.7); c.quadraticCurveTo(-r * 2.7, -r * 0.2, -r * 3.0, r * 0.05); c.quadraticCurveTo(-r * 2.6, r * 0.2, -r * 2.2, r * 0.12); c.closePath(); c.fill();
+  tri(-r * 1.6, r * 0.52, -r * 1.55, r * 0.14, -r * 1.3, r * 0.42);   // tail spikes
+  tri(-r * 2.0, r * 0.28, -r * 2.0, -r * 0.14, -r * 1.7, r * 0.05);
+  // big bat wing behind the body: arm bone, three fingers, scalloped skin
+  c.save(); c.translate(-r * 0.05, -r * 0.4); c.rotate(wing * 1.0 - 0.2);
+  c.fillStyle = cl(B.wing); c.strokeStyle = cl(B.wingTip); c.lineWidth = r * 0.08;
+  const A = [-r * 0.25, -r * 2.0], Bt = [-r * 1.3, -r * 1.75], C = [-r * 2.1, -r * 0.95];
+  c.beginPath(); c.moveTo(0, 0); c.lineTo(A[0], A[1]); c.quadraticCurveTo(-r * 0.55, -r * 1.0, Bt[0], Bt[1]); c.quadraticCurveTo(-r * 1.35, -r * 0.75, C[0], C[1]); c.quadraticCurveTo(-r * 1.1, -r * 0.05, 0, r * 0.22); c.closePath(); c.fill(); c.stroke();
+  c.beginPath(); c.moveTo(0, 0); c.lineTo(A[0], A[1]); c.moveTo(0, 0); c.lineTo(Bt[0], Bt[1]); c.moveTo(0, 0); c.lineTo(C[0], C[1]); c.stroke();
+  c.fillStyle = cl('#f6f0dc'); [A, Bt, C].forEach(p => { c.beginPath(); c.arc(p[0], p[1], r * 0.09, 0, TAU); c.fill(); });   // wing claws
+  c.restore();
+  // spikes down the back
+  c.fillStyle = cl('#ff9a3c');
+  for (let i = 0; i < 4; i++) { const sx = r * (0.45 - i * 0.42), sy = -r * (0.8 - i * 0.04); tri(sx + r * 0.18, sy + r * 0.02, sx - r * 0.02, sy - r * 0.38, sx - r * 0.2, sy + r * 0.05); }
+  // body, scales, belly
+  c.fillStyle = cl(B.body); c.beginPath(); c.ellipse(0, 0, r * 1.1, r * 0.88, 0, 0, TAU); c.fill();
+  c.strokeStyle = cl('#4fa05f'); c.lineWidth = r * 0.06;
+  c.beginPath(); for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) { const sx = r * (-0.75 + i * 0.4 + j * 0.2), sy = -r * (0.35 - j * 0.28); c.moveTo(sx, sy); c.quadraticCurveTo(sx + r * 0.1, sy + r * 0.16, sx + r * 0.2, sy); } c.stroke();
+  c.fillStyle = cl(B.belly); c.beginPath(); c.ellipse(r * 0.15, r * 0.33, r * 0.8, r * 0.48, 0, 0, TAU); c.fill();
+  c.strokeStyle = cl('#d8bd7a'); c.lineWidth = r * 0.05; c.beginPath(); for (let i = 0; i < 3; i++) { c.moveTo(r * (-0.3 + i * 0.4), r * 0.15); c.lineTo(r * (-0.3 + i * 0.4), r * 0.58); } c.stroke();
+  // clawed foot and front paw
+  c.fillStyle = cl('#4fa05f'); c.beginPath(); c.ellipse(r * 0.0, r * 0.86, r * 0.32, r * 0.17, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(r * 0.62, r * 0.62, r * 0.22, r * 0.15, 0.5, 0, TAU); c.fill();
+  c.fillStyle = cl('#f6f0dc'); tri(r * 0.28, r * 0.86, r * 0.42, r * 0.8, r * 0.34, r * 1.0); tri(r * 0.78, r * 0.62, r * 0.92, r * 0.58, r * 0.84, r * 0.76);
+  // head: heavier brow, longer snout, fangs, curved horns
+  const hx = r * 0.9, hy = -r * 0.4;
+  c.fillStyle = cl('#ff9a3c'); tri(hx - r * 0.3, hy - r * 0.05, hx - r * 0.95, hy - r * 0.2, hx - r * 0.35, hy + r * 0.38);   // swept-back cheek fin
+  c.fillStyle = cl(B.body); c.beginPath(); c.arc(hx, hy, r * 0.58, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(hx + r * 0.62, hy + r * 0.2, r * 0.55, r * 0.3, 0.12, 0, TAU); c.fill();
+  c.fillStyle = cl('#4fa05f'); c.beginPath(); c.ellipse(hx + r * 0.52, hy + r * 0.43, r * 0.42, r * 0.13, 0.12, 0, TAU); c.fill();   // lower jaw
+  c.fillStyle = cl('#ffffff'); tri(hx + r * 0.9, hy + r * 0.38, hx + r * 0.98, hy + r * 0.38, hx + r * 0.94, hy + r * 0.56); tri(hx + r * 0.62, hy + r * 0.42, hx + r * 0.7, hy + r * 0.42, hx + r * 0.66, hy + r * 0.58);
+  c.strokeStyle = cl('#2f6b3b'); c.lineWidth = r * 0.06; c.beginPath(); c.moveTo(hx + r * 1.12, hy + r * 0.3); c.quadraticCurveTo(hx + r * 0.7, hy + r * 0.45, hx + r * 0.25, hy + r * 0.34); c.stroke();   // mouth line
+  c.fillStyle = cl('#f6f0dc');
+  c.beginPath(); c.moveTo(hx - r * 0.05, hy - r * 0.5); c.quadraticCurveTo(hx - r * 0.5, hy - r * 0.9, hx - r * 0.9, hy - r * 1.05); c.quadraticCurveTo(hx - r * 0.55, hy - r * 0.55, hx - r * 0.3, hy - r * 0.38); c.closePath(); c.fill();
+  c.beginPath(); c.moveTo(hx + r * 0.25, hy - r * 0.52); c.quadraticCurveTo(hx + r * 0.0, hy - r * 0.85, hx - r * 0.35, hy - r * 0.92); c.quadraticCurveTo(hx - r * 0.1, hy - r * 0.55, hx + r * 0.05, hy - r * 0.4); c.closePath(); c.fill();
+  c.fillStyle = cl('#2f6b3b'); c.beginPath(); c.arc(hx + r * 0.95, hy + r * 0.1, r * 0.05, 0, TAU); c.arc(hx + r * 1.06, hy + r * 0.17, r * 0.045, 0, TAU); c.fill();   // nostrils
+  if (bu > 0.4) {
+    c.strokeStyle = '#efe6d2'; c.lineWidth = r * 0.1;
+    const ex = hx + r * 0.25, ey = hy - r * 0.08, d = r * 0.14;
+    c.beginPath(); c.moveTo(ex - d, ey - d); c.lineTo(ex + d, ey + d); c.moveTo(ex + d, ey - d); c.lineTo(ex - d, ey + d); c.stroke();
+  } else {
+    c.fillStyle = fl ? '#ffffff' : '#ffd23a'; c.strokeStyle = cl('#7a4a0c'); c.lineWidth = r * 0.04;
+    c.beginPath(); c.arc(hx + r * 0.25, hy - r * 0.08, r * 0.21, 0, TAU); c.fill(); c.stroke();
+    c.fillStyle = fl ? '#ffffff' : '#1a1208'; c.beginPath(); c.ellipse(hx + r * 0.28, hy - r * 0.08, r * 0.05, r * 0.15, 0, 0, TAU); c.fill();   // slit pupil
+    c.fillStyle = fl ? '#ffffff' : '#fff'; c.beginPath(); c.arc(hx + r * 0.2, hy - r * 0.15, r * 0.045, 0, TAU); c.fill();
+  }
+  c.strokeStyle = cl('#2f6b3b'); c.lineWidth = r * 0.12;   // brow ridge: a little fierce
+  c.beginPath(); c.moveTo(hx - r * 0.02, hy - r * 0.34); c.lineTo(hx + r * 0.5, hy - r * 0.2); c.stroke();
+  if (bu < 0.4 && !fl) {   // a curl of smoke and a spark from the nose
+    c.fillStyle = 'rgba(230,225,215,.55)';
+    c.beginPath(); c.arc(hx + r * 1.28, hy - r * 0.08, r * 0.08, 0, TAU); c.arc(hx + r * 1.42, hy - r * 0.27, r * 0.11, 0, TAU); c.arc(hx + r * 1.62, hy - r * 0.5, r * 0.14, 0, TAU); c.fill();
+    c.fillStyle = 'rgba(255,170,60,.95)'; c.beginPath(); c.arc(hx + r * 1.2, hy - r * 0.02, r * 0.05, 0, TAU); c.fill();
+  }
+  if (sprig) drawSprig(c, hx + r * 1.0, hy + r * 0.2, r);
+  c.restore();
+}
+
+// fx: { burn: 0..1 charred look, flash: true for a white-hot frame }
+function drawBird(c, key, x, y, rot, wing, k, sprig, alpha, fx, look) {
+  look = look | 0; LOOKSK = look > 0 && SKINS[key] ? SKINS[key][look] || null : null; LOOKID = key + ':' + look + ':';
+  if (LOOKSK && LOOKSK.glow && !(fx && (fx.flash || fx.burn > 0.4))) {   // a soft halo for the showier looks
+    const gr = BIRDS[key].r * k * 2.9, hg = c.createRadialGradient(x, y, gr * 0.15, x, y, gr);
+    hg.addColorStop(0, 'rgba(' + LOOKSK.glow + ',.5)'); hg.addColorStop(1, 'rgba(' + LOOKSK.glow + ',0)');
+    c.save(); c.globalAlpha = alpha == null ? 1 : alpha; c.fillStyle = hg; c.beginPath(); c.arc(x, y, gr, 0, TAU); c.fill(); c.restore();
+  }
+  if (BIRDS[key].insect) { drawInsect(c, key, x, y, rot, wing, k, sprig, alpha, fx); return; }
+  if (BIRDS[key].buzz) { drawHummer(c, key, x, y, rot, wing, k, sprig, alpha, fx); return; }
+  if (BIRDS[key].phoenix) { drawPhoenix(c, key, x, y, rot, wing, k, sprig, alpha, fx); return; }
+  if (BIRDS[key].creature) { drawDragonet(c, key, x, y, rot, wing, k, sprig, alpha, fx); return; }
+  const B = BIRDS[key], r = B.r * k;
+  const bu = fx && fx.burn ? fx.burn : 0, fl = !!(fx && fx.flash);
+  const cl = col => fl ? '#ffffff' : (bu > 0 ? mix(lk(col), '#15110d', Math.min(1, bu) * 0.88) : lk(col));
   c.save();
   c.translate(x, y);
   c.rotate(rot);
   c.globalAlpha = alpha == null ? 1 : alpha;
   if (B.glow && bu < 0.4 && !fl) {
     const g = c.createRadialGradient(0, 0, r * 0.4, 0, 0, r * 2.6);
-    g.addColorStop(0, 'rgba(255,226,120,.55)');
-    g.addColorStop(1, 'rgba(255,226,120,0)');
+    const gr = B.glowRGB || '255,226,120';
+    g.addColorStop(0, 'rgba(' + gr + ',.55)');
+    g.addColorStop(1, 'rgba(' + gr + ',0)');
     c.fillStyle = g;
     c.beginPath(); c.arc(0, 0, r * 2.6, 0, TAU); c.fill();
   }
@@ -1240,6 +1607,13 @@ function drawBird(c, key, x, y, rot, wing, k, sprig, alpha, fx) {
   c.closePath(); c.fill();
   c.fillStyle = cl(B.body);
   c.beginPath(); c.ellipse(0, 0, r * 1.15, r * 0.88, 0, 0, TAU); c.fill();
+  if (LOOKSK && LOOKSK.pat && !fl && bu === 0) {   // pattern on the body
+    c.save(); c.beginPath(); c.ellipse(0, 0, r * 1.15, r * 0.88, 0, 0, TAU); c.clip(); c.fillStyle = LOOKSK.pc; c.strokeStyle = LOOKSK.pc; c.lineWidth = r * 0.22;
+    if (LOOKSK.pat === 'stripes') { c.beginPath(); for (let i = -2; i <= 2; i++) { c.moveTo(r * (i * 0.5 + 0.35), -r); c.lineTo(r * (i * 0.5 - 0.15), r); } c.stroke(); }
+    else if (LOOKSK.pat === 'band') { c.fillRect(-r * 0.25, -r, r * 0.5, r * 2); }
+    else { [[-0.7, -0.2, 0.12], [-0.25, 0.35, 0.1], [0.2, -0.45, 0.11], [0.45, 0.2, 0.09], [-0.5, 0.05, 0.08], [0.75, -0.1, 0.08]].forEach(p => { c.beginPath(); c.arc(r * p[0], r * p[1], r * p[2], 0, TAU); c.fill(); }); }
+    c.restore();
+  }
   c.fillStyle = cl(B.belly);
   c.beginPath(); c.ellipse(r * 0.1, r * 0.3, r * 0.85, r * 0.5, 0, 0, TAU); c.fill();
   c.fillStyle = cl(B.head || B.body);
@@ -1380,7 +1754,69 @@ if (!Array.isArray(wd) || wd.length !== 6) {
 }
 let daily = null;   // today's daily flight, when you are in it
 let practice = 0;   // a replay of a week you already cleared: no medals, records or saved progress change
-function markWeek(w, d) { if (w >= 1 && w <= 6 && d > (wd[w - 1] || 0)) { wd[w - 1] = d; store.set('wd', wd); } }
+function markWeek(w, d) { if (w >= 1 && w <= 6 && d > (wd[w - 1] || 0)) { wd[w - 1] = d; store.set(sk('wd'), wd); } }
+/* ---------- levels ----------
+   Level 1 is The Flood, Level 2 is The Fire. A later level opens per difficulty: beat a level on Normal and the next one opens on Normal;
+   beat it on Hard and it opens on Normal and Hard; beat it on Impossible and every difficulty opens. Solo and team flights both count. */
+const DRANK = { normal: 1, hard: 2, impossible: 3 };
+const MAXLV = 2;
+let lvu = store.get('lvu', null);
+if (!lvu || typeof lvu !== 'object') {
+  lvu = { '2': { normal: false, hard: false, impossible: false } };
+  if (+store.get('journeys', 0) >= 1) lvu['2'].normal = true;   // finished Level 1 before levels existed: Level 2 opens on Normal
+  store.set('lvu', lvu);
+}
+const lvOpen = (n, d) => n <= 1 || !!(lvu[n] && lvu[n][d]);
+const lvAny = n => n <= 1 || !!(lvu[n] && (lvu[n].normal || lvu[n].hard || lvu[n].impossible));
+let lvQ = [];   // "level opened" banners waiting for the next end screen
+function grantNext(n, d) {
+  if (n >= MAXLV || !DRANK[d]) return false;
+  const nx = String(n + 1);
+  if (!lvu[nx]) lvu[nx] = { normal: false, hard: false, impossible: false };
+  const gained = [];
+  Object.keys(DRANK).forEach(k => { if (DRANK[k] <= DRANK[d] && !lvu[nx][k]) { lvu[nx][k] = true; gained.push(k); } });
+  if (!gained.length) return false;
+  store.set('lvu', lvu);
+  lvQ.push('Level ' + (n + 1) + ' is open on ' + gained.map(k => DIFFS[k].name).join(', ') + '.');
+  return true;
+}
+function loadSaves() {
+  best = store.get(sk('best3'), 0); wins = store.get(sk('wins'), 0); journeys = store.get(sk('journeys'), 0);
+  wbest = store.get(sk('wbest'), []); if (!Array.isArray(wbest)) wbest = [];
+  jbest = store.get(sk('jbest'), 0);
+  wd = store.get(sk('wd'), null);
+  if (!Array.isArray(wd) || wd.length !== 6) {
+    wd = [];
+    for (let w = 1; w <= 6; w++) wd.push(lvl === 1 ? ((+wbest[w - 1] > 0 || best > 7 * w) ? 8 : Math.max(0, Math.min(7, best - 7 * (w - 1)))) : (+wbest[w - 1] > 0 ? 8 : 0));
+    store.set(sk('wd'), wd);
+  }
+}
+function lockNote(d) {
+  const need = d === 'normal' ? 'Normal' : d === 'hard' ? 'Hard or Impossible' : 'Impossible';
+  return 'Locked. Beat Level ' + (lvl - 1) + ' on ' + need + ' to open Level ' + lvl + ' on ' + DIFFS[d].name + '.';
+}
+function setLevelUi() {
+  document.querySelectorAll('#lvlSeg .segb').forEach(b => {
+    const n = +b.dataset.l, on = n === lvl;
+    b.classList.toggle('on', on); b.classList.toggle('lk', !lvAny(n)); b.setAttribute('aria-checked', on ? 'true' : 'false');
+  });
+  document.querySelectorAll('#diffSeg .segb').forEach(b => b.classList.toggle('lk', !lvOpen(lvl, b.dataset.d)));
+}
+function setLevel(n) {
+  if (n === lvl) return;
+  lvl = n;
+  loadSaves();
+  diff = store.get('diff', 'normal'); if (!DIFFS[diff]) diff = 'normal';
+  if (!lvOpen(lvl, diff)) diff = ['normal', 'hard', 'impossible'].find(k => lvOpen(lvl, k)) || 'normal';   // not saved: back on Level 1 your own choice returns
+  if (inited) { setLevelUi(); setDiff(diff, true); updateStats(); updateResumeUi(); }
+}
+function pickLevel(n) {
+  if (!lvAny(n)) { $('#diffNote').textContent = 'Locked. Beat Level ' + (n - 1) + ' on Normal to open Level ' + n + '.'; return; }
+  if (n === lvl) return;
+  setLevel(n); renderCards(); tone(600, 0.08, 'sine', 0.05);
+}
+let rebirthUsed = false, puffT = 8;   // Phoenix: Rebirth spent this week; Baby Dragon: seconds until the next Ember Puff
+const PUFF_CD = 15;
 let lives = LIVES, iT = 0, hurtT = 0, hurtKind = '', oopsTimer = 0, lastOops = '', cq = [], lastSpace = 0, panelAt = 0;
 let dpr = 1, lastTs = 0, inited = false;
 // The canvas is redrawn in full every frame, so a sharp (high pixel density) screen costs a lot. If a phone cannot keep up, drop one step at a time (never below 1.5) and remember it.
@@ -1399,7 +1835,8 @@ function perfWatch(ms) {
   }
 }
 let mp = null, roomNs = null;
-const clouds = [], rain = [], stars = [], shoot = [];
+const clouds = [], rain = [], stars = [], shoot = [], embers = [];
+for (let i = 0; i < 70; i++) embers.push({ x: rand(0, W), y: rand(0, 560), v: rand(14, 48), s: rand(0.7, 2.1), ph: rand(0, 6), a: rand(0.3, 0.9) });
 
 function newBird() { return { x: BIRD_X, y: H * 0.42, vy: 0, rot: 0, flapT: 0, phase: 0, sprig: false }; }
 for (let i = 0; i < 7; i++) clouds.push({ x: rand(0, W), y: rand(40, 330), s: rand(0.8, 1.7), sp: rand(5, 14), a: rand(0.55, 0.9) });
@@ -1414,8 +1851,17 @@ const SCN = [null,
   { name: 'The mountains go under',       sky: ['#140f2b', '#7a64b4', '#2b2250', '#b9a6d8', '#4a3a68', '#f0c8b8'], water: ['#1c2447', '#3a5e91', '#151b38', '#314f80'], rainN: 60,  rainFloor: 0.2,  slant: 0.12, rw: 1.1, rim: 0.18 },
   { name: 'The storm at full strength',   sky: ['#07060e', '#2b2a46', '#12111f', '#4b405f', '#291b26', '#7c5242'], water: ['#141c2e', '#27506c', '#0e1523', '#203f56'], rainN: 140, rainFloor: 0.7,  slant: 0.4,  rw: 1.5, rim: 0.38 },
   { name: 'The skies begin to clear',     sky: ['#18223a', '#6fb5e0', '#324468', '#cfe6f2', '#5a5a70', '#ffe3a0'], water: ['#1b3446', '#2f84a0', '#16293a', '#2a7390'], rainN: 40,  rainFloor: 0,    slant: 0.1,  rw: 1.1, rim: 0.05 }];
-const scn = () => SCN[clamp(week, 1, NWEEKS)];
-const stt = () => (reduceMotion ? 0 : t);   // scenery movement stands still when the player asked for reduced motion
+// Level 2: ash and red skies, and lava in place of the sea (water[] is the lava: surface and glow, then the lower layer)
+const SCN2 = [null,
+  { name: 'Hail and fire',        sky: ['#1a0b0b', '#6b3a33', '#2b1210', '#b5604a', '#3b1a12', '#f0a56a'], water: ['#6a1a0a', '#e0561e', '#430f06', '#bd3c12'], rainN: 0, rainFloor: 0, slant: 0, rw: 1, rim: 0 },
+  { name: 'The burning mountain', sky: ['#160707', '#5a2d2a', '#2a0f0d', '#a04a3a', '#451b10', '#ee9a5e'], water: ['#701c0a', '#ea6022', '#4a1107', '#c64312'], rainN: 0, rainFloor: 0, slant: 0, rw: 1, rim: 0 },
+  { name: 'The falling star',     sky: ['#0e0a14', '#4a3150', '#1e1228', '#8a5a78', '#3a1c26', '#e8a07a'], water: ['#661a10', '#e0561e', '#400f08', '#b83a14'], rainN: 0, rainFloor: 0, slant: 0, rw: 1, rim: 0 },
+  { name: 'The blood moon',       sky: ['#12040a', '#4d1620', '#260812', '#8f2a30', '#3c0f10', '#e0654a'], water: ['#701208', '#ee4a1a', '#450a05', '#c8300e'], rainN: 0, rainFloor: 0, slant: 0, rw: 1, rim: 0 },
+  { name: 'The sky on fire',      sky: ['#0a0305', '#2e0f12', '#170608', '#5b1a16', '#2b0b08', '#b8452a'], water: ['#7a1408', '#f25a1c', '#4a0b05', '#d03a0e'], rainN: 0, rainFloor: 0, slant: 0, rw: 1, rim: 0 },
+  { name: 'The dragon\'s sky',    sky: ['#0c0306', '#3a0d10', '#1d0709', '#7a1e18', '#340d0a', '#ff8a3a'], water: ['#801608', '#ff6a20', '#500c05', '#dc400e'], rainN: 0, rainFloor: 0, slant: 0, rw: 1, rim: 0 }];
+const scn = () => (lvl === 2 ? SCN2 : SCN)[clamp(week, 1, NWEEKS)];
+const stt = () => (reduceMotion ? 0 : t);
+   // scenery movement stands still when the player asked for reduced motion
 let rbSaid = false;
 
 const prog = () => clamp(elapsed / total, 0, 1);
@@ -1425,8 +1871,8 @@ const dayScale = () => Math.max(0.45, Math.pow(0.88, week - 1));
 // Each week is a set percentage harder than the week before it: +5%, +7%, +15%, +7%, +15% (Week 6 is about 1.59x Week 1),
 // shared out between scroll speed, tighter spacing and lightning.
 // Inside a week the ramp is the same shape as Week 1, so every week starts a little easier than the last one ended.
-const WK_STEP = [0, 0, 0.05, 0.07, 0.15, 0.07, 0.15];   // index = week; the step is on top of the week before
-const wkM = wk => { let m = 1; const w = wk === undefined ? week : wk; for (let i = 2; i <= w && i < WK_STEP.length; i++) m *= 1 + WK_STEP[i]; return m; };
+const WK_STEP = [0, 0, 0.05, 0.07, 0.15, 0.07, 0.15, 0.07];   // index = week; the step is on top of the week before
+const wkM = wk => { let m = 1; const w = (wk === undefined ? week : wk) + (lvl === 2 ? 1 : 0); for (let i = 2; i <= w && i < WK_STEP.length; i++) m *= 1 + WK_STEP[i]; return m; };
 const spdAt = (p, wk) => lerp(125, 165, p) * Math.pow(wkM(wk), 0.4);
 const spacingAt = (p, wk) => lerp(250, 200, p) / Math.pow(wkM(wk), 0.35);
 // team play and the daily flight both build the sky from the DISTANCE flown, so the obstacles come in the same order for everyone
@@ -1600,6 +2046,16 @@ const WEEKM = [
   { root: -2, sc: DBL,  prog: [0, 1, 0, 5],  wave: 'square',   bpm: 1.25, x: ['stab', 'pad', 'gallop'] },             // week 5: the storm at full strength
   { root: -3, sc: LYD,  prog: [0, 4, 5, 3],  wave: 'triangle', bpm: 1.31, x: ['pad', 'arp16', 'oct'] }               // week 6: soaring, nearly home
 ];
+const WEEKM2 = [   // Level 2: lower and slower, with a soft techno bass under everything ('tbass')
+  { root: -5, sc: DOR, prog: [0, 3, 0, 4], wave: 'triangle', bpm: 0.92, x: ['tbass'] },
+  { root: -6, sc: PHR, prog: [0, 1, 0, 5], wave: 'triangle', bpm: 0.98, x: ['tbass', 'hook'] },
+  { root: -7, sc: HMN, prog: [0, 3, 4, 0], wave: 'sawtooth', bpm: 1.02, x: ['tbass', 'stab'] },
+  { root: -4, sc: LOC, prog: [0, 1, 5, 4], wave: 'sawtooth', bpm: 1.07, x: ['tbass', 'pulse', 'gallop'] },
+  { root: -8, sc: DBL, prog: [0, 1, 0, 5], wave: 'square', bpm: 1.12, x: ['tbass', 'stab', 'gallop'] },
+  { root: -6, sc: PHR, prog: [0, 4, 5, 3], wave: 'sawtooth', bpm: 1.16, x: ['tbass', 'pad', 'pulse', 'gallop'] }
+];
+THEMES.rest2 = { bpm: 60, root: 52, sc: DOR, prog: [0, 3, 4, 0], bass: 1, arp: 1, drum: 0, lead: 1, wave: 'sine' };
+THEMES.boss = { bpm: 116, root: 47, sc: PHR, prog: [0, 1, 0, 5], bass: 2, arp: 3, drum: 3, lead: 3, wave: 'sawtooth', x: ['tbass', 'stab', 'pulse', 'gallop'] };
 const BASS = [null,
   [0, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, -1, -1, -1, -1],
   [0, -1, 0, -1, 0, -1, 2, -1, 0, -1, 0, -1, 0, -1, 2, -1]];
@@ -1678,10 +2134,10 @@ function mpad(freq, t0, dur, vol) {
 }
 const themeCache = {};
 function themeFor(key) {
-  const m = /^w(\d+)d(\d)$/.exec(key);
+  const m = /^([wf])(\d+)d(\d)$/.exec(key);
   if (!m) return THEMES[key] || THEMES.menu;
   if (themeCache[key]) return themeCache[key];
-  const base = THEMES['d' + m[2]], wm = WEEKM[Math.min(WEEKM.length, +m[1]) - 1] || WEEKM[0];
+  const tab = m[1] === 'f' ? WEEKM2 : WEEKM, base = THEMES['d' + m[3]], wm = tab[Math.min(tab.length, +m[2]) - 1] || tab[0];
   return (themeCache[key] = Object.assign({}, base, { root: base.root + wm.root, sc: wm.sc || base.sc, prog: wm.prog || base.prog, wave: wm.wave || base.wave, bpm: base.bpm * wm.bpm, x: wm.x }));
 }
 function musicStep(step, t0, th, sd) {
@@ -1705,6 +2161,10 @@ function musicStep(step, t0, th, sd) {
   const xs = th.x || [];
   if (xs.length) {
     const ch = n => mtoF(note(ct(n)));
+    if (xs.indexOf('tbass') >= 0) {   // soft techno bass for the fire levels: a quiet kick on each beat and a low note between them
+      if (s % 4 === 0) mv(mtoF(th.root - 12), t0, sd * 2, 'sine', 0.11, false);
+      if (s % 4 === 2) mv(mtoF(note(ct(0)) - 12), t0, sd * 1.6, 'sine', 0.07, false);
+    }
     if (xs.indexOf('pulse') >= 0) {   // lub-dub, lub-dub
       if (s === 0 || s === 8) mthump(mtoF(th.root), t0, 0.24);
       if (s === 2 || s === 10) mthump(mtoF(th.root + 5), t0, 0.15);
@@ -1728,8 +2188,8 @@ function musicStep(step, t0, th, sd) {
   if (D.h.indexOf(s) >= 0) mdrum('h', t0);
 }
 function wantTheme() {
-  if (state === 'finale' || state === 'depart' || state === 'dry') return 'rest';
-  if (state === 'play' || state === 'dying' || state === 'spectate') return 'w' + week + 'd' + Math.min(dayIdx, 6);
+  if (state === 'finale' || state === 'depart' || state === 'dry') return lvl === 2 ? 'rest2' : 'rest';
+  if (state === 'play' || state === 'dying' || state === 'spectate') return lvl === 2 && boss ? 'boss' : (lvl === 2 ? 'f' : 'w') + week + 'd' + Math.min(dayIdx, 6);
   return 'menu';
 }
 function musicForce() {
@@ -1774,17 +2234,25 @@ function fit() {
 
 /* ---------- menu and HUD ---------- */
 // every bird is drawn about the same size on its card, whatever its real hit circle is
-function drawCardBird(c, k, locked) {
-  const B = BIRDS[k], kk = k === 'eagle' ? 1.1 : Math.min(2.0, 17.5 / B.r);
-  const cx = B.long ? 38 : 50;
-  drawBird(c, k, cx, 46, -0.08, 0.35, kk, false, locked ? 0.35 : 1);
+function drawCardBird(c, k, locked, look, nopips) {
+  if (look == null) look = lookIdx(k);
+  const B = BIRDS[k], cc = B.card || {}, kk = cc.k || (k === 'eagle' ? 1.1 : Math.min(2.0, 17.5 / B.r));
+  const cx = cc.cx || (B.long ? 38 : 50);
+  drawBird(c, k, cx, cc.cy || 46, -0.08, 0.35, kk, false, locked ? 0.35 : 1, null, locked ? 0 : look);
+  if (!locked && !nopips && SKINS[k]) {   // four pips: lit = the look you can use, gold ring = the one you wear
+    for (let i = 0; i < NLOOK; i++) {
+      const px = 76 + i * 8.5, py = 8, open = lookOpen(k, i);
+      c.beginPath(); c.arc(px, py, 3, 0, TAU); c.fillStyle = open ? 'rgba(255,255,255,.8)' : 'rgba(255,255,255,.2)'; c.fill();
+      if (i === look) { c.beginPath(); c.arc(px, py, 4.6, 0, TAU); c.strokeStyle = '#f6c978'; c.lineWidth = 1.6; c.stroke(); }
+    }
+  }
 }
 function birdInfoText(k) {
   const info = $('#birdInfo');
   if (!info) return;
   info.textContent = '';
   const b = document.createElement('b');
-  b.textContent = BIRDS[k].name + '. ';
+  b.textContent = BIRDS[k].name + (!isLocked(k) && lookIdx(k) ? ' (' + lookName(k, lookIdx(k)) + '). ' : '. ');
   info.append(b, isLocked(k) ? lockText(k) : BIRDS[k].desc);
 }
 function renderCards() {
@@ -1811,14 +2279,14 @@ function renderMinis() {
   ORDER.forEach(k => {
     const locked = isLocked(k);
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'mini'; b.dataset.k = k; b.disabled = locked;
-    b.setAttribute('aria-label', BIRDS[k].name);
+    b.type = 'button'; b.className = 'mini'; b.dataset.k = k; b.disabled = locked || soloOnly(k);
+    b.setAttribute('aria-label', BIRDS[k].name + (soloOnly(k) ? ' (solo only)' : ''));
     b.setAttribute('aria-pressed', String(k === charKey));
     const c = document.createElement('canvas');
     c.width = 108; c.height = 88; c.setAttribute('aria-hidden', 'true');
     b.append(c);
     lcards.append(b);
-    drawCardBird(c.getContext('2d'), k, locked);
+    drawCardBird(c.getContext('2d'), k, locked || soloOnly(k));
   });
 }
 function updateStats() { $('#stats').textContent = 'Best: ' + fmtDay(best) + '  \u00b7  Journeys ' + journeys + (jbest ? '  \u00b7  Fastest ' + mmss(jbest) : ''); }
@@ -1828,6 +2296,7 @@ function setPanels(which) {
   $('#medalsP').hidden = which !== 'medals'; $('#boardP').hidden = which !== 'board';
   $('#home').hidden = which !== 'home'; $('#infoP').hidden = which !== 'info';
   if (which) { paused = false; $('#pauseP').hidden = true; }
+  if (which === 'home' || which === 'lobby') setLevel(1);
   if (which === 'home') homeShow();
 }
 function setCap(text, ms) {
@@ -1850,7 +2319,7 @@ function buildTicks() {
 function syncHud(force) {
   const d = Math.min(NDAYS, dayIdx + 1);
   if (force || d !== hudDay) { hudDay = d; dayN.textContent = d; }
-  const ph = 'Week ' + week + ' of ' + NWEEKS + ' \u00b7 ' + phaseName();
+  const ph = (lvl === 2 ? 'L2 \u00b7 ' : '') + 'Week ' + week + ' of ' + NWEEKS + ' \u00b7 ' + phaseName();
   if (force || ph !== hudPhase) { hudPhase = ph; phaseEl.textContent = ph; }
   bar.style.width = (prog() * 100).toFixed(2) + '%';
 }
@@ -1907,8 +2376,9 @@ function newWeekClock() {
   leaves = []; leafNext = 0; wkLeaves = 0; lR = mkRng(seed * 53 + week * 3571 + 7); updateLeafHud();
   wDist = 0; encCum = 0; fogCool = 0; spawnDist = 0; lastSpace = 0; lastEnc = ''; encPassed = 0; orbDue = false; strikeT = 8; prevC = null; hid = 0; bag = []; lastPw = ''; rbSaid = false;
   wkLost = false; wkRev = false; wkBolts = 0; wkKinds = {};
-  lives = LIVES; iT = 0; hurtT = 0; panelAt = 0; hideOops();
-  cq = week === 1 ? planClouds() : [];
+  boss = null; bossHud(false);
+  lives = LIVES; iT = 0; hurtT = 0; panelAt = 0; hideOops(); rebirthUsed = false; puffT = 8;
+  cq = week === 1 && lvl === 1 ? planClouds() : [];
   updateLivesHud();
   buildTicks(); updatePwHud(); syncHud(true);
 }
@@ -1978,7 +2448,7 @@ function updateCpHud() {
   const e = eff();
   cpb.classList.toggle('set', !!cp);
   cpb.classList.toggle('warn', e === 'impossible');
-  cpbT.textContent = e === 'normal' ? (cp ? 'Checkpoint \u00b7 Day ' + (cp.dayIdx + 1) : 'Checkpoint on Day ' + (CP_DAY + 1)) : e === 'hard' ? 'Hard \u00b7 no checkpoint' : 'Impossible';
+  cpbT.textContent = e === 'normal' ? (cp ? (cp.boss ? 'Checkpoint \u00b7 Dragon' : 'Checkpoint \u00b7 Day ' + (cp.dayIdx + 1)) : 'Checkpoint on Day ' + (CP_DAY + 1)) : e === 'hard' ? 'Hard \u00b7 no checkpoint' : 'Impossible';
 }
 function autoCheckpoint() {
   if (cp || eff() !== 'normal' || dayIdx !== CP_DAY) return;
@@ -1989,9 +2459,10 @@ function autoCheckpoint() {
   setCap(mp ? 'Team checkpoint saved. If everyone falls, the team restarts on Day ' + (dayIdx + 1) + '.' : 'Checkpoint saved. Fall and you restart here on Day ' + (dayIdx + 1) + '.', 3200);
   tone(523, 0.15, 'triangle', 0.06); tone(784, 0.2, 'triangle', 0.06, 0.1); tone(1047, 0.3, 'triangle', 0.06, 0.2);
 }
-function setDiff(d) {
+function setDiff(d, quiet) {
   if (!DIFFS[d]) return;
-  diff = d; store.set('diff', d);
+  if (!lvOpen(lvl, d)) { $('#diffNote').textContent = lockNote(d); return; }
+  diff = d; if (!quiet) store.set('diff', d);
   document.querySelectorAll('#diffSeg .segb').forEach(b => { const on = b.dataset.d === d; b.classList.toggle('on', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); });
   $('#diffNote').textContent = DIFFS[d].note;
   updateResumeUi();
@@ -2012,14 +2483,14 @@ function resetWeek() {
 }
 /* ---------- saved progress, Home button, pause ---------- */
 // leaving a run keeps the week you were in: next time you can retry it from Day 1 or start again from Week 1
-function getResume() { if (!weekSaves()) return null; const r = store.get('resume', null); return r && r.w >= 2 && r.w <= NWEEKS && isFinite(r.t0) ? r : null; }
+function getResume() { if (!weekSaves()) return null; const r = store.get(sk('resume'), null); return r && r.w >= 2 && r.w <= NWEEKS && isFinite(r.t0) ? r : null; }
 function saveProgress() {
   if (mp || practice || !weekSaves()) return;   // Impossible keeps nothing: leave and the run is over
   let r = null;
   if (state === 'finale' && fin) { if (fin.kind === 'rest' && week < NWEEKS) r = { w: week + 1, t0: runTime }; }
   else if (week > 1) r = { w: week, t0: weekT0 };
   if (r) { r.l = runLost ? 1 : 0; r.c = runCreat | 0; }
-  store.set('resume', r);
+  store.set(sk('resume'), r);
 }
 function updateResumeUi() {
   const r = getResume(), go = $('#go');
@@ -2262,7 +2733,7 @@ function showMenu(pick) {
 }
 function beginReady(keepWeek) {
   ensureAudio(); cloudTip = false;
-  if (keepWeek === true) runTime = weekT0; else { practice = 0; daily = null; week = 1; runTime = 0; cp = null; runLost = false; runCreat = 0; ms.pwRun = 0; if (weekSaves()) store.set('resume', null); }
+  if (keepWeek === true) runTime = weekT0; else { practice = 0; daily = null; week = 1; runTime = 0; cp = null; runLost = false; runCreat = 0; ms.pwRun = 0; if (weekSaves()) store.set(sk('resume'), null); }
   seed = daily ? daily.seed : newSeed();   // the daily flight deals the same sky every time you try it today
   resetWeek();
   const resume = keepWeek === true && !mp && !!cp;
@@ -2280,6 +2751,7 @@ function startRun() {
   if (mp) { mpSet({ s: 'alive', l: lives }); }
   if (mp) mp.runT0 = t;
   mev('fly');
+  if (!mp && !practice && !daily) bumpStat(charKey, 'f');
 }
 
 /* ---------- hazards ---------- */
@@ -2305,7 +2777,7 @@ function particle(o) {
   parts.push(q);
 }
 function splash(x, y, n) {
-  for (let i = 0; i < (n || 16); i++) particle({ x: x + rand(-6, 6), y: y, vx: rand(-90, 90), vy: -rand(120, 280), g: 760, size: rand(1.6, 3.4), color: '#dcecf4', life: rand(0.5, 0.9) });
+  for (let i = 0; i < (n || 16); i++) particle({ x: x + rand(-6, 6), y: y, vx: rand(-90, 90), vy: -rand(120, 280), g: 760, size: rand(1.6, 3.4), color: lvl === 2 ? '#ffb347' : '#dcecf4', life: rand(0.5, 0.9) });
 }
 function ripple(x, twice) {
   particle({ type: 'ring', x: x, y: WATER + 2, size: 4, grow: 70, life: 0.8, color: '#e8f1f5' });
@@ -2407,6 +2879,58 @@ function pushCreature(type, x, sp) {
   const T = 2 * v0 / GR;
   hazards.push({ type: type, cr: true, x: x, y: WATER + 30, vy: 0, v0: v0, launched: false, launchX: BIRD_X + sp * T * wrand(0.22, 0.8), id: hid++, lead: true, skin: FISH_SKINS[hid % 3] });
 }
+/* ---------- Level 2: the fire ----------
+   Fire pillars (the cracks or vent glow, and a faint outline of the column shows, before it bursts), fire gates (a pillar from the ground and one from the sky
+   with a way through), flying fire brands (an arrow shows at the screen edge before they come in) and asteroids (dealt through the same strike machinery as
+   lightning, so the safe-path check covers them too). */
+const pillarEnv = ht => ht < 0 ? 0 : ht < 0.22 ? easeOut(ht / 0.22) : ht < 1.9 ? 1 : ht < 2.2 ? 1 - smooth((ht - 1.9) / 0.3) : 0;
+function pushPillar(x) {
+  hazards.push({ type: 'pillar', x: x, w: 40, H: wrand(120, 255), ht: -1, cur: 0, arr: 9, id: hid++, lead: true });
+  tipOnce('pillar', 'Lava bubbles and a faint column shows where a pillar of fire will burst out. Fly over it.');
+}
+function pushCPillar(x) {
+  hazards.push({ type: 'cpillar', x: x, w: 40, L: wrand(110, 270), ht: -1, cur: 0, arr: 9, id: hid++, lead: true });
+  tipOnce('cpillar', 'A glowing vent in the sky: fire will pour down from it. Fly under it.');
+}
+function pushFGate(x, ep) {
+  const gap = lerp(215, 182, ep) - 12 * (wkM() - 1);
+  const minC = gap / 2 + 70, maxC = WATER - gap / 2 - 60;
+  let c = wrand(minC, maxC);
+  if (prevC != null) c = clamp(c, prevC - 125, prevC + 125);
+  c = clamp(c, minC, maxC); prevC = c;
+  hazards.push({ type: 'cpillar', x: x, w: 40, L: c - gap / 2, ht: -1, cur: 0, arr: 9, early: 1.25, id: hid++, lead: true });
+  hazards.push({ type: 'pillar', x: x, w: 40, H: WATER - (c + gap / 2), ht: -1, cur: 0, arr: 9, early: 1.25, id: hid++, lead: false });
+  tipOnce('fgate', 'Fire from above and below at the same spot: fly through the gap between them.');
+}
+function pushBrand(x, sp, y, lead) {
+  const bv = 55 + 22 * (week - 1) + wrand(0, 40);   // how much faster than the world it flies
+  hazards.push({ type: 'brand', x: x + 8 + (sp + bv) * 0.95, y: y, w: 48, h: 18, bv: bv, ph: wrand(0, TAU), id: hid++, lead: lead });
+}
+function pushBrands(x, sp) {
+  const y1 = wrand(100, WATER - 90);
+  pushBrand(x, sp, y1, true);
+  if (week >= 5 && wrand(0, 1) < (week === 5 ? 0.35 : 0.5)) {   // a second one, always well clear of the first
+    const y2 = y1 < 270 ? wrand(y1 + 190, WATER - 90) : wrand(100, Math.max(100, y1 - 190));
+    pushBrand(x + 70, sp, y2, false);
+  }
+  tipOnce('brand', 'Flying fire brands come in faster than the world. An arrow shows where, before they appear.');
+}
+function chooseEnc2() {
+  const ep = det() ? shProgAt(encCum) : prog(), w = week;
+  const opts = [['pillar', 3], ['cpillar', 3], ['fgate', w === 1 ? 1.5 + 2 * clamp((ep - 0.1) / 0.7, 0, 1) : 3]];
+  const bw = w === 1 ? 0 : w === 2 ? 2.4 * clamp((ep - 0.05) / 0.65, 0, 1) : 2.8 + 0.15 * w;
+  if (bw > 0.05) opts.push(['brand', bw]);
+  const list = opts.filter(o => o[0] !== lastEnc);
+  let sum = 0; list.forEach(o => { sum += o[1]; });
+  let r = wR() * sum;
+  for (const o of list) { r -= o[1]; if (r <= 0) return o[0]; }
+  return list[0][0];
+}
+function fireBurst(h) {
+  const cx = h.x + h.w / 2, down = h.type === 'cpillar';
+  noiseFx(0.55, 0.05, 'lowpass', 700, 140, 0, 0.04); tone(90, 0.5, 'sawtooth', 0.04, 0, 48);
+  for (let i = 0; i < 10; i++) particle({ x: cx + rand(-10, 10), y: down ? 0 : WATER, vx: rand(-50, 50), vy: (down ? 1 : -1) * rand(40, 150), g: down ? 120 : 300, size: rand(1.5, 3), color: i % 2 ? '#ffb347' : '#ff6a2b', life: rand(0.5, 0.9) });
+}
 function chooseEnc(d) {
   const opts = [['rock', 3], ['hang', 3], ['gate', 3]];
   if (week > 1) opts.push(['cloud', 3]);   // week 1 clouds are scheduled instead
@@ -2479,7 +3003,7 @@ function spawnEncounter() {
   const spacing = spacingAt(ep, week) + wrand(-18, 22);
   encCum += spacing;
   spawnDist = Math.min(0, spawnDist) + spacing; lastSpace = spacing;
-  const kind = chooseEnc(d);
+  const kind = lvl === 2 ? chooseEnc2() : chooseEnc(d);
   lastEnc = kind;
   if (kind === 'rock') pushRock(x, true);
   else if (kind === 'hang') pushHang(x, true);
@@ -2490,9 +3014,13 @@ function spawnEncounter() {
   else if (kind === 'gust') { const extra = spacing * 0.25; encCum += extra; spawnDist += extra; lastSpace += extra; pushGust(x, spacing + extra); }   // a breather after the gust
   else if (kind === 'debris') pushDebris(x);
   else if (kind === 'tree') pushTree(x);
+  else if (kind === 'pillar') pushPillar(x);
+  else if (kind === 'cpillar') pushCPillar(x);
+  else if (kind === 'fgate') pushFGate(x, ep);
+  else if (kind === 'brand') pushBrands(x, sp);
   else pushCreature(kind, x, sp);
   if (leavesOn()) maybeLeaf(kind, x, spacing, ep);   // before the fog is added, so the obstacle just pushed is the last one in the list
-  if (week >= 6) { const fr = wR(); fogCool--; if (fr < 0.1 + 0.1 * ep && fogCool <= 0) { pushFog(x - 140); fogCool = 5; } }   // fog rolls over the next few obstacles
+  if (week >= 6 && lvl === 1) { const fr = wR(); fogCool--; if (fr < 0.1 + 0.1 * ep && fogCool <= 0) { pushFog(x - 140); fogCool = 5; } }   // fog rolls over the next few obstacles
   if (orbDue) {
     orbDue = false;
     orbs.push({ x: x - spacing * 0.5, y: 150 + pR() * 260, type: nextPower(), bob: pR() * 6, got: false });
@@ -2503,7 +3031,7 @@ function spawnEncounter() {
    Five a week, solo flights only. Each hangs at a risky spot (just over a rock, under a pillar, at a gate's edge, over a wave crest) so grabbing it is a choice.
    They are dealt from their own random stream, so they never change where anything else appears. */
 const LEAF_AT = [0.13, 0.31, 0.5, 0.68, 0.84];
-const leavesOn = () => !mp && !practice && !daily;
+const leavesOn = () => !mp && !practice && !daily && lvl === 1;
 function maybeLeaf(kind, x, spacing, ep) {
   if (leafNext >= LEAF_AT.length || ep < LEAF_AT[leafNext]) return;
   const last = hazards[hazards.length - 1], first = hazards[hazards.length - 2];
@@ -2574,6 +3102,9 @@ function fairBlocks(tau, sp, hr, extra) {
     else if (h.type === 'tree') { if (bx > x - hr - m && bx < x + h.w + hr + m) out.push([h.y - hr - m, 1e9]); }
     else if (h.type === 'fount') { if (bx > x - hr - m && bx < x + h.w + hr + m) out.push([WATER - h.H - hr - m, 1e9]); }   // by the time it reaches you it is up, so count it at full height
     else if (h.type === 'debris') { if (bx > x - hr - m && bx < x + h.w + hr + m) out.push([WATER - h.hgt - 4 - hr - m, 1e9]); }
+    else if (h.type === 'pillar') { if (bx > x - hr - m && bx < x + h.w + hr + m) out.push([WATER - h.H - hr - m, 1e9]); }
+    else if (h.type === 'cpillar') { if (bx > x - hr - m && bx < x + h.w + hr + m) out.push([-1e9, h.L + hr + m]); }
+    else if (h.type === 'brand') { const xb = h.x - (sp + h.bv) * tau; if (bx > xb + 3 - hr - m && bx < xb + h.w - 3 + hr + m) out.push([h.y - h.h / 2 - hr - m, h.y + h.h / 2 + hr + m]); }
     else if (h.type === 'wave') {
       const f = smooth(clamp((W + 60 - x) / (W + 60 - (BIRD_X + 70)), 0, 1));
       const cur = x + h.w < BIRD_X - 20 ? 6 : 8 + (h.hp - 8) * f;
@@ -2633,7 +3164,7 @@ function newStrike(warn, avoid) {
   for (let i = 0; i < 10; i++) cand.push(srand(125, 395));
   for (const y of cand) {
     if (avoid.some(v => Math.abs(v - y) < 120)) continue;
-    const s = { x: x, y: y, t: 0, warn: warn, state: 'warn', pts: null, blink: -1 };
+    const s = { x: x, y: y, t: 0, warn: warn, state: 'warn', pts: null, blink: -1, ast: lvl === 2 };
     if (fairOk([s])) return s;
   }
   return null;
@@ -2653,8 +3184,8 @@ function fairFixStrikes() {
 }
 function spawnStrike() {
   const d = edif(), p = det() ? shProgAt(encCum) : prog(), M = wkM();
-  strikeT = srand(7, 11) * (1 - 0.4 * p) / Math.pow(M, 0.25);
-  const n = (d > 0.6 && sR() < 0.3 + 0.35 * (M - 1) + 0.1 * p) ? 2 : 1;
+  strikeT = srand(7, 11) * (1 - 0.4 * p) / Math.pow(M, 0.25) * (lvl === 2 && week === 1 ? 1.5 : 1);
+  const n = (lvl === 2 ? (week >= 4 && sR() < 0.2 + 0.3 * (M - 1)) : (d > 0.6 && sR() < 0.3 + 0.35 * (M - 1) + 0.1 * p)) ? 2 : 1;
   const ys = [];
   for (let i = 0; i < n; i++) {
     const s = newStrike(lerp(1.5, 1.2, p), ys);
@@ -2679,10 +3210,12 @@ function activate(type) {
   if (mega) mev('mega', type);
   if (!mp) {
     weekPicks++;
+    if (lvl === 1) {
     ach.picks = Math.max(ach.picks || 0, weekPicks);
     if (mega) ach.mega = (ach.mega || 0) + 1;
     store.set('ach', ach);
     checkUnlocks();
+    }
   }
   // in team play a Tailwind, and any Mega, is for everybody (see remoteTail / remoteMega)
   const team = !!mp && (type === 'tail' || mega);
@@ -2754,7 +3287,8 @@ const OOPS_BY = {
 function hideOops() { clearTimeout(oopsTimer); oopsEl.classList.remove('on'); }
 function showOops(kind, ms) {
   ms = ms || 2500;
-  const pool = OOPS_ANY.concat(OOPS_BY[kind] || [], OOPS_BY[kind] || []);
+  const by = (lvl === 2 && OOPS2[kind]) || OOPS_BY[kind] || [];
+  const pool = OOPS_ANY.concat(by, by);
   let m, g = 0;
   do { m = pool[Math.floor(Math.random() * pool.length)]; g++; } while (m === lastOops && g < 10);
   lastOops = m;
@@ -2771,6 +3305,8 @@ function takeHit(kind) {
   breakChain();
   wkLost = true; runLost = true; mev('hurt');
   lives = Math.max(0, lives - 1);
+  const reborn = lives === 0 && phoenixReady();   // the hit still counts for medals; the Phoenix just gets back up
+  if (reborn) { lives = 1; rebirthUsed = true; }
   updateLivesHud();
   // the last hit keeps its words up about two seconds longer, and the options screen waits for them
   showOops(kind, lives > 0 ? 2500 : 4500);
@@ -2784,9 +3320,17 @@ function takeHit(kind) {
     if (kind === 'strike') zapFx();
     tone(170, 0.25, 'sawtooth', 0.07, 0, 60);
     for (let i = 0; i < 7; i++) particle({ type: 'r', x: bird.x + rand(-8, 8), y: bird.y + rand(-6, 6), vx: rand(-60, 20), vy: rand(-80, -10), g: 60, rot: rand(0, TAU), vr: rand(-5, 5), size: rand(2, 3.4), color: kind === 'strike' ? '#1a1612' : BIRDS[charKey].body, life: rand(1, 1.7), fade: 1 });
+    if (reborn) rebirthFx();
     return;
   }
   die(kind);
+}
+const phoenixReady = () => charKey === 'phoenix' && !rebirthUsed && !mp && curDiff() !== 'impossible';   // Impossible stays fully unforgiving
+function rebirthFx() {
+  iT = 2.4; flash = reduceMotion ? 0 : 0.5;
+  for (let i = 0; i < 44; i++) { const a = rand(0, TAU), v = rand(60, 260); particle({ x: bird.x, y: bird.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, g: 40, size: rand(1.6, 4), color: i % 3 === 0 ? '#ffe27a' : i % 3 === 1 ? '#ff9d1a' : '#ff4d1a', life: rand(0.6, 1.3) }); }
+  [392, 523, 659, 784, 1047].forEach((f, i) => tone(f, 0.3, 'triangle', 0.06, i * 0.08));
+  setCap(BIRDS.phoenix.verse, 4200);
 }
 
 const CAUSES = {
@@ -2799,6 +3343,22 @@ const CAUSES = {
   shark:  ['Shark: 1. Bird: 0.', 'You need a bigger bird.'],
   whale:  ['Whale-slapped.', 'Jonah could have warned you.'],
   wave:   ['The sea stood up and said no.', 'Surf is up. You were not.']
+};
+const CAUSES2 = {
+  water:   ['The lava does not negotiate.', 'Too hot to handle. Literally.'],
+  strike:  ['An asteroid. It did warn you.', 'That line in the sky was not decoration.', 'Space rock: 1. Bird: 0.'],
+  pillar:  ['That pillar of fire had a head start.', 'The lava was bubbling for a reason.'],
+  cpillar: ['Fire from the sky does not care about your plans.', 'Mind the vents.'],
+  brand:   ['A flying brand. The arrow was kind.', 'Hot log, fast delivery.'],
+  dragon:  ['The dragon wins this round.', 'You flew too close to the fire.']
+};
+const OOPS2 = {
+  strike:  ['Hit by an asteroid! That line was a warning.', 'Space rock: 1. You: 0.'],
+  water:   ['Lava is not water, little bird.', 'Not the cooling-off you wanted.'],
+  pillar:  ['Fly over it. The cracks glow first.', 'Pillars do not move. You did.'],
+  cpillar: ['Fly under it. The vent glows first.', 'Fire from above. Duck.'],
+  brand:   ['The arrow is your friend.', 'Hot log, fast delivery.'],
+  dragon:  ['The dragon is not impressed.', 'Stay out of the lane!']
 };
 const VERSES = [
   ['They shall mount up with wings as eagles; they shall run, and not be weary.', 'Isaiah 40:31'],
@@ -2819,8 +3379,10 @@ const WEEK_INTRO = [null,
 ];
 function setHintWeek(resume) {
   hint.classList.remove('onlight');
-  const wi = WEEK_INTRO[clamp(week, 1, NWEEKS)];
-  $('#hintB').textContent = resume ? 'Week ' + week + ', Day ' + (dayIdx + 1) : week > 1 ? 'Week ' + week + ' \u00b7 ' + scn().name : 'Tap to flap';
+  const wi = (lvl === 2 ? WEEK_INTRO2 : WEEK_INTRO)[clamp(week, 1, NWEEKS)];
+  $('#hintB').textContent = resume ? 'Week ' + week + ', Day ' + (dayIdx + 1) : week > 1 ? 'Week ' + week + ' \u00b7 ' + scn().name : lvl === 2 ? 'Level 2 \u00b7 The Fire' : 'Tap to flap';
+  const hT = $('#hintT'); if (!hT.dataset.orig) hT.dataset.orig = hT.textContent;
+  hT.textContent = lvl === 2 ? 'Fire is the new danger. Cracks glow before a pillar bursts out, a mark in the sky means an asteroid, and flying brands show an arrow first.' : hT.dataset.orig;
   const v = $('#hintV'); v.textContent = ''; v.append(wi.v);
   const c = document.createElement('cite'); c.textContent = wi.r; v.append(c);
   $('#hintT').hidden = !!mp || week > 1 || !!resume;   // the power-up tip is for the first week; later weeks open with their verse
@@ -2835,6 +3397,25 @@ const ENDS = [null,
 const NEW_HAZ = [null, null, null, 'fountains of the deep', 'wind gusts', 'floating debris', 'drowned treetops, drifting gates and fog'];   // what a week brings that the one before did not
 const REST_VERSES = ENDS.slice(1).map(e => [e.verse, e.ref]);
 const REST_TITLES = ENDS.slice(1).map(e => e.title);
+/* Level 2, The Fire. Each week opens on a verse that fits what is coming (KJV), and each rest stop is a Bible story where God brought people through fire. */
+const WEEK_INTRO2 = [null,
+  { v: '…there followed hail and fire mingled with blood, and they were cast upon the earth…', r: 'Revelation 8:7' },
+  { v: '…as it were a great mountain burning with fire was cast into the sea…', r: 'Revelation 8:8' },
+  { v: '…there fell a great star from heaven, burning as it were a lamp…', r: 'Revelation 8:10' },
+  { v: 'The sun shall be turned into darkness, and the moon into blood, before the great and the terrible day of the LORD come.', r: 'Joel 2:31' },
+  { v: 'And there appeared another wonder in heaven; and behold a great red dragon, having seven heads and ten horns, and seven crowns upon his heads.', r: 'Revelation 12:3' },
+  { v: 'And there was war in heaven: Michael and his angels fought against the dragon; and the dragon fought and his angels,', r: 'Revelation 12:7' }
+];
+const ENDS2 = [null,
+  { title: 'A pillar of fire.', verse: '…and by night in a pillar of fire, to give them light; to go by day and night:', ref: 'Exodus 13:21', tint: ['#1a0d1c', '#6a2f4a', '#e08a5a'], night: true },
+  { title: 'Not consumed.', verse: '…and, behold, the bush burned with fire, and the bush was not consumed.', ref: 'Exodus 3:2', tint: ['#1c0e0a', '#6a3524', '#e8a064'] },
+  { title: 'The fourth man.', verse: 'Lo, I see four men loose, walking in the midst of the fire, and they have no hurt; and the form of the fourth is like the Son of God.', ref: 'Daniel 3:25', tint: ['#140b14', '#5a2c3e', '#d98a5e'] },
+  { title: 'A chariot of fire.', verse: '…behold, there appeared a chariot of fire, and horses of fire, and parted them both asunder; and Elijah went up by a whirlwind into heaven.', ref: '2 Kings 2:11', tint: ['#120a18', '#4a2a50', '#e0885a'], night: true },
+  { title: 'The fire fell.', verse: 'Then the fire of the LORD fell, and consumed the burnt sacrifice, and the wood, and the stones, and the dust…', ref: '1 Kings 18:38', tint: ['#1a0c0a', '#6e3020', '#f0a860'] },
+  { title: 'The dragon is cast out.', verse: 'And they overcame him by the blood of the Lamb, and by the word of their testimony; and they loved not their lives unto the death.', ref: 'Revelation 12:11', tint: ['#241a2a', '#9a6a7a', '#ffd9a0'] }
+];
+const ENDX = () => (lvl === 2 ? ENDS2 : ENDS);
+const NEW_HAZ2 = [null, null, 'flying fire brands', 'brands in thicker, and the fire gates narrow', 'the blood moon, and asteroids in pairs', 'brands in pairs', 'every hazard at full speed, and the dragon waiting at the end'];
 
 function die(kind) {
   state = 'dying'; deadT = 0; fallT = 0; bounces = 0; causeKind = kind; chain = { type: '', n: 0 };
@@ -2914,13 +3495,13 @@ function showOver() {
   const day = Math.min(NDAYS, dayIdx + 1), td = totalDays();
   markWeek(week, day);
   saveProgress(); $('#overHome').hidden = false;
-  if (td > best) { best = td; store.set('best3', best); }
-  const pool = CAUSES[causeKind] || CAUSES.water;
+  if (td > best) { best = td; store.set(sk('best3'), best); }
+  const pool = (lvl === 2 && CAUSES2[causeKind]) || CAUSES[causeKind] || CAUSES.water;
   let qi; do { qi = Math.floor(Math.random() * pool.length); } while (pool.length > 1 && qi === lastQuip[causeKind]);
   lastQuip[causeKind] = qi;
   let vi; do { vi = Math.floor(Math.random() * VERSES.length); } while (vi === lastVerse);
   lastVerse = vi;
-  $('#overEye').textContent = 'Splash';
+  $('#overEye').textContent = lvl === 2 ? 'Burned' : 'Splash';
   $('#oBestL').textContent = 'Best day';
   $('#overT').textContent = pool[qi];
   $('#oWeek').textContent = week; $('#oDay').textContent = day; $('#oBest').textContent = best; $('#oTime').textContent = mmss(runTime);
@@ -2935,8 +3516,8 @@ function showOver() {
   if (!mp) {
     ci.hidden = false;
     if (cp) {
-      ci.textContent = 'Your Day ' + (cp.dayIdx + 1) + ' checkpoint holds. Resume there as many times as you need.';
-      $('#again').textContent = 'Resume Day ' + (cp.dayIdx + 1);
+      ci.textContent = cp.boss ? 'Your checkpoint at the dragon holds. Resume there as many times as you need.' : 'Your Day ' + (cp.dayIdx + 1) + ' checkpoint holds. Resume there as many times as you need.';
+      $('#again').textContent = cp.boss ? 'Face the dragon again' : 'Resume Day ' + (cp.dayIdx + 1);
     } else if (e === 'normal') {
       ci.textContent = 'You fell before the Day ' + (CP_DAY + 1) + ' checkpoint, so this week starts again from Day 1.';
     } else if (e === 'hard') {
@@ -2974,11 +3555,11 @@ function weekRecords(isEnd) {
   const wt = Math.max(1, runTime - weekT0);
   const prev = +wbest[week - 1] || 0;
   const isBest = prev > 0 && wt < prev;
-  if (!prev || isBest) { wbest[week - 1] = Math.round(wt * 10) / 10; for (let i = 0; i < wbest.length; i++) if (!wbest[i]) wbest[i] = 0; store.set('wbest', wbest); }
+  if (!prev || isBest) { wbest[week - 1] = Math.round(wt * 10) / 10; for (let i = 0; i < wbest.length; i++) if (!wbest[i]) wbest[i] = 0; store.set(sk('wbest'), wbest); }
   let jNew = false;
   if (isEnd) {
     jNew = !jbest || runTime < jbest;
-    if (jNew) { jbest = Math.round(runTime * 10) / 10; store.set('jbest', jbest); }
+    if (jNew) { jbest = Math.round(runTime * 10) / 10; store.set(sk('jbest'), jbest); }
   }
   return { wt: wt, prev: prev, isBest: isBest, saved: weekSaved, hits: LIVES - lives, jNew: jNew };
 }
@@ -3007,22 +3588,24 @@ function startFinale() {
   const isEnd = week >= NWEEKS;
   const first = !practice && wins < 1;
   if (!daily) markWeek(week, 8);   // a daily flight is a practice-style flight: it never marks a week as cleared
-  if (!practice) { wins++; store.set('wins', wins); }
-  if (isEnd && !practice) { journeys++; store.set('journeys', journeys); }
+  if (!practice) { wins++; store.set(sk('wins'), wins); }
+  if (isEnd && !practice) { journeys++; store.set(sk('journeys'), journeys); }
+  if (!practice && !mp && !daily) { bumpStat(charKey, 'c'); if (!wkLost) bumpStat(charKey, 'fl'); }   // earns this character's colour looks
+  if (isEnd && !practice && !daily) grantNext(lvl, curDiff());   // beating a level opens the next one at this difficulty and every easier one
   newRecord = false;
   if (mp) newRecord = recordTeam(week * NDAYS, isEnd ? runTime : 0);
-  else if (!daily) { best = Math.max(best, week * NDAYS); store.set('best3', best); }
+  else if (!daily) { best = Math.max(best, week * NDAYS); store.set(sk('best3'), best); }
   const stats = mp ? null : daily ? dailyRecords() : weekRecords(isEnd && !practice);
   if (!mp) {   // butterfly: finish a week well inside its own clock
     const frac = clamp(1 - stats.wt / Math.max(1, total), 0, 1);
-    if (!practice && frac > (ach.fast || 0)) { ach.fast = frac; store.set('ach', ach); }
+    if (lvl === 1 && !practice && frac > (ach.fast || 0)) { ach.fast = frac; store.set('ach', ach); }
     cp = null; updateCpHud();
     if (!practice) checkUnlocks();
   }
   if (!practice) mev('clear', { isEnd: isEnd, frac: clamp(1 - (runTime - weekT0) / Math.max(1, total), 0, 1) });
   if (!practice) checkUnlocks();   // Week 3 brings the Golden Dove, a flawless Week 3 or later the Butterfly
   if (mp) rankSubmit(isEnd ? NWEEKS * NDAYS : week * NDAYS, runTime);
-  state = 'finale';
+  state = 'finale'; boss = null; bossHud(false);
   hazards = []; strikes = []; orbs = []; leaves = []; pws = []; chain = { type: '', n: 0 }; updatePwHud();
   burn = 0; stunT = 0; causeKind = ''; landed = false; hint.hidden = true;
   fin = { t: 0, gx: W + 110, sx: bird.x, sy: bird.y, rain: 0, lit: false, ev: {}, cf: 0, newUnlock: first && !isEnd, shown: false, py: bird.y, kind: isEnd ? 'end' : 'rest', wk: week, perched: false, tapAt: 0, stats: stats };
@@ -3040,7 +3623,7 @@ function startFinale() {
 function birdPathAt(T) {
   const f = fin, slot = mySlot(), gx = 112;
   const end = f.kind === 'end';
-  const dest = end ? armSpot(slot, gx) : perchSpot(slot, gx);
+  const dest = end && lvl === 1 ? armSpot(slot, gx) : perchSpot(slot, gx);
   const kf = end
     ? [[0, f.sx, f.sy], [1.6, BIRD_X, 268], [3.4, BIRD_X, 268], [5.0, 98, WATER - 216], [5.8, 98, WATER - 216], [8.4, dest[0], dest[1]]]
     : [[0, f.sx, f.sy], [1.6, BIRD_X, 268], [3.4, BIRD_X, 268], [5.6, dest[0], dest[1]]];
@@ -3080,7 +3663,7 @@ async function makeShareCard(info) {
   g.fillStyle = '#8a5a31'; g.beginPath(); g.moveTo(2, 12); g.lineTo(36, 12); g.bezierCurveTo(35, 18, 31, 22, 26, 22); g.lineTo(12, 22); g.bezierCurveTo(7, 22, 3, 18, 2, 12); g.fill();
   g.fillStyle = '#a97a47'; g.fillRect(9, 5, 20, 7); g.fillStyle = '#5e3b1f'; g.beginPath(); g.moveTo(7, 5); g.lineTo(19, 0); g.lineTo(31, 5); g.fill();
   g.restore();
-  g.save(); g.translate(540, 780); g.rotate(-0.12); drawBird(g, charKey, 0, 0, 0, 0.1, 5.5, true, 1); g.restore();
+  g.save(); g.translate(540, 780); g.rotate(-0.12); drawBird(g, charKey, 0, 0, 0, 0.1, 5.5, true, 1, null, lookIdx(charKey)); g.restore();
   g.textAlign = 'center'; g.textBaseline = 'alphabetic';
   g.fillStyle = '#f0d9a0'; g.font = '700 38px ' + serif; if ('letterSpacing' in g) g.letterSpacing = '8px';
   g.fillText('WINGS OVER THE FLOOD', 540 + 4, 118);
@@ -3123,22 +3706,28 @@ function showRest() {
     fillWk($('#winStats'), wkItems(f.stats, true));
     fillUnlocks($('#winUnlock'));
     $('#winLede').textContent = daily ? 'Daily flight done in ' + mmss(runTime - weekT0) + '.' + (dailyStreak() > 1 ? ' ' + dailyStreak() + ' days in a row.' : '') + ' A new sky arrives tomorrow.' : practice ? 'Practice flight done. Noah was waiting again. Your journey records are as you left them.' : 'Noah was waiting with his arm out. You carried the olive leaf all the way.' + (mp && newRecord ? ' New team record!' : '');
+    const l2 = lvl === 2;
+    $('#winEye').textContent = l2 ? 'Level 2 of 5 complete' : 'Week 6 of 6 complete';
+    $('#winTitle').textContent = l2 ? 'The dragon is cast out.' : 'Welcome home.';
+    $('#winVerse').textContent = l2 ? 'And the great dragon was cast out, that old serpent, called the Devil, and Satan, which deceiveth the whole world: he was cast out into the earth, and his angels were cast out with him.' : 'And the dove came in to him in the evening; and, lo, in her mouth was an olive leaf pluckt off: so Noah knew that the waters were abated from off the earth.';
+    $('#winRef').textContent = l2 ? 'Revelation 12:9' : 'Genesis 8:11';
+    if (l2) $('#winLede').textContent = 'You flew through the fire, outlasted the dragon, and came out the other side. Level 3, the darkness, is still on its way.' + (mp && newRecord ? ' New team record!' : '');
     $('#again2').textContent = mp ? 'Back to lobby' : daily ? 'Fly it again' : practice ? 'Practice again' : 'Play again';
     $('#swap2').textContent = mp ? 'Leave room' : 'Change bird';
     shareInfo = practice ? null : { time: mmss(runTime), medals: medalSummary().m, team: !!mp };
-    $('#shareWin').hidden = !shareInfo;
-    $('#dryWin').hidden = !!(mp || practice || daily);
+    $('#shareWin').hidden = !shareInfo || lvl === 2;
+    $('#dryWin').hidden = !!(mp || practice || daily || lvl === 2);
     setPanels('win'); delayEnable(winP);
     try { $('#again2').focus({ preventScroll: true }); } catch (e) { /* ignore */ }
     return;
   }
   fillWk($('#restStats'), wkItems(f.stats, false));
-  const rv = REST_VERSES[(week - 1) % REST_VERSES.length];
+  const RE = ENDX()[((week - 1) % 5) + 1], rv = [RE.verse, RE.ref];
   $('#restEye').textContent = daily ? 'Daily flight complete' : 'Week ' + week + ' of ' + NWEEKS + ' complete';
-  $('#restTitle').textContent = REST_TITLES[(week - 1) % REST_TITLES.length];
+  $('#restTitle').textContent = RE.title;
   $('#restVerse').textContent = rv[0]; $('#restRef').textContent = rv[1];
   const nextLen = Math.round(45 * Math.max(0.45, Math.pow(0.88, week)));
-  $('#nextInfo').textContent = daily ? 'Daily flight done in ' + mmss(runTime - weekT0) + '.' + (dailyStreak() > 1 ? ' ' + dailyStreak() + ' days in a row.' : '') + ' A new sky arrives tomorrow.' : practice ? 'Practice flight done. Your saved progress is exactly as you left it.' : 'Next, Week ' + (week + 1) + ': days run about ' + nextLen + ' seconds, the waves climb higher and the storm hits harder.' + (NEW_HAZ[week + 1] ? ' New this week: ' + NEW_HAZ[week + 1] + '.' : '');
+  $('#nextInfo').textContent = daily ? 'Daily flight done in ' + mmss(runTime - weekT0) + '.' + (dailyStreak() > 1 ? ' ' + dailyStreak() + ' days in a row.' : '') + ' A new sky arrives tomorrow.' : practice ? 'Practice flight done. Your saved progress is exactly as you left it.' : lvl === 2 ? 'Next, Week ' + (week + 1) + ': days run about ' + nextLen + ' seconds and the fire burns hotter.' + (NEW_HAZ2[week + 1] ? ' New this week: ' + NEW_HAZ2[week + 1] + '.' : '') : 'Next, Week ' + (week + 1) + ': days run about ' + nextLen + ' seconds, the waves climb higher and the storm hits harder.' + (NEW_HAZ[week + 1] ? ' New this week: ' + NEW_HAZ[week + 1] + '.' : '');
   $('#tapNote').textContent = (mp && !mp.isHost) ? 'Waiting for the host to fly on.' : practice ? 'Rest as long as you like. Tap to go Home.' : 'Rest as long as you like. Tap to fly on.';
   $('#endRun').textContent = mp ? 'Leave room' : daily ? 'Fly it again' : practice ? 'Practice again' : 'Save and go Home';
   fillUnlocks($('#unlock'));
@@ -3155,6 +3744,7 @@ function updateFinale(dt) {
   bird.rot = pos[2] ? 0 : clamp((ny - f.py) / Math.max(dt, 0.001) * 0.0014, -0.4, 0.5);
   bird.x = pos[0]; bird.y = ny; f.py = ny;
   bird.phase += dt * 13;
+  if (lvl === 2) { updateFinale2(f, T, end, dt); return; }
 
   if (end) {
     if (T > 2.4 && !f.ev.a) { f.ev.a = 1; setCap('The rain has stopped.', 1800); }
@@ -3317,7 +3907,8 @@ async function mpJoinRoom(code, creating) {
   if (!r) { lmsg(lastErr === 'missing' ? 'No room with that code. Check the code, and make sure the host still has the room open.' : (lastErr === 'server' || lastErr === 'timeout') ? 'Could not reach the connection server. Check your signal or Wi-Fi, then try again.' : 'Could not reach that room. Check the code and try again.'); return; }
   mp = { room: r, code: code, creating: creating, jn: Date.now(), unsub: [], cd: null, lastRid: 0, entered: false, isHost: false, slot: -1, list: [], vis: {}, sendT: 0, clkT: 0, sent: {}, joinedAt: Date.now(), tw: 0, twSeen: {}, sSeen: {}, rkSeen: {}, peakN: 0, rk: 0, twAt: undefined, mg: 0, mgSeen: {}, diff: null, dsel: diff };
   mp.unsub.push(r.onPeers(mpOnPeers, () => {}));
-  mpSet({ mp: 1, n: myName(), c: charKey, s: 'lobby', jn: mp.jn, h: creating ? 1 : 0, ph: creating ? 'lobby' : null, rid: 0, wk: 1, seed: 0, l: LIVES, tw: 0, mg: 0, mt: '', rk: 0, tb: teamBest, tt: teamBestT, df: creating ? diff : '', ck: 0 });
+  if (soloOnly(charKey)) { charKey = 'dove'; store.set('char', charKey); }   // team play only knows the classic birds for now
+  mpSet({ mp: 1, n: myName(), c: charKey, k: lookIdx(charKey), s: 'lobby', jn: mp.jn, h: creating ? 1 : 0, ph: creating ? 'lobby' : null, rid: 0, wk: 1, seed: 0, l: LIVES, tw: 0, mg: 0, mt: '', rk: 0, tb: teamBest, tt: teamBestT, df: creating ? diff : '', ck: 0 });
   lmsg('');
   renderLobby();
 }
@@ -3348,9 +3939,10 @@ function renderLobby() {
     const li = document.createElement('li');
     const dot = document.createElement('i'), nm = document.createElement('span'), sm = document.createElement('small');
     const B = BIRDS[m.p.c] || BIRDS.dove;
-    dot.style.background = B.body;
+    const pk = BIRDS[m.p.c] && SKINS[m.p.c] && SKINS[m.p.c][m.p.k | 0] ? m.p.k | 0 : 0;
+    dot.style.background = pk ? lookBody(m.p.c, pk) : B.body;
     nm.textContent = cleanName(m.p.n) || 'Player';
-    sm.textContent = (m.p.h === 1 ? 'Host \u00b7 ' : '') + B.name + (m.me ? ' \u00b7 you' : '');
+    sm.textContent = (m.p.h === 1 ? 'Host \u00b7 ' : '') + (pk ? lookName(m.p.c, pk) + ' ' : '') + B.name + (m.me ? ' \u00b7 you' : '');
     li.append(dot, nm, sm);
     ul.appendChild(li);
   });
@@ -3380,12 +3972,27 @@ function mpRenderHud() {
     matesEl.appendChild(d);
   });
 }
+// two players on the same bird in the same look: whoever joined later is moved to a free look (before takeoff and at rest stops only)
+function mpFixLook() {
+  if (!mp || !mp.list || mp.slot < 0 || state === 'play' || state === 'dying' || state === 'spectate') return;
+  const mine = mp.list[mp.slot]; if (!mine) return;
+  const c = charKey, my = lookIdx(c);
+  const used = {}; let clash = false;
+  for (let i = 0; i < mp.slot; i++) { const q = mp.list[i]; if (q.p.c === c) { used[q.p.k | 0] = 1; if ((q.p.k | 0) === my) clash = true; } }
+  if (!clash) return;
+  let free = -1; for (let j = 0; j < NLOOK; j++) if (!used[j]) { free = j; break; }
+  if (free < 0) return;
+  looks[c] = free; store.set('look', looks); mpSet({ k: free }); mine.p = Object.assign({}, mine.p, { k: free });
+  setCap('Your look is now ' + lookName(c, free) + ', so your team can tell you apart.', 3200);
+  renderMinis();
+}
 function mpOnPeers() {
   if (!mp) return;
   mp.list = mpList();
   adoptRoomRecord();
   const me = mp.list.findIndex(m => m.me);
   mp.slot = me;
+  mpFixLook();
   if (me >= MAX_TEAM) { mpLeave('That room is full (' + MAX_TEAM + ' players).'); return; }
   if (me < 0) return;
   // host = oldest player who holds the host flag; if nobody does after a short wait, the oldest player takes it
@@ -3602,15 +4209,192 @@ function updateStrikes(dt) {
     s.t += dt;
     if (s.state === 'warn') {
       const b = Math.floor(s.t / 0.12);
-      if (b !== s.blink) { s.blink = b; if (b % 4 === 0) tone(1100, 0.05, 'square', 0.022); }
+      if (b !== s.blink) { s.blink = b; if (b % 4 === 0) tone(s.ast ? 720 : 1100, 0.05, s.ast ? 'triangle' : 'square', 0.022); }
       if (s.t >= s.warn) {
         s.state = 'bolt'; s.t = 0; s.pts = makeBolt(s.x, s.y);
-        flash = Math.max(flash, reduceMotion ? 0 : 0.3);
-        tone(110, 0.5, 'sawtooth', 0.07, 0, 40);
+        flash = Math.max(flash, reduceMotion ? 0 : (s.ast ? 0.18 : 0.3));
+        if (s.ast) { noiseFx(0.6, 0.1, 'lowpass', 1100, 90, 0, 0.02); tone(70, 0.5, 'sine', 0.12, 0, 34); } else tone(110, 0.5, 'sawtooth', 0.07, 0, 40);
       }
     } else if (s.t > 0.45) s.dead = true;
   }
   strikes = strikes.filter(s => !s.dead);
+}
+/* ---------- the dragon (end of Level 2, Week 6) ----------
+   A survival fight of about 48 seconds. The dragon weakens as the seconds pass, and each light you gather wounds him faster.
+   He attacks one thing at a time, and every attack is shown before it lands:
+   a lane of fire (the lane flashes and his mouth glows for 1.3 seconds first), fireballs (an arrow at the edge 0.95 s before each one enters), and asteroids (the normal warning marks). */
+const BOSS_DUR = 48, LANE_H = 36, BS = 0.9, BOSS_Y0 = 118, BOSS_Y1 = WATER - 74;
+function bossHud(show, pct) {
+  const e = $('#bossBar');
+  if (e.hidden === show) e.hidden = !show;
+  hud.classList.toggle('boss', show);   // the dragon's bar takes the place of the week label
+  if (show) $('#bossFill').style.width = clamp(pct, 0, 100).toFixed(1) + '%';
+}
+function startBoss() {
+  boss = { t: 0, hp: 100, atk: null, cool: 0.5, balls: [], lights: [], lightT: 5.6, hx: W + 240, hy: 150, last: '', said: 0, flashT: 0, n: 0 };
+  strikes = [];
+  if (!mp && eff() === 'normal') {   // Normal: a fall from here restarts the dragon, not the whole week
+    cp = { dayIdx: NDAYS - 1, u: 1, runTime: runTime, weekT0: weekT0, saved: weekSaved, picks: weekPicks, leaves: wkLeaves, lnext: leafNext, boss: true };
+    updateCpHud();
+  }
+  setCap('Behold, a great red dragon.', 3000);   // Revelation 12:3
+  tone(90, 1.4, 'sawtooth', 0.08, 0, 45); noiseFx(1.3, 0.08, 'lowpass', 700, 120, 0, 0.1);
+  if (!reduceMotion) shake = Math.max(shake, 6);
+  musicForce();
+  bossHud(true, 100);
+}
+function bossLane(near) {   // a lane that is on or near the bird, so the telegraph makes you move
+  const y = near === undefined ? rand(BOSS_Y0, BOSS_Y1) : near + rand(-45, 45);
+  return clamp(y, BOSS_Y0, BOSS_Y1);
+}
+function bossPick(b, p2) {
+  const kinds = ['breath', 'balls', 'rain'].filter(k => k !== b.last), r = Math.random();
+  const k = kinds.length === 3 ? 'breath' : (r < 0.42 ? kinds[0] : r < 0.84 ? kinds[1] : (kinds[2] || kinds[0]));
+  b.last = k; b.n++;
+  if (k === 'breath') {
+    const l1 = bossLane(bird.y), lanes = [l1];
+    if (p2) { let l2 = l1; for (let i = 0; i < 12 && Math.abs(l2 - l1) < 130; i++) l2 = rand(BOSS_Y0, BOSS_Y1); if (Math.abs(l2 - l1) >= 130) lanes.push(l2); }
+    b.atk = { k: 'breath', t: 0, tele: p2 ? 1.1 : 1.3, fire: 0.9, lanes: lanes, idx: 0, fired: false, said: false };
+  } else if (k === 'balls') {
+    const n = p2 ? 4 : 3, items = [];
+    let y = bossLane(bird.y);
+    for (let i = 0; i < n; i++) {
+      items.push({ y: y, at: 0.1 + i * 0.6, tele: 0.95, sp: false });
+      y = clamp(y + (Math.random() < 0.5 ? -1 : 1) * rand(70, 130), BOSS_Y0, BOSS_Y1);
+    }
+    b.atk = { k: 'balls', t: 0, items: items, vx: p2 ? -330 : -300 };
+  } else {
+    b.atk = { k: 'rain', t: 0, done: false };
+  }
+}
+function bossStep(dt, pick) {
+  const b = boss, p2 = b.hp < 50;
+  b.t += dt; b.flashT = Math.max(0, b.flashT - dt);
+  b.hx = lerp(W + 240, W - 96, easeOut(clamp(b.t / 3.2, 0, 1))) + Math.sin(b.t * 1.7) * 3;
+  let a = b.atk, ty = 150 + 40 * Math.sin(b.t * 0.8);
+  if (a && a.k === 'breath') ty = a.lanes[a.idx] - 8 * BS;
+  b.hy += (ty - b.hy) * Math.min(1, dt * (a ? 4 : 1.5));
+  if (b.t > 4) b.hp -= dt * 100 / (BOSS_DUR - 4);
+  if (!b.said && b.hp < 50) { b.said = 1; setCap('Michael and his angels fought against the dragon.', 3400); tone(196, 0.5, 'triangle', 0.06); tone(294, 0.7, 'triangle', 0.06, 0.14); }   // Revelation 12:7
+  // the light: gather it to wound him faster
+  b.lightT -= dt;
+  if (b.t > 4.5 && b.lightT <= 0 && b.hp > 12) { b.lightT = 5.2 + Math.random() * 1.6; b.lights.push({ x: W + 30, y: rand(150, WATER - 90), bob: 0, got: false }); tipOnce('bosslight', 'Gather the light to wound the dragon faster.'); }
+  for (const l of b.lights) {
+    l.x -= curSp * dt; l.bob += dt;
+    if (pick && !l.got && Math.hypot(l.x - bird.x, l.y + Math.sin(l.bob * 3) * 5 - bird.y) < 20 + hitR() + (BIRDS[charKey].mag || 0)) {
+      l.got = true; b.hp -= 6; b.flashT = 0.35;
+      tone(880, 0.12, 'sine', 0.06); tone(1320, 0.2, 'sine', 0.05, 0.08); tone(1760, 0.25, 'sine', 0.04, 0.16);
+      for (let i = 0; i < 12; i++) particle({ x: l.x, y: l.y, vx: rand(-120, 120), vy: rand(-120, 120), size: rand(1.4, 3), color: '#fff0b0', life: rand(0.4, 0.8) });
+    }
+  }
+  b.lights = b.lights.filter(l => !l.got && l.x > -40);
+  for (const q of b.balls) { q.x += q.vx * dt; if (Math.random() < dt * 40) particle({ x: q.x + 8, y: q.y + rand(-4, 4), vx: rand(10, 50), vy: rand(-20, 20), size: rand(1.4, 3), color: '#ff9a3a', life: rand(0.2, 0.4) }); }
+  b.balls = b.balls.filter(q => q.x > -40);
+  // the attacks, one at a time
+  if (a) {
+    a.t += dt;
+    if (a.k === 'breath') {
+      if (a.t >= 0 && !a.said) { a.said = true; tone(110, 0.8, 'sawtooth', 0.04, 0, 160); }
+      if (a.t >= a.tele && !a.fired) { a.fired = true; noiseFx(a.fire, 0.1, 'bandpass', 500, 1500, 0, 0.05); tone(70, 0.6, 'sawtooth', 0.07, 0, 40); if (!reduceMotion) shake = Math.max(shake, 4); }
+      if (a.t >= a.tele + a.fire + 0.15) {
+        if (a.idx + 1 < a.lanes.length) { a.idx++; a.t = -0.35; a.fired = false; a.said = false; }
+        else { b.atk = null; b.cool = p2 ? 1.0 : 1.6; }
+      }
+    } else if (a.k === 'balls') {
+      let all = true;
+      for (const it of a.items) {
+        if (!it.sp && a.t >= it.at + it.tele) { it.sp = true; b.balls.push({ x: W + 20, y: it.y, vx: a.vx }); tone(180, 0.25, 'sawtooth', 0.04, 0, 90); }
+        if (!it.sp) all = false;
+        else if (it.sp && a.t < it.at + it.tele + 0.02) all = false;
+      }
+      if (all) { b.atk = null; b.cool = p2 ? 1.0 : 1.5; }
+    } else if (a.k === 'rain') {
+      if (!a.done) {
+        a.done = true;
+        const ys = [];
+        for (let i = 0; i < (p2 ? 2 : 1); i++) { const q = newStrike(1.5, ys); if (q) { ys.push(q.y); strikes.push(q); } }
+      }
+      if (a.t > 0.3) { b.atk = null; b.cool = p2 ? 1.6 : 2.0; }
+    }
+  } else {
+    b.cool -= dt;
+    if (b.t > 4.4 && b.cool <= 0 && !b.balls.length && !strikes.length && b.hp > 4 && b.t < BOSS_DUR + 6) bossPick(b, p2);
+  }
+  bossHud(true, b.hp);
+  if (b.hp <= 0) { bossWin(); return false; }
+  return true;
+}
+function bossWin() {
+  const b = boss;
+  for (let i = 0; i < 30; i++) particle({ x: b.hx - 30 + rand(-40, 60), y: b.hy + rand(-30, 40), vx: rand(-160, 160), vy: rand(-160, 60), g: 200, size: rand(2, 5), color: Math.random() < 0.5 ? '#ffb347' : '#ff6a30', life: rand(0.5, 1.1) });
+  tone(160, 0.9, 'sawtooth', 0.07, 0, 40); noiseFx(1.0, 0.08, 'lowpass', 1200, 90, 0, 0.03);
+  boss = null; strikes = []; bossHud(false);
+  startFinale();
+}
+// does the dragon's fire or a fireball touch the bird?
+function bossHurts(hr) {
+  const b = boss;
+  if (!b) return false;
+  const a = b.atk;
+  if (a && a.k === 'breath' && a.t >= a.tele && a.t < a.tele + a.fire && Math.abs(bird.y - a.lanes[a.idx]) < LANE_H / 2 + hr * 0.55) return true;
+  for (const q of b.balls) if (Math.hypot(q.x - bird.x, q.y - bird.y) < 12 + hr * 0.7) return true;
+  return false;
+}
+function drawBoss() {
+  const b = boss, a = b.atk, tm = stt(), sc = BS;
+  for (const l of b.lights) {   // the light
+    const y = l.y + Math.sin(l.bob * 3) * 5;
+    const g = ctx.createRadialGradient(l.x, y, 1, l.x, y, 26);
+    g.addColorStop(0, 'rgba(255,252,220,.95)'); g.addColorStop(0.35, 'rgba(255,230,140,.55)'); g.addColorStop(1, 'rgba(255,200,80,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(l.x, y, 26, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,248,210,.9)'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.beginPath();
+    const r = 11 + 2 * Math.sin(tm * 6);
+    ctx.moveTo(l.x - r, y); ctx.lineTo(l.x + r, y); ctx.moveTo(l.x, y - r); ctx.lineTo(l.x, y + r); ctx.stroke();
+    ctx.fillStyle = '#fffbe6'; ctx.beginPath(); ctx.arc(l.x, y, 4, 0, TAU); ctx.fill();
+  }
+  for (const q of b.balls) {   // fireballs
+    const g = ctx.createRadialGradient(q.x, q.y, 1, q.x, q.y, 22);
+    g.addColorStop(0, 'rgba(255,240,180,1)'); g.addColorStop(0.4, 'rgba(255,140,50,.85)'); g.addColorStop(1, 'rgba(220,50,20,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(q.x, q.y, 22, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,120,40,.6)';
+    for (let i = 1; i < 5; i++) { ctx.beginPath(); ctx.ellipse(q.x + i * 11, q.y + Math.sin(tm * 14 + i) * 2, 10 - i * 1.6, 7 - i, 0, 0, TAU); ctx.fill(); }
+  }
+  let open = 0.15;
+  if (a && a.k === 'balls') {   // the arrow at the edge, then the ball comes in
+    for (const it of a.items) {
+      if (it.sp || a.t < it.at) continue;
+      const k = (a.t - it.at) / it.tele, on = Math.floor(a.t * 8) % 2 === 0;
+      ctx.save();
+      ctx.setLineDash([6, 8]); ctx.strokeStyle = 'rgba(255,120,60,' + (0.2 + 0.2 * k).toFixed(2) + ')'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(W - 26, it.y); ctx.lineTo(BIRD_X + 20, it.y); ctx.stroke(); ctx.setLineDash([]);
+      if (on) { ctx.lineJoin = 'round'; ctx.fillStyle = '#ff7a3a'; ctx.strokeStyle = '#2a1006'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(W - 6, it.y - 13); ctx.lineTo(W - 30, it.y); ctx.lineTo(W - 6, it.y + 13); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+      ctx.restore();
+    }
+    open = 0.5;
+  }
+  if (a && a.k === 'breath' && a.t >= 0) {
+    const ly = a.lanes[a.idx], mx = b.hx - 40 * sc;
+    if (a.t < a.tele) {
+      const k = a.t / a.tele, on = k > 0.7 ? Math.floor(a.t * 12) % 2 === 0 : true;
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,90,40,' + ((0.05 + 0.16 * k) * (on ? 1 : 0.4)).toFixed(3) + ')';
+      ctx.fillRect(0, ly - LANE_H / 2, mx, LANE_H);
+      ctx.setLineDash([8, 7]); ctx.strokeStyle = 'rgba(255,150,70,' + (0.35 + 0.45 * k).toFixed(2) + ')'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, ly - LANE_H / 2); ctx.lineTo(mx, ly - LANE_H / 2); ctx.moveTo(0, ly + LANE_H / 2); ctx.lineTo(mx, ly + LANE_H / 2); ctx.stroke();
+      ctx.restore();
+      open = k;
+    } else if (a.t < a.tele + a.fire + 0.15) {
+      const T = a.t - a.tele, env = Math.min(1, T / 0.1) * Math.min(1, (a.fire + 0.15 - T) / 0.15), h = LANE_H * env;
+      const g = ctx.createLinearGradient(0, ly - h / 2, 0, ly + h / 2);
+      g.addColorStop(0, 'rgba(220,60,20,.0)'); g.addColorStop(0.2, 'rgba(255,110,40,.9)'); g.addColorStop(0.5, 'rgba(255,240,190,1)'); g.addColorStop(0.8, 'rgba(255,110,40,.9)'); g.addColorStop(1, 'rgba(220,60,20,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, ly - h / 2 - 4, mx, h + 8);
+      ctx.fillStyle = 'rgba(255,200,100,.7)';
+      for (let i = 0; i < 16; i++) { const x = mx - (i + ((tm * 12) % 1)) * (mx / 16), r = (5 + 5 * Math.sin(tm * 30 + i * 1.7)) * env; ctx.beginPath(); ctx.ellipse(x, ly + Math.sin(tm * 20 + i) * 4, 14, Math.max(1, r), 0, 0, TAU); ctx.fill(); }
+      open = 1;
+    }
+  }
+  drawDragon(b.hx, b.hy, { scale: sc, wing: b.t * 3.4, open: open });
+  if (b.flashT > 0) { ctx.fillStyle = 'rgba(255,248,210,' + (0.18 * b.flashT / 0.35).toFixed(3) + ')'; ctx.fillRect(0, 0, W, H); }
 }
 function updateHazards(dt, sp) {
   for (const h of hazards) {
@@ -3635,6 +4419,14 @@ function updateHazards(dt, sp) {
       if (h.ht >= 0) h.ht += dt;
       h.cur = h.H * fountEnv(h.ht);
       if (h.cur > 20 && Math.random() < dt * 34) particle({ x: h.x + h.w / 2 + rand(-12, 12), y: WATER - h.cur + rand(0, 10), vx: rand(-45, 45), vy: -rand(0, 70), g: 620, size: rand(1.4, 3), color: '#e8f4f8', life: 0.55 });
+    } else if (h.type === 'pillar' || h.type === 'cpillar') {
+      h.arr = (h.x + h.w / 2 - BIRD_X) / Math.max(sp, 60);   // seconds until it reaches you
+      if (h.ht < 0 && h.arr <= (h.early || 0.8)) { h.ht = 0; fireBurst(h); }
+      if (h.ht >= 0) h.ht += dt;
+      h.cur = (h.type === 'pillar' ? h.H : h.L) * pillarEnv(h.ht);
+      if (h.cur > 20 && Math.random() < dt * 30) particle({ x: h.x + h.w / 2 + rand(-12, 12), y: h.type === 'pillar' ? WATER - h.cur + rand(0, 14) : h.cur - rand(0, 14), vx: rand(-40, 40), vy: (h.type === 'pillar' ? -1 : 1) * rand(10, 80), g: h.type === 'pillar' ? 120 : -40, size: rand(1.3, 2.8), color: '#ffb347', life: 0.6 });
+    } else if (h.type === 'brand') {
+      h.x -= h.bv * dt;   // on top of the scroll
     } else if (h.type === 'hang' || h.type === 'rock') {
       if (h.mvA) { const sh = gShift(h, h.x); if (h.type === 'hang') h.bottom = h.b0 + sh; else h.y = h.r0 + sh; }
     } else if (h.type === 'wave') {
@@ -3677,7 +4469,7 @@ function advanceClock(d) {
       }
     }
     dayT -= L; dayIdx++;
-    if (dayIdx >= NDAYS) { dayIdx = NDAYS - 1; dayT = dayLens[NDAYS - 1]; elapsed = total; startFinale(); return false; }
+    if (dayIdx >= NDAYS) { dayIdx = NDAYS - 1; dayT = dayLens[NDAYS - 1]; elapsed = total; if (lvl === 2 && week >= NWEEKS) { startBoss(); return true; } startFinale(); return false; }
     onNewDay();
     autoCheckpoint();
   }
@@ -3691,12 +4483,12 @@ function worldStep(dt, pick) {
   const ds = clockMult();
   runTime += dt;
   if (ds > 1) weekSaved += dt * (ds - 1);   // real seconds the boost cuts from this week
-  if (!advanceClock(dt * ds)) return false;
+  if (boss) { if (!bossStep(dt, pick)) return false; } else if (!advanceClock(dt * ds)) return false;
   spawnDist -= sp * dt; wDist += sp * dt;
-  spawnDue();
+  if (!boss) spawnDue();
   const wdt = pwMega('calm') ? dt * 0.3 : dt;   // Mega Calm Waters slows the lightning too
   strikeT -= wdt;
-  if (week > 1 && strikeT <= 0 && edif() > 0.04) spawnStrike();
+  if (!boss && (week > 1 || lvl === 2) && strikeT <= 0 && edif() > (lvl === 2 && week === 1 ? 0.3 : 0.04)) spawnStrike();   // Level 2 Week 1: asteroids start on Day 3
   updateHazards(dt, sp);
   fairT -= dt; if (fairT <= 0) { fairT = 0.25; if (strikes.length) fairFixStrikes(); }   // a fish launching can crowd a bolt that is still only a warning
   updateOrbs(dt, sp, hitR(), pick);
@@ -3718,6 +4510,9 @@ function touching(h, hr, ghost, ghostAll) {
   if (h.x > bird.x + 90 || h.x + h.w < bird.x - 90) return false;
   if (h.type === 'cloud' && !(h.charged && !h.zapped)) return false;   // no lightning inside: safe to pass through
   if (h.type === 'gust' || h.type === 'fog') return false;   // wind pushes and fog hides, neither hurts
+  if (h.type === 'pillar') return h.cur > 6 && hitRect(bird.x, bird.y, hr, h.x + 6, WATER - h.cur, h.w - 12, h.cur + 30);
+  if (h.type === 'cpillar') return h.cur > 6 && hitRect(bird.x, bird.y, hr, h.x + 6, -120, h.w - 12, h.cur + 120);
+  if (h.type === 'brand') return !h.burnt && hitRect(bird.x, bird.y, hr, h.x + 5, h.y - h.h / 2 + 3, h.w - 10, h.h - 6);
   if (h.type === 'fount') return h.cur > 6 && hitRect(bird.x, bird.y, hr, h.x + 4, WATER - h.cur, h.w - 8, h.cur + 30);
   if (h.type === 'debris') return hitRect(bird.x, bird.y, hr, h.x + 3, WATER - h.hgt + debrisBob(h, h.x), h.w - 6, h.hgt + 40);
   if (h.type === 'tree') return hitRect(bird.x, bird.y, hr, h.x + 5, h.y, h.w - 10, WATER + 40 - h.y);
@@ -3727,15 +4522,28 @@ function touching(h, hr, ghost, ghostAll) {
   return hitRect(bird.x, bird.y, hr, h.x + 5, h.y - h.h / 2 + 5, h.w - 10, h.h - 10);
 }
 function closeCall() {
-  if (!mp) { ach.close = (ach.close || 0) + 1; store.set('ach', ach); }
+  if (!mp && lvl === 1) { ach.close = (ach.close || 0) + 1; store.set('ach', ach); }
   mev('close');
   setCap('Close call!', 900);
   tone(1500, 0.07, 'square', 0.03); tone(1900, 0.1, 'square', 0.03, 0.07);
   for (let i = 0; i < 8; i++) particle({ x: bird.x, y: bird.y, vx: rand(-80, 80), vy: rand(-80, 80), size: rand(1, 2), color: '#fff3a0', life: rand(0.2, 0.5) });
   checkUnlocks();
 }
+function emberPuff() {   // burn away the nearest flying brand that is on screen and ahead of you
+  let best = null;
+  for (const h of hazards) if (h.type === 'brand' && !h.burnt && h.x < W - 8 && h.x > bird.x + 30 && (!best || h.x < best.x)) best = h;
+  if (!best) return false;
+  best.burnt = true;
+  const bx = best.x + best.w / 2, by = best.y;
+  for (let i = 0; i < 22; i++) { const f = i / 21; particle({ x: lerp(bird.x + 24, bx, f), y: lerp(bird.y, by, f) + rand(-5, 5), vx: rand(-20, 60), vy: rand(-40, 20), g: -30, size: rand(2, 4.4), color: i % 2 ? '#ffb347' : '#ff6a2b', life: rand(0.3, 0.7) }); }
+  for (let i = 0; i < 18; i++) particle({ x: bx, y: by, vx: rand(-120, 120), vy: rand(-120, 80), g: 160, size: rand(1.6, 3.6), color: i % 2 ? '#ffd27a' : '#ff6a2b', life: rand(0.5, 1.0) });
+  noiseFx(0.35, 0.05, 'lowpass', 1400, 200, 0, 0.03); tone(260, 0.2, 'sawtooth', 0.05, 0, 90);
+  setCap('Ember Puff!', 900);
+  return true;
+}
 function updatePlay(dt) {
   const B = BIRDS[charKey];
+  if (charKey === 'babydragon' && !mp) { puffT = Math.max(0, puffT - dt); if (puffT === 0 && emberPuff()) puffT = PUFF_CD; }
   if (pws.length) {
     let changed = false;
     for (let i = pws.length - 1; i >= 0; i--) {
@@ -3778,6 +4586,7 @@ function updatePlay(dt) {
   for (const h of hazards) {
     if (touching(h, hr, ghost, gAll)) { takeHit(h.type); return; }
   }
+  if (boss && !ghost && !gAll && bossHurts(hr)) { takeHit('dragon'); return; }
   if (gAll) return;
   for (const s of strikes) {
     if (s.state !== 'bolt') continue;
@@ -3802,15 +4611,16 @@ function update(dt) {
   if (calmSky !== hudCalm) { hudCalm = calmSky; hud.classList.toggle('calm', hudCalm); }
   const tgt = calmSky ? 1 : prog();
   pS += (tgt - pS) * Math.min(1, dt * 1.6);
-  const nTgt = state === 'dry' ? 0 : state === 'finale' ? (fin && fin.kind === 'rest' && ENDS[fin.wk] && ENDS[fin.wk].night ? smooth(clamp((fin.t - 1.2) / 5.5, 0, 1)) : 0) : nightOf(uNow());
+  const nTgt = state === 'dry' ? 0 : state === 'finale' ? (fin && fin.kind === 'rest' && ENDX()[fin.wk] && ENDX()[fin.wk].night ? smooth(clamp((fin.t - 1.2) / 5.5, 0, 1)) : 0) : nightOf(uNow());
   nS += (nTgt - nS) * Math.min(1, dt * 3);
   fS += ((calmSky ? 1 : 0) - fS) * Math.min(1, dt * 1.2);
   const slow = (state === 'play' || state === 'spectate') ? 1.5 : 1;
   const wind = state === 'finale' && fin && fin.kind === 'rest' && fin.wk === 3 ? 1 + 5 * clamp((fin.t - 1) / 4, 0, 1) : 1;
   for (const c of clouds) { c.x -= c.sp * dt * slow * wind; if (c.x < -150) c.x = W + 150; }
   const slant = scn().slant;
+  if (lvl === 2) for (const e of embers) { e.y -= e.v * dt; e.x += Math.sin(t * 1.3 + e.ph) * 6 * dt - 8 * dt; if (e.y < -6 || e.x < -6) { e.y = WATER + rand(0, 20); e.x = rand(0, W + 30); } }
   for (const d of rain) { d.y += d.v * dt; d.x -= d.v * slant * dt; if (d.y > WATER || d.x < -20) { d.y = rand(-60, -5); d.x = rand(0, W + 80); } }
-  if (!reduceMotion && (pS < 0.4 || week === 5) && week < 6 && state !== 'finale' && state !== 'dry') {
+  if (lvl === 1 && !reduceMotion && (pS < 0.4 || week === 5) && week < 6 && state !== 'finale' && state !== 'dry') {
     nextBolt -= dt;
     if (nextBolt <= 0) { flash = Math.max(flash, 0.28); nextBolt = week === 5 ? rand(2.5, 5.5) : rand(4, 9); tone(64, 0.9, 'sawtooth', 0.025, 0.15, 38); }
   }
@@ -3879,22 +4689,22 @@ function drawSky() {
   a = lerp(a, clamp((p - 0.35) / 0.65, 0, 1) * (1 - nS), fS);
   if (a > 0.02) {
     const rg = ctx.createRadialGradient(sx, sy, 10, sx, sy, 240);
-    rg.addColorStop(0, 'rgba(255,240,190,' + (0.8 * a).toFixed(3) + ')');
-    rg.addColorStop(1, 'rgba(255,240,190,0)');
+    rg.addColorStop(0, 'rgba(' + (lvl === 2 ? '255,150,90' : '255,240,190') + ',' + (0.8 * a).toFixed(3) + ')');
+    rg.addColorStop(1, 'rgba(' + (lvl === 2 ? '255,150,90' : '255,240,190') + ',0)');
     ctx.fillStyle = rg;
     ctx.fillRect(-20, -20, W + 40, H + 40);
-    ctx.fillStyle = 'rgba(255,248,214,' + (0.95 * a).toFixed(3) + ')';
+    ctx.fillStyle = (lvl === 2 ? 'rgba(255,200,160,' : 'rgba(255,248,214,') + (0.95 * a).toFixed(3) + ')';
     ctx.beginPath(); ctx.arc(sx, sy, 26, 0, TAU); ctx.fill();
   }
-  if (fin && fin.kind === 'rest' && ENDS[fin.wk] && fS > 0.01) {   // each rest stop has its own sky: dusk, a rainy slate, night, lavender, dawn
-    const tn = ENDS[fin.wk].tint, tg = ctx.createLinearGradient(0, 0, 0, WATER);
+  if (fin && ((fin.kind === 'rest' && ENDX()[fin.wk]) || (fin.kind === 'end' && lvl === 2)) && fS > 0.01) {   // each rest stop has its own sky: dusk, a rainy slate, night, lavender, dawn
+    const tn = ENDX()[fin.kind === 'end' ? 6 : fin.wk].tint, tg = ctx.createLinearGradient(0, 0, 0, WATER);
     tn.forEach((c, i) => tg.addColorStop(i / (tn.length - 1), c));
     ctx.globalAlpha = 0.92 * fS; ctx.fillStyle = tg; ctx.fillRect(-20, -20, W + 40, WATER + 22); ctx.globalAlpha = 1;
   }
 }
 const PUFFS = [[-34, 8, 20], [-12, -6, 26], [16, -2, 24], [40, 8, 17], [0, 12, 24]];
 function drawClouds() {
-  ctx.fillStyle = mix('#1a2133', '#ffffff', pS);
+  ctx.fillStyle = lvl === 2 ? mix('#2a1210', '#7a5048', pS) : mix('#1a2133', '#ffffff', pS);
   const cm = fin && fin.kind === 'rest' && fin.wk === 3 ? 1 - smooth(clamp((fin.t - 1) / 6, 0, 1)) * fS : 1;   // the wind clears them away
   for (const c of clouds) {
     ctx.globalAlpha = c.a * cm;
@@ -3906,7 +4716,7 @@ function drawClouds() {
 }
 function drawNight() {
   if (nS < 0.01) return;
-  ctx.fillStyle = 'rgba(4,8,26,' + (0.52 * nS).toFixed(3) + ')';
+  ctx.fillStyle = (lvl === 2 ? 'rgba(26,6,8,' : 'rgba(4,8,26,') + (0.52 * nS).toFixed(3) + ')';
   ctx.fillRect(-20, -20, W + 40, H + 40);
   const sa = nS * (0.3 + 0.7 * pS);
   ctx.fillStyle = '#fff';
@@ -3926,8 +4736,8 @@ function drawNight() {
     ctx.globalAlpha = 1;
   }
   const m = clamp((uNow() - 0.55) / 0.4, 0, 1), mx = lerp(W * 0.88, W * 0.12, m), my = 150 - 90 * Math.sin(Math.PI * m);
-  ctx.globalAlpha = nS * (0.35 + 0.65 * pS);
-  ctx.fillStyle = '#f3efd9';
+  ctx.globalAlpha = lvl === 2 && week >= 4 ? 0 : nS * (0.35 + 0.65 * pS);   // Level 2 from Week 4 has the blood moon instead (drawn with the scenery)
+  ctx.fillStyle = lvl === 2 ? '#e8b890' : '#f3efd9';
   ctx.beginPath(); ctx.arc(mx, my, 15, 0, TAU); ctx.fill();
   ctx.fillStyle = 'rgba(40,50,80,.25)';
   ctx.beginPath(); ctx.arc(mx - 4, my - 3, 3.5, 0, TAU); ctx.arc(mx + 5, my + 4, 2.5, 0, TAU); ctx.fill();
@@ -3955,6 +4765,7 @@ function tornado(x, top, base, wTop, sway, a, k) {
 }
 const wrapX = (x, span) => ((x % span) + span) % span - 120;
 function drawScene() {
+  if (lvl === 2) { drawSceneL2(); return; }
   if (week < 2 || state === 'finale' || state === 'dry') return;
   const st = stt(), p = prog(), dark = 1 - pS * 0.55;
   if (week === 2) {
@@ -4006,6 +4817,12 @@ function drawScene() {
 }
 const DEB = []; for (let i = 0; i < 7; i++) DEB.push({ x: i * 58 + (i * 37) % 31, ph: i * 1.7, kind: i % 3, sp: 16 + (i % 3) * 7, y: (i % 4) * 13 });
 function drawSceneFront() {
+  if (lvl === 2) {   // embers drifting up, and ash coming down in the later weeks
+    ctx.fillStyle = 'rgba(255,170,70,.75)'; ctx.beginPath();
+    for (const e of embers) { const k = e.s * (0.8 + 0.2 * Math.sin(t * 5 + e.ph)); ctx.moveTo(e.x + k, e.y); ctx.arc(e.x, e.y, k, 0, TAU); }
+    ctx.fill();
+    return;
+  }
   if (week < 3 || week > 5) return;
   const st = stt(), rough = week === 3 ? 1 : week === 5 ? 1.5 : 0.5;
   // whitecaps riding the swell
@@ -4177,8 +4994,94 @@ function drawRestScene(gx, T, wk) {
     }
   }
 }
+// The five rest stops of Level 2 are Bible stories where God brought people through fire. The birds perch on a rock mound shaped like the ark's roof,
+// so they sit in the same places as in Level 1. The end of the level is the dragon falling out of a dawn sky.
+function drawFireRest() {
+  const f = fin, gx = f.gx, wk = f.wk, T = f.t, end = f.kind === 'end', ax = gx + 150, sg = (a, b) => clamp((T - a) / (b - a), 0, 1);
+  const gl = ctx.createRadialGradient(ax - 60, WATER - 60, 10, ax - 60, WATER - 60, 280);
+  gl.addColorStop(0, 'rgba(255,150,60,' + (end ? 0.25 : 0.4).toFixed(2) + ')'); gl.addColorStop(1, 'rgba(255,110,40,0)');
+  ctx.fillStyle = gl; ctx.fillRect(0, WATER - 340, W, 360);
+  const bx = gx + 12;
+  if (end) {
+    const d = sg(0.4, 5.2);   // the dragon falls out of the sky, turning over, smaller and smaller
+    if (d < 1) drawDragon(lerp(W - 40, 20, d), lerp(80, WATER + 40, d * d), { scale: lerp(0.8, 0.3, d), wing: T * 6, rot: d * 4.2, alpha: 1 - d * 0.6, open: 1 - d });
+    const sun = smooth(sg(3, 9));
+    const rg = ctx.createRadialGradient(ax - 90, WATER - 30 - 70 * sun, 6, ax - 90, WATER - 30 - 70 * sun, 200);
+    rg.addColorStop(0, 'rgba(255,236,170,' + (0.8 * sun).toFixed(3) + ')'); rg.addColorStop(1, 'rgba(255,200,120,0)');
+    ctx.fillStyle = rg; ctx.fillRect(0, 100, W, WATER - 100);
+  } else if (wk === 1) {   // a pillar of fire to give light by night
+    const r = smooth(sg(0.8, 3.2));
+    const lg = ctx.createLinearGradient(bx - 110, 0, bx + 110, 0);   // a soft glow around the pillar, not a hard-edged band
+    lg.addColorStop(0, 'rgba(255,140,50,0)'); lg.addColorStop(0.5, 'rgba(255,140,50,' + (0.2 * r).toFixed(3) + ')'); lg.addColorStop(1, 'rgba(255,140,50,0)');
+    ctx.fillStyle = lg; ctx.fillRect(bx - 110, 0, 220, WATER);
+    flameCol(bx, WATER + 4, WATER - 390 * r, 64, 0.92); flameCol(bx, WATER + 4, WATER - 300 * r, 30, 0.95);
+  } else if (wk === 2) {   // the bush that burned and was not consumed
+    ctx.fillStyle = '#3f6a2a';
+    [[-26, -22, 18], [-6, -34, 22], [18, -26, 20], [0, -12, 20], [-22, -8, 15], [26, -8, 15]].forEach(c => { ctx.beginPath(); ctx.arc(bx + c[0], WATER - 60 + c[1], c[2], 0, TAU); ctx.fill(); });
+    const r = smooth(sg(0.8, 2.6));
+    [[-18, 40], [2, 62], [20, 44]].forEach((c, i) => flameCol(bx + c[0], WATER - 72, WATER - 72 - c[1] * r * (0.85 + 0.15 * Math.sin(T * 6 + i)), 24, 0.88));
+  } else if (wk === 3) {   // the furnace, and four men walking in it
+    ctx.fillStyle = '#3a2220'; ctx.fillRect(bx - 56, WATER - 140, 112, 150);
+    const fg = ctx.createLinearGradient(0, WATER - 130, 0, WATER);
+    fg.addColorStop(0, 'rgba(255,200,100,.95)'); fg.addColorStop(1, 'rgba(255,100,30,.95)');
+    ctx.fillStyle = fg; ctx.beginPath(); ctx.moveTo(bx - 34, WATER); ctx.lineTo(bx - 34, WATER - 84); ctx.quadraticCurveTo(bx, WATER - 130, bx + 34, WATER - 84); ctx.lineTo(bx + 34, WATER); ctx.closePath(); ctx.fill();
+    for (let i = 0; i < 4; i++) {
+      const fx = bx - 24 + i * 16, fourth = i === 3, a = i < 3 ? 1 : smooth(sg(1.8, 3.4));
+      if (fourth) { const g = ctx.createRadialGradient(fx, WATER - 36, 2, fx, WATER - 36, 30); g.addColorStop(0, 'rgba(255,255,230,' + (0.9 * a).toFixed(2) + ')'); g.addColorStop(1, 'rgba(255,255,230,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(fx, WATER - 36, 30, 0, TAU); ctx.fill(); }
+      ctx.globalAlpha = a; ctx.fillStyle = fourth ? '#fff6dc' : '#2a1410';
+      ctx.beginPath(); ctx.arc(fx, WATER - 52, 4.5, 0, TAU); ctx.fill(); ctx.beginPath(); ctx.rect(fx - 4.5, WATER - 47, 9, 26); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  } else if (wk === 4) {   // a chariot of fire goes up in a whirlwind
+    const p = smooth(sg(1.2, 6.8)), cx = lerp(bx + 10, bx - 40, p), cy = lerp(WATER - 60, WATER - 430, p);
+    ctx.strokeStyle = 'rgba(255,214,150,' + (0.4 * Math.sin(Math.PI * p)).toFixed(3) + ')'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.beginPath();
+    for (let i = 0; i < 6; i++) { const y = cy + 30 + i * 36, o = Math.sin(T * 5 + i) * 14; ctx.moveTo(cx - 24 + o, y); ctx.bezierCurveTo(cx - 8 + o, y - 8, cx + 10 + o, y + 8, cx + 30 + o, y - 2); }
+    ctx.stroke();
+    flameCol(cx + 8, cy + 20, cy + 150 * p + 10, 40, 0.8);
+    ctx.fillStyle = '#ffb347'; ctx.beginPath(); ctx.ellipse(cx, cy, 28, 14, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#ff7a3a'; ctx.beginPath(); ctx.ellipse(cx - 12, cy - 12, 14, 8, -0.3, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#ffe6a0'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx + 4, cy + 12, 11, 0, TAU); ctx.stroke();
+    for (let i = 0; i < 4; i++) { const a = T * 8 + i * Math.PI / 2; ctx.beginPath(); ctx.moveTo(cx + 4, cy + 12); ctx.lineTo(cx + 4 + Math.cos(a) * 11, cy + 12 + Math.sin(a) * 11); ctx.stroke(); }
+    ctx.fillStyle = '#ffd27a'; ctx.beginPath(); ctx.ellipse(cx - 44, cy - 6, 15, 8, 0.1, 0, TAU); ctx.fill();
+  } else if (wk === 5) {   // the altar, and fire from heaven
+    ctx.fillStyle = '#5a4640'; ctx.fillRect(bx - 34, WATER - 38, 68, 44);
+    ctx.fillStyle = '#6e5850'; ctx.fillRect(bx - 38, WATER - 46, 76, 10);
+    const b = smooth(sg(1.9, 2.5)), burn = smooth(sg(2.2, 3.6));
+    if (b > 0 && b < 1) { ctx.fillStyle = 'rgba(255,240,200,' + (0.9 * (1 - b)).toFixed(3) + ')'; ctx.fillRect(bx - 18, 0, 36, WATER - 46); }
+    if (T > 1.9) { ctx.fillStyle = 'rgba(255,200,120,' + (0.25 * (1 - sg(1.9, 2.6))).toFixed(3) + ')'; ctx.fillRect(0, 0, W, WATER); }
+    flameCol(bx, WATER - 44, WATER - 44 - 120 * burn, 54, 0.92);
+  }
+  ctx.fillStyle = '#2a1713'; ctx.beginPath();   // the mound the birds sit on: its roof slopes the way the ark's does
+  ctx.moveTo(ax - 130, WATER + 16); ctx.quadraticCurveTo(ax - 100, WATER - 40, ax - 70, WATER - 64);
+  ctx.lineTo(ax, WATER - 98); ctx.lineTo(ax + 70, WATER - 64); ctx.quadraticCurveTo(ax + 100, WATER - 40, ax + 130, WATER + 16); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,150,70,.55)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ax - 70, WATER - 64); ctx.lineTo(ax, WATER - 98); ctx.lineTo(ax + 70, WATER - 64); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,170,70,' + (0.18 + 0.1 * Math.sin(t * 3)).toFixed(3) + ')';
+  ctx.beginPath(); ctx.ellipse(ax - 50, WATER - 36, 16, 3, 0, 0, TAU); ctx.ellipse(ax + 44, WATER - 24, 20, 3, 0, 0, TAU); ctx.fill();
+}
+function updateFinale2(f, T, end, dt) {
+  f.rain = 0;
+  const ev = f.ev, wk = f.wk;
+  if (end) {
+    if (T > 0.7 && !ev.a) { ev.a = 1; setCap('The dragon falls.', 2400); tone(160, 0.8, 'sawtooth', 0.06, 0, 40); noiseFx(0.9, 0.07, 'lowpass', 900, 80, 0, 0.05); }
+    if (T > 3.8 && !ev.b) { ev.b = 1; setCap('Cast out.', 1800); [392, 494, 587].forEach((q, i) => tone(q, 1.2, 'sine', 0.03, i * 0.12)); }
+    if (T > 5.8 && !ev.c) { ev.c = 1; f.lit = true; fanfare(); setCap('They overcame him by the blood of the Lamb.', 4200); }
+    if (T > 5.8 && T < 10) { f.cf += dt * 60; const n = Math.floor(f.cf); f.cf -= n; if (n > 0) confetti(n); }
+    if (T > 9.2 && !f.shown) showRest();
+    return;
+  }
+  if (wk === 1 && T > 2.0 && !ev.a) { ev.a = 1; setCap('By night, a pillar of fire.', 2600); noiseFx(1.6, 0.05, 'bandpass', 300, 900, 0, 0.6); tone(120, 1.4, 'sine', 0.04, 0, 200); }
+  if (wk === 2 && T > 2.2 && !ev.a) { ev.a = 1; setCap('The bush burned, and was not consumed.', 2800); noiseFx(1.4, 0.04, 'highpass', 2500, 3500, 0, 0.3); tone(220, 0.6, 'triangle', 0.03, 0, 330); }
+  if (wk === 3 && T > 2.6 && !ev.a) { ev.a = 1; setCap('The form of the fourth is like the Son of God.', 3400); [392, 494, 587, 784].forEach((q, i) => tone(q, 1.5, 'sine', 0.03, i * 0.15)); }
+  if (wk === 4 && T > 1.8 && !ev.a) { ev.a = 1; setCap('A chariot of fire.', 2400); noiseFx(4.6, 0.05, 'bandpass', 260, 1100, 0, 1.8); tone(150, 2.2, 'sine', 0.035, 0, 90); }
+  if (wk === 5 && T > 1.9 && !ev.a) { ev.a = 1; setCap('The fire of the LORD fell.', 2600); tone(60, 0.6, 'sine', 0.16, 0, 30); noiseFx(0.9, 0.07, 'lowpass', 1200, 100, 0, 0.02); if (!reduceMotion) shake = Math.max(shake, 5); }
+  if (T > 6.8 && !ev.d) { ev.d = 1; setCap('Rest, little bird.', 2400); tone(523, 0.5, 'sine', 0.05); tone(784, 0.6, 'sine', 0.05, 0.15); }
+  if (T > 7.0 && !ev.e) { ev.e = 1; f.lit = true; tone(659, 0.3, 'triangle', 0.05); tone(988, 0.5, 'triangle', 0.05, 0.12); }
+  if (T > 7.0 && T < 8.4) { f.cf += dt * 30; const n = Math.floor(f.cf); f.cf -= n; if (n > 0) confetti(n); }
+  if (T > 8.4 && !f.shown) showRest();
+}
 function drawFinaleScenery() {
   if (!fin) return;
+  if (lvl === 2) { drawFireRest(); return; }
   if (fin.kind === 'rest' && ENDS[fin.wk]) { drawRestScene(fin.gx, fin.t, fin.wk); return; }
   const gx = fin.gx, peak = WATER - 135;
   const hg = ctx.createLinearGradient(0, peak, 0, WATER);
@@ -4272,6 +5175,265 @@ function drawWave(h) {
   }
 }
 // the sea bubbles and rings out, then a spout bursts up for about a second
+/* ---------- Level 2 drawing ---------- */
+function flameCol(cx, y0, y1, w, a) {   // a wavy flame standing on y0 and reaching y1
+  const n = 9, hh = y1 - y0, tm = stt();
+  const g = ctx.createLinearGradient(0, y0, 0, y1);
+  g.addColorStop(0, 'rgba(255,246,206,' + a.toFixed(3) + ')');
+  g.addColorStop(0.3, 'rgba(255,176,56,' + a.toFixed(3) + ')');
+  g.addColorStop(0.75, 'rgba(226,64,24,' + (a * 0.9).toFixed(3) + ')');
+  g.addColorStop(1, 'rgba(120,20,10,0)');
+  ctx.fillStyle = g; ctx.beginPath();
+  for (let i = 0; i <= n; i++) {
+    const f = i / n, ww = w * 0.5 * (1 - 0.7 * f * f) * (1 + 0.12 * Math.sin(tm * 14 + i * 1.7)), xx = cx - ww + Math.sin(tm * 9 + i * 0.9) * 2.5 * f;
+    if (i === 0) ctx.moveTo(xx, y0 + hh * f); else ctx.lineTo(xx, y0 + hh * f);
+  }
+  for (let i = n; i >= 0; i--) {
+    const f = i / n, ww = w * 0.5 * (1 - 0.7 * f * f) * (1 + 0.12 * Math.sin(tm * 14 + i * 1.7 + 2)), xx = cx + ww + Math.sin(tm * 9 + i * 0.9) * 2.5 * f;
+    ctx.lineTo(xx, y0 + hh * f);
+  }
+  ctx.closePath(); ctx.fill();
+}
+const fireNear = h => h.ht < 0 ? clamp(1 - (h.arr - (h.early || 0.8)) / 1.9, 0.12, 1) : 1;   // how close the burst is, for the build-up
+function drawPillar(h) {
+  const cx = h.x + h.w / 2;
+  if (h.ht < 0) {   // not yet: a faint column shows where the fire will stand, and the lava bubbles harder as it nears
+    const k = fireNear(h);
+    ctx.save();
+    ctx.setLineDash([5, 6]); ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(255,150,60,' + (0.25 + 0.4 * k).toFixed(3) + ')';
+    ctx.fillStyle = 'rgba(255,110,40,' + (0.04 + 0.1 * k).toFixed(3) + ')';
+    ctx.beginPath(); ctx.rect(cx - h.w * 0.4, WATER - h.H, h.w * 0.8, h.H); ctx.fill(); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = 'rgba(255,196,96,' + (0.8 * k).toFixed(3) + ')'; ctx.lineWidth = 2;
+    for (let r = 0; r < 3; r++) {
+      const ph = (stt() * 1.5 + r / 3 + h.id * 0.17) % 1;
+      ctx.globalAlpha = (1 - ph) * k; ctx.beginPath(); ctx.ellipse(cx, WATER + 3, 8 + ph * 30 * k, 2.5 + ph * 6, 0, 0, TAU); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  if (h.cur > 3) {
+    const gr = ctx.createRadialGradient(cx, WATER - h.cur * 0.5, 4, cx, WATER - h.cur * 0.5, h.cur * 0.6 + 40);
+    gr.addColorStop(0, 'rgba(255,170,60,.35)'); gr.addColorStop(1, 'rgba(255,100,30,0)');
+    ctx.fillStyle = gr; ctx.fillRect(cx - 110, WATER - h.cur - 50, 220, h.cur + 70);
+    flameCol(cx, WATER + 6, WATER - h.cur, h.w * 1.05, 0.95);
+    flameCol(cx, WATER + 6, WATER - h.cur * 0.78, h.w * 0.55, 0.95);
+  }
+}
+function drawCPillar(h) {
+  const cx = h.x + h.w / 2, k = fireNear(h);
+  if (h.ht < 0) {
+    ctx.save();
+    ctx.setLineDash([5, 6]); ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(255,150,60,' + (0.25 + 0.4 * k).toFixed(3) + ')';
+    ctx.fillStyle = 'rgba(255,110,40,' + (0.04 + 0.1 * k).toFixed(3) + ')';
+    ctx.beginPath(); ctx.rect(cx - h.w * 0.4, 0, h.w * 0.8, h.L); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+  ctx.fillStyle = '#2a1512';   // the vent: a dark lip in the sky with a glowing slit
+  ctx.beginPath(); ctx.moveTo(cx - h.w * 0.7, -4); ctx.lineTo(cx + h.w * 0.7, -4); ctx.lineTo(cx + h.w * 0.45, 12); ctx.lineTo(cx - h.w * 0.45, 12); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(255,150,50,' + Math.min(1, 0.35 + 0.65 * k * (0.75 + 0.25 * Math.sin(stt() * 9 + h.id))).toFixed(3) + ')';
+  ctx.fillRect(cx - h.w * 0.32, 6, h.w * 0.64, 5);
+  if (h.cur > 3) {
+    const gr = ctx.createRadialGradient(cx, h.cur * 0.5, 4, cx, h.cur * 0.5, h.cur * 0.6 + 40);
+    gr.addColorStop(0, 'rgba(255,170,60,.35)'); gr.addColorStop(1, 'rgba(255,100,30,0)');
+    ctx.fillStyle = gr; ctx.fillRect(cx - 110, -20, 220, h.cur + 70);
+    flameCol(cx, 8, h.cur, h.w * 1.05, 0.95);
+    flameCol(cx, 8, h.cur * 0.78, h.w * 0.55, 0.95);
+  }
+}
+function drawBrand(h) {
+  const x = h.x, y = h.y;
+  const hs = charKey === 'dragonfly' && x > bird.x + 10;   // Heat Sense: the lane stays lit right up to you
+  if (hs && x <= W - 14) {
+    ctx.save(); ctx.setLineDash([5, 7]); ctx.strokeStyle = 'rgba(255,140,70,.55)'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(bird.x + 18, y); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+  }
+  if (x > W - 14) {   // still off the right edge: an arrow and a faint lane say where it will come in
+    const on = Math.floor(t * 8) % 2 === 0;
+    ctx.save();
+    ctx.setLineDash([6, 8]); ctx.strokeStyle = hs ? 'rgba(255,140,70,.6)' : 'rgba(255,120,60,.35)'; ctx.lineWidth = hs ? 2.5 : 2;
+    ctx.beginPath(); ctx.moveTo(W - 26, y); ctx.lineTo(BIRD_X + 20, y); ctx.stroke(); ctx.setLineDash([]);
+    if (on) {
+      ctx.lineJoin = 'round'; ctx.fillStyle = '#ff7a3a'; ctx.strokeStyle = '#2a1006'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(W - 6, y - 13); ctx.lineTo(W - 30, y); ctx.lineTo(W - 6, y + 13); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  if (x > W + 30) return;
+  ctx.save(); ctx.translate(x, y);
+  const tm = stt();
+  for (let i = 0; i < 5; i++) {   // flames streaming behind it (it flies to the left)
+    const fx = h.w + 4 + i * 11, fy = Math.sin(tm * 16 + i * 1.3 + h.ph) * 3, r = 9 - i * 1.4;
+    ctx.fillStyle = i < 2 ? 'rgba(255,200,90,.9)' : i < 4 ? 'rgba(255,120,40,.75)' : 'rgba(200,50,20,.5)';
+    ctx.beginPath(); ctx.ellipse(fx, h.h / 2 + fy, r * 1.5, r, 0, 0, TAU); ctx.fill();
+  }
+  ctx.fillStyle = '#4a2a18';
+  ctx.beginPath(); rrect(0, 0, h.w, h.h, 8); ctx.fill();
+  ctx.fillStyle = '#2a170d'; ctx.fillRect(10, 2, 3, h.h - 4); ctx.fillRect(26, 2, 3, h.h - 4);
+  const gl = ctx.createRadialGradient(4, h.h / 2, 1, 4, h.h / 2, 16);
+  gl.addColorStop(0, 'rgba(255,230,140,1)'); gl.addColorStop(1, 'rgba(255,120,40,0)');
+  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(4, h.h / 2, 16, 0, TAU); ctx.fill();
+  ctx.restore();
+}
+function drawAsteroid(s) {
+  if (s.state === 'warn') {
+    const k = s.t / s.warn, on = Math.floor(s.t / 0.12) % 2 === 0;
+    ctx.save();
+    ctx.setLineDash([4, 6]); ctx.strokeStyle = 'rgba(255,110,60,' + (0.25 + 0.25 * k).toFixed(2) + ')'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(s.x, 0); ctx.lineTo(s.x, s.y - 20); ctx.stroke();
+    ctx.setLineDash([5, 5]); ctx.strokeStyle = 'rgba(255,110,60,' + (0.3 + 0.35 * k).toFixed(2) + ')';
+    ctx.beginPath(); ctx.arc(s.x, s.y, 40, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(255,90,40,' + (0.06 + 0.12 * k).toFixed(3) + ')';
+    ctx.beginPath(); ctx.arc(s.x, s.y, 40, 0, TAU); ctx.fill();
+    const rr = 5 + 7 * k, g = ctx.createRadialGradient(s.x, 10, 1, s.x, 10, rr * 3);   // the rock, small and far off, glowing
+    g.addColorStop(0, 'rgba(255,200,120,.9)'); g.addColorStop(1, 'rgba(255,90,30,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(s.x, 10, rr * 3, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#3b2420'; ctx.beginPath(); ctx.arc(s.x, 10, rr, 0, TAU); ctx.fill();
+    if (on) {
+      ctx.lineJoin = 'round';
+      ctx.fillStyle = '#ff7a3a'; ctx.strokeStyle = '#2a1006'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(s.x, s.y - 17); ctx.lineTo(s.x + 16, s.y + 12); ctx.lineTo(s.x - 16, s.y + 12); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#2a1006'; ctx.fillRect(s.x - 1.8, s.y - 7, 3.6, 10); ctx.beginPath(); ctx.arc(s.x, s.y + 7.5, 2.1, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  } else if (s.pts) {
+    const a = 1 - s.t / 0.45, fy = s.y * easeOut(Math.min(1, s.t / 0.12));
+    ctx.save();
+    const tg = ctx.createLinearGradient(0, -20, 0, fy);
+    tg.addColorStop(0, 'rgba(255,120,40,0)'); tg.addColorStop(1, 'rgba(255,210,120,' + (0.9 * a).toFixed(3) + ')');
+    ctx.strokeStyle = tg; ctx.lineWidth = 12; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(s.x, -20); ctx.lineTo(s.x, fy); ctx.stroke();
+    if (s.t < 0.14) { ctx.fillStyle = '#3b2420'; ctx.beginPath(); ctx.arc(s.x, fy, 12, 0, TAU); ctx.fill(); }
+    const e = clamp((s.t - 0.08) / 0.3, 0, 1);
+    const g = ctx.createRadialGradient(s.x, s.y, 2, s.x, s.y, 54);
+    g.addColorStop(0, 'rgba(255,240,190,' + (0.85 * a).toFixed(3) + ')'); g.addColorStop(0.5, 'rgba(255,120,40,' + (0.5 * a).toFixed(3) + ')'); g.addColorStop(1, 'rgba(255,80,20,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(s.x, s.y, 54, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,170,80,' + (0.8 * a).toFixed(3) + ')'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(s.x, s.y, 14 + 34 * e, 0, TAU); ctx.stroke();
+    ctx.restore();
+  }
+}
+function drawLava() {
+  const WC = scn().water, tm = stt();
+  const gg = ctx.createLinearGradient(0, WATER - 70, 0, WATER);
+  gg.addColorStop(0, 'rgba(255,120,40,0)'); gg.addColorStop(1, 'rgba(255,120,40,' + (0.2 + 0.05 * Math.sin(tm * 2)).toFixed(3) + ')');
+  ctx.fillStyle = gg; ctx.fillRect(-20, WATER - 70, W + 40, 72);
+  waveLayer(WATER, 3, 30, 0.8, 0, mix(WC[0], WC[1], 0.35 + 0.4 * pS));
+  waveLayer(WATER + 9, 2.5, 22, -1.1, 2, mix(WC[2], WC[3], 0.3 + 0.5 * pS));
+  ctx.fillStyle = 'rgba(40,10,6,.5)';   // dark crust drifting on the lava
+  for (let i = 0; i < 7; i++) {
+    const x = wrapX(i * 71 - tm * (14 + (i % 3) * 5) + 30, W + 160), y = WATER + 15 + (i % 3) * 9 + Math.sin(tm * 0.9 + i) * 1.5;
+    ctx.beginPath(); ctx.ellipse(x, y, 20 + (i % 4) * 7, 3.6, 0, 0, TAU); ctx.fill();
+  }
+  ctx.strokeStyle = 'rgba(255,205,100,.45)'; ctx.lineWidth = 1.4; ctx.beginPath();   // bright seams between the plates
+  for (let i = 0; i < 6; i++) {
+    const x = wrapX(i * 83 - tm * 20 + 10, W + 160), y = WATER + 11 + (i % 3) * 10;
+    ctx.moveTo(x - 14, y); ctx.lineTo(x - 4, y + 2); ctx.lineTo(x + 6, y - 1); ctx.lineTo(x + 16, y + 1);
+  }
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,214,130,.55)'; ctx.lineWidth = 1.5;   // bubbles popping
+  for (let i = 0; i < 5; i++) {
+    const ph = (tm * 0.7 + i * 0.31) % 1, x = (i * 83 + 24 * Math.sin(i * 2.1)) % W, r = 1.5 + 3.5 * Math.sin(Math.PI * ph);
+    ctx.beginPath(); ctx.arc(x < 0 ? x + W : x, WATER + 8 + (i % 3) * 6, r, 0, TAU); ctx.stroke();
+  }
+  const g = ctx.createLinearGradient(0, WATER, 0, H);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.45)');
+  ctx.fillStyle = g; ctx.fillRect(-20, WATER, W + 40, H - WATER + 20);
+}
+function drawSceneL2() {
+  if (state === 'finale' || state === 'dry') return;
+  const st = stt(), dark = 1 - pS * 0.35;
+  const hg = ctx.createLinearGradient(0, WATER - 230, 0, WATER);
+  hg.addColorStop(0, 'rgba(255,100,40,0)'); hg.addColorStop(1, 'rgba(255,110,40,' + (0.16 + 0.03 * week).toFixed(3) + ')');
+  ctx.fillStyle = hg; ctx.fillRect(-20, WATER - 230, W + 40, 232);
+  if (week >= 4) {   // the blood moon
+    const mx = W * 0.24, my = 128 + Math.sin(st * 0.2) * 3, a = clamp(0.5 + 0.45 * nS, 0, 1);
+    const mg = ctx.createRadialGradient(mx, my, 20, mx, my, 120);
+    mg.addColorStop(0, 'rgba(210,40,30,' + (0.45 * a).toFixed(3) + ')'); mg.addColorStop(1, 'rgba(210,40,30,0)');
+    ctx.fillStyle = mg; ctx.fillRect(mx - 130, my - 130, 260, 260);
+    ctx.globalAlpha = a; ctx.fillStyle = '#b01e1a'; ctx.beginPath(); ctx.arc(mx, my, 27, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(90,10,10,.35)'; ctx.beginPath(); ctx.arc(mx - 8, my - 6, 6, 0, TAU); ctx.arc(mx + 9, my + 8, 4.5, 0, TAU); ctx.arc(mx + 6, my - 12, 3, 0, TAU); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+  const ridge = (off, h, base, col, ph) => {
+    ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(-20, WATER + 12);
+    for (let x = -20; x <= W + 20; x += 8) {
+      const a = (x + off) / W * TAU, v = 0.5 + 0.28 * Math.sin(a * 2 + ph) + 0.2 * Math.sin(a * 3 + ph * 1.7) + 0.12 * Math.sin(a * 5 + ph * 0.6);
+      ctx.lineTo(x, base - h * v);
+    }
+    ctx.lineTo(W + 20, WATER + 12); ctx.closePath(); ctx.fill();
+  };
+  ridge(st * 4, 150, WATER - 4, 'rgba(78,26,22,' + (0.55 * dark + 0.1).toFixed(3) + ')', 0.7);
+  if (week >= 2) {   // a burning mountain with a river of lava and a plume of smoke
+    const vx = wrapX(W * 0.78 - st * 3, W + 260) + 40, vb = WATER - 6, vt = WATER - 150 - 6 * week;
+    ctx.fillStyle = 'rgba(48,16,14,' + (0.8 * dark + 0.1).toFixed(3) + ')';
+    ctx.beginPath(); ctx.moveTo(vx - 110, vb + 8); ctx.lineTo(vx - 18, vt); ctx.lineTo(vx + 18, vt); ctx.lineTo(vx + 110, vb + 8); ctx.closePath(); ctx.fill();
+    const cg = ctx.createRadialGradient(vx, vt, 2, vx, vt, 46);
+    cg.addColorStop(0, 'rgba(255,200,100,.9)'); cg.addColorStop(1, 'rgba(255,100,30,0)');
+    ctx.fillStyle = cg; ctx.fillRect(vx - 50, vt - 50, 100, 100);
+    ctx.strokeStyle = 'rgba(255,150,60,.75)'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(vx + 4, vt + 4); ctx.quadraticCurveTo(vx + 20 + Math.sin(st) * 2, (vt + vb) / 2, vx + 46, vb); ctx.stroke();
+    ctx.fillStyle = 'rgba(60,40,40,.35)';
+    for (let i = 0; i < 4; i++) { const f = ((st * 0.18 + i * 0.27) % 1); ctx.beginPath(); ctx.arc(vx + f * 50 + Math.sin(st + i) * 6, vt - f * 90, 10 + f * 22, 0, TAU); ctx.fill(); }
+  }
+  ridge(st * 10, 100, WATER - 1, 'rgba(38,12,10,' + (0.7 * dark + 0.12).toFixed(3) + ')', 2.9);
+  if (week === 3) {   // a great star burning like a lamp: slow falling streaks across the sky
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 3; i++) {
+      const f = (st * 0.07 + i * 0.34) % 1, x = lerp(W + 40, -60, f), y = 30 + i * 70 + f * 160;
+      const g = ctx.createLinearGradient(x, y, x + 70, y - 38);
+      g.addColorStop(0, 'rgba(255,230,170,.85)'); g.addColorStop(1, 'rgba(255,120,50,0)');
+      ctx.strokeStyle = g; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 70, y - 38); ctx.stroke();
+    }
+  }
+  if (week === 6 && !boss) {   // far off, the dragon circles
+    const x = wrapX(W * 0.95 - st * 12, W + 220) + 60, y = 88 + 12 * Math.sin(st * 0.7);
+    drawDragon(x, y, { scale: 0.34, wing: st * 2.2, alpha: 0.55 });
+  }
+}
+// a dragon facing left: head at (hx, hy), the body trailing off to the right. o: scale, wing (flap phase), open (mouth 0..1), alpha, rot
+function drawDragon(hx, hy, o) {
+  o = o || {};
+  const sc = o.scale || 1, wp = o.wing || 0, open = clamp(o.open || 0, 0, 1), n = 9, tm = stt();
+  ctx.save(); ctx.translate(hx, hy); ctx.scale(sc, sc);
+  if (o.rot) ctx.rotate(o.rot);
+  if (o.alpha !== undefined) ctx.globalAlpha = o.alpha;
+  const seg = [];
+  for (let i = 0; i <= n; i++) seg.push([i * 17 + 10, Math.sin(tm * 3 + i * 0.7) * (1.5 + i * 1.3), 19 - i * 1.5]);
+  const flap = Math.sin(wp), sx = seg[2][0], sy = seg[2][1];
+  ctx.fillStyle = '#6e1410'; ctx.strokeStyle = '#d4553c'; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(sx - 6, sy - 8); ctx.lineTo(sx + 6, sy - 64 - 24 * flap);
+  ctx.quadraticCurveTo(sx + 44, sy - 74 - 28 * flap, sx + 92, sy - 38 - 20 * flap);
+  ctx.quadraticCurveTo(sx + 66, sy - 32 - 6 * flap, sx + 70, sy - 14);
+  ctx.quadraticCurveTo(sx + 44, sy - 26 - 4 * flap, sx + 40, sy - 8);
+  ctx.quadraticCurveTo(sx + 20, sy - 18, sx + 12, sy - 6);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  for (let i = n; i >= 0; i--) {
+    const q = seg[i];
+    if (i % 2 === 1) { ctx.fillStyle = '#3a0d0a'; ctx.beginPath(); ctx.moveTo(q[0] - 5, q[1] - q[2] + 3); ctx.lineTo(q[0], q[1] - q[2] - 8); ctx.lineTo(q[0] + 5, q[1] - q[2] + 3); ctx.closePath(); ctx.fill(); }
+    ctx.fillStyle = '#8f1d16'; ctx.beginPath(); ctx.arc(q[0], q[1], q[2], 0, TAU); ctx.fill();
+    ctx.fillStyle = '#d9784f'; ctx.beginPath(); ctx.ellipse(q[0], q[1] + q[2] * 0.45, q[2] * 0.75, q[2] * 0.4, 0, 0, TAU); ctx.fill();
+  }
+  ctx.fillStyle = '#9c2218'; ctx.beginPath(); ctx.ellipse(0, 0, 26, 19, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#a82a1e';
+  ctx.beginPath(); ctx.moveTo(-8, -11); ctx.lineTo(-44, -6); ctx.lineTo(-46, 3); ctx.lineTo(-10, 5); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#7e1a12';
+  ctx.beginPath(); ctx.moveTo(-8, 7); ctx.lineTo(-42, 9 + open * 16); ctx.lineTo(-38, 14 + open * 16); ctx.lineTo(-6, 15); ctx.closePath(); ctx.fill();
+  if (open > 0.05) {
+    const g = ctx.createRadialGradient(-40, 8, 1, -40, 8, 30);
+    g.addColorStop(0, 'rgba(255,210,110,' + (0.9 * open).toFixed(3) + ')'); g.addColorStop(1, 'rgba(255,100,30,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(-40, 8, 30, 0, TAU); ctx.fill();
+  }
+  ctx.fillStyle = '#f4efe0';
+  for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(-18 - i * 7, 5); ctx.lineTo(-15 - i * 7, 5 + 5); ctx.lineTo(-21 - i * 7, 5); ctx.closePath(); ctx.fill(); }
+  ctx.strokeStyle = '#e8d9b0'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(6, -14); ctx.quadraticCurveTo(22, -34, 40, -30); ctx.moveTo(-2, -16); ctx.quadraticCurveTo(10, -38, 28, -40); ctx.stroke();
+  ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.ellipse(-14, -6, 5, 3.4, -0.2, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#1a0806'; ctx.fillRect(-15, -9, 2, 6);
+  ctx.restore();
+}
 function drawFount(h) {
   const cx = h.x + h.w / 2, e = h.cur / h.H;
   const day = pS;
@@ -4526,6 +5688,7 @@ function waveLayer(y0, amp, len, spd, off, color) {
   ctx.fillStyle = color; ctx.fill();
 }
 function drawWater() {
+  if (lvl === 2) { drawLava(); return; }
   const WC = scn().water, wv = week === 3 ? 1.35 : week === 5 ? 1.7 : 1;
   waveLayer(WATER, 4 * wv, 22, 1.4, 0, mix(WC[0], WC[1], pS));
   waveLayer(WATER + 9, 3 * wv, 17, -1.9, 2, mix(WC[2], WC[3], pS));
@@ -4596,7 +5759,13 @@ function drawPlayer() {
     ctx.stroke();
   }
   const fx = (dead && causeKind === 'strike') ? { burn: burn, flash: stunT > 0 && fallT < 0.12 } : (hurtT > 0 && hurtKind === 'strike' && state === 'play') ? { burn: Math.min(0.85, hurtT / 1.6) } : null;
-  drawBird(ctx, charKey, bird.x, bird.y, bird.rot, wing, k, bird.sprig, alpha, fx);
+  drawBird(ctx, charKey, bird.x, bird.y, bird.rot, wing, k, bird.sprig, alpha, fx, lookIdx(charKey));
+  if (charKey === 'babydragon' && lvl === 2 && state === 'play' && !mp) {   // a thin ring fills while Ember Puff recharges, and glows when it is ready
+    const rr = hitR() + 13, ready = puffT <= 0;
+    ctx.save(); ctx.lineWidth = 2; ctx.lineCap = 'round';
+    ctx.strokeStyle = ready ? 'rgba(255,170,70,' + (0.55 + 0.35 * Math.sin(t * 8)).toFixed(2) + ')' : 'rgba(255,170,70,.35)';
+    ctx.beginPath(); ctx.arc(bird.x, bird.y, rr, -Math.PI / 2, -Math.PI / 2 + TAU * (ready ? 1 : 1 - puffT / PUFF_CD)); ctx.stroke(); ctx.restore();
+  }
   if (mp) {
     if (state === 'finale' && fin && fin.perched) nameTag(bird.x, bird.y + BIRDS[charKey].r + 15 + (mySlot() % 2) * 14, myName() + ' (you)', 'rgba(246,201,120,.95)');
     else nameTag(bird.x, bird.y - BIRDS[charKey].r - 12, myName() + ' (you)', 'rgba(246,201,120,.95)');
@@ -4620,18 +5789,19 @@ function drawMates() {
     const v = mp.vis[m.peer];
     if (state === 'finale' && fin && s === 'rest') {
       const sp = fin.kind === 'end' ? armSpot(i, 112) : perchSpot(i, 112);
-      if (fin.t > 5.5) { drawBird(ctx, key, sp[0], sp[1], 0, -0.35, 1, false, 0.95); nameTag(sp[0], sp[1] + BIRDS[key].r + 15 + (i % 2) * 14, nm, 'rgba(255,255,255,.9)'); }
+      if (fin.t > 5.5) { drawBird(ctx, key, sp[0], sp[1], 0, -0.35, 1, false, 0.95, null, m.p.k | 0); nameTag(sp[0], sp[1] + BIRDS[key].r + 15 + (i % 2) * 14, nm, 'rgba(255,255,255,.9)'); }
       return;
     }
     if (s !== 'alive' || !v) return;
     if (state !== 'play' && state !== 'ready' && state !== 'dying' && state !== 'spectate' && state !== 'depart') return;
     const nP = mp.list.length, x = BIRD_X + (i - me) * (nP <= 4 ? 18 : Math.max(6, 54 / (nP - 1))), vy = +m.p.v || 0;
     const wing = Math.sin(t * (vy < -40 ? 30 : 5) + i) * 0.7 + 0.15;
-    drawBird(ctx, key, x, v.y, clamp(vy * 0.0017, -0.5, 1.15), wing, 1, false, 0.7);
+    drawBird(ctx, key, x, v.y, clamp(vy * 0.0017, -0.5, 1.15), wing, 1, false, 0.7, null, m.p.k | 0);
     if (nP <= 6) nameTag(x, v.y - BIRDS[key].r - 12, nm, 'rgba(255,255,255,.85)');
   });
 }
 function drawStrike(s) {
+  if (s.ast) { drawAsteroid(s); return; }
   if (s.state === 'warn') {
     const on = Math.floor(s.t / 0.12) % 2 === 0, k = s.t / s.warn;
     ctx.save();
@@ -4688,20 +5858,24 @@ function draw() {
     else if (h.type === 'gust') drawGust(h);
     else if (h.type === 'debris') drawDebris(h);
     else if (h.type === 'tree') drawTree(h);
+    else if (h.type === 'pillar') drawPillar(h);
+    else if (h.type === 'cpillar') drawCPillar(h);
+    else if (h.type === 'brand') { if (!h.burnt) drawBrand(h); }
     else if (h.type === 'fog') continue;   // drawn on top of everything else, below
     else { drawTelegraph(h); if (h.launched) drawCreature(h); }
   }
   drawFog();
   for (const o of orbs) drawOrb(o);
   for (const l of leaves) drawLeaf(l);
+  if (boss) drawBoss();
   drawMates();
   drawPlayer();
   drawWater();
   drawSceneFront();
-  if (nS > 0.01) { ctx.fillStyle = 'rgba(4,8,26,' + (0.2 * nS).toFixed(3) + ')'; ctx.fillRect(-20, -20, W + 40, H + 40); }
+  if (nS > 0.01) { ctx.fillStyle = (lvl === 2 ? 'rgba(26,6,8,' : 'rgba(4,8,26,') + (0.2 * nS).toFixed(3) + ')'; ctx.fillRect(-20, -20, W + 40, H + 40); }
   drawParticles();
   const sc = scn();
-  let ri = state === 'dry' ? 0 : Math.max(1 - pS, sc.rainFloor);
+  let ri = state === 'dry' || lvl === 2 ? 0 : Math.max(1 - pS, sc.rainFloor);
   if (fin && fin.kind === 'rest') ri = fin.wk === 2 ? Math.max(ri, 0.95) * (1 - smooth(clamp((fin.t - 5.6) / 2.4, 0, 1))) : ri * (1 - smooth(clamp((fin.t - 0.8) / 3.5, 0, 1)));   // the rain eases off at a rest stop (Week 2: it stops on the fortieth day)
   if (ri > 0.02) {
     ctx.strokeStyle = 'rgba(200,215,235,' + (0.42 * ri).toFixed(3) + ')';
@@ -4737,12 +5911,26 @@ function frame(ts) {
 
 function pickBird(k) {
   if (!BIRDS[k] || isLocked(k)) return;
+  if (mp && soloOnly(k)) { setCap('Solo only for now.', 1800); return; }
+  if (k === charKey && SKINS[k]) {   // tapping the bird you already wear changes its look
+    ensureAudio();
+    const cur = lookIdx(k); let nx = -1;
+    for (let j = 1; j <= NLOOK; j++) { const c2 = (cur + j) % NLOOK; if (c2 !== cur && lookOpen(k, c2)) { nx = c2; break; } }
+    if (nx < 0) { const g = LOOK_GOALS[1]; setCap('Next look: ' + g.text + ' (' + lookProg(k, 1) + ')', 2600); return; }
+    looks[k] = nx; store.set('look', looks);
+    if (mp) mpSet({ k: nx });
+    renderCards(); renderMinis(); birdInfoText(k);
+    setCap(lookName(k, nx) + ' ' + BIRDS[k].name + (nx === 0 ? '' : '  \u00b7  next: tap again'), 1800);
+    tone(700, 0.08, 'sine', 0.05); tone(930, 0.1, 'sine', 0.04, 0.07);
+    return;
+  }
   ensureAudio();
   charKey = k; store.set('char', charKey);
   [cards, lcards].forEach(box => Array.prototype.forEach.call(box.children, x => x.setAttribute('aria-pressed', String(x.dataset.k === k))));
   birdInfoText(k);
   tone(600, 0.08, 'sine', 0.05);
-  if (mp) mpSet({ c: charKey });
+  if (mp) mpSet({ c: charKey, k: lookIdx(charKey) });
+  if (SKINS[k]) { let n = 0; for (let j = 1; j < NLOOK; j++) if (lookOpen(k, j)) n++; if (n > 0) tipOnce('looks', 'Tap the bird you are wearing again to change its look.'); }
 }
 
 /* ---------- medals ---------- */
@@ -4865,6 +6053,7 @@ function checkMedals(silent) {
   if (got) { store.set('md', md); if (mq.length) pumpMedalToast(); if (!silent) playersSoon(); }
 }
 function mev(k, a) {
+  if (lvl !== 1) return;   // medals belong to Level 1 for now
   switch (k) {
     case 'fly': {
       ms.fly++;
@@ -5380,7 +6569,7 @@ function homeDraw(afk) {
   if (hb.mode === 'away') return;
   c.save();
   c.translate(hb.x, hb.y); c.scale(hb.dir, 1);
-  drawBird(c, hb.key, 0, 0, hb.rot, hb.wing, hb.k, false, 1);
+  drawBird(c, hb.key, 0, 0, hb.rot, hb.wing, hb.k, false, 1, null, lookIdx(hb.key));
   c.restore();
   if (hb.mode === 'sleep') {
     hb.sleepZ = (hb.sleepZ || 0) + 0.016;
@@ -5425,6 +6614,8 @@ function init() {
   cards.addEventListener('click', e => { const b = e.target.closest('.card'); if (!b) return; if (isLocked(b.dataset.k)) { birdInfoText(b.dataset.k); return; } pickBird(b.dataset.k); });
   lcards.addEventListener('click', e => { const b = e.target.closest('.mini'); if (b && !b.disabled) pickBird(b.dataset.k); });
   document.querySelectorAll('#diffSeg .segb').forEach(b => b.addEventListener('click', () => setDiff(b.dataset.d)));
+  document.querySelectorAll('#lvlSeg .segb').forEach(b => b.addEventListener('click', () => pickLevel(+b.dataset.l)));
+  setLevelUi();
   setDiff(diff);
   $('#go').addEventListener('click', () => beginReady(false));
   $('#goSolo').addEventListener('click', () => { ensureAudio(); setPanels('menu'); renderCards(); updateResumeUi(); });
