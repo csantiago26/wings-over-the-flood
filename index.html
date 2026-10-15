@@ -526,7 +526,7 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
       <div class="leafhud" id="leafHud" hidden aria-label="Olive leaves this week"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20C3 10 9 4 21 3c0 11-6 17-16 17z" fill="#8fbf5a" stroke="#d9e8a8" stroke-width="1.4"/><path d="M3.5 20.5C9 14 13 10.5 18 6.5" fill="none" stroke="#3f6b2a" stroke-width="1.4" stroke-linecap="round"/></svg><b id="leafN">0</b><span id="leafMax">/5</span></div>
       <button class="cpb" id="cpb" type="button" tabindex="-1" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></svg><span id="cpbT">Checkpoint</span></button>
       <div class="hint" id="hint"><b id="hintB">Tap to flap</b><span id="hintS">Space or Up Arrow works too</span><span class="hintV" id="hintV"></span><span id="hintT">Grab glowing orbs for power-ups. Grab the same one again and again for a MEGA boost.</span></div>
-      <div class="bossbar" id="bossBar" hidden><span>The great red dragon</span><i><b id="bossFill"></b></i></div>
+      <div class="bossbar" id="bossBar" hidden><span id="bossName">The great red dragon</span><i><b id="bossFill"></b></i></div>
       <div class="oops" id="oops" aria-live="assertive"><b id="oopsB"></b><span id="oopsS"></span></div>
       <div class="cap" id="cap" aria-live="polite"></div>
     </div>
@@ -558,9 +558,10 @@ input.code { text-transform: uppercase; letter-spacing: .3em; text-align: center
         <p class="birdinfo" id="birdInfo" aria-live="polite"></p>
       </div>
       <div class="diffbox" id="lvlBox">
-        <div class="seg two" id="lvlSeg" role="radiogroup" aria-label="Level">
-          <button type="button" class="segb" role="radio" data-l="1">1 &middot; The Flood</button>
-          <button type="button" class="segb" role="radio" data-l="2">2 &middot; The Fire</button>
+        <div class="seg" id="lvlSeg" role="radiogroup" aria-label="Level">
+          <button type="button" class="segb" role="radio" data-l="1">1 &middot; Flood</button>
+          <button type="button" class="segb" role="radio" data-l="2">2 &middot; Fire</button>
+          <button type="button" class="segb" role="radio" data-l="3">3 &middot; Dark</button>
         </div>
       </div>
       <div class="diffbox">
@@ -1089,9 +1090,9 @@ const store = {
   set(k, v) { try { localStorage.setItem('wotf-' + k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
 };
 
-let lvl = 1;   // 1 = The Flood, 2 = The Fire
-let boss = null;   // the dragon at the end of Level 2, while the fight is on
-const sk = k => (lvl === 2 ? 'l2-' + k : k);   // each level keeps its own records, so Level 2 never touches Level 1's
+let lvl = 1;   // 1 = The Flood, 2 = The Fire, 3 = The Darkness
+let boss = null;   // the dragon at the end of Level 2 / the Great Darkness at the end of Level 3, while the fight is on
+const sk = k => (lvl >= 2 ? 'l' + lvl + '-' + k : k);   // each level keeps its own records, so Level 2 never touches Level 1's and Level 3 never touches either
 
 document.querySelectorAll('.nd').forEach(n => { n.textContent = NDAYS; });
 document.querySelectorAll('.nw').forEach(n => { n.textContent = NWEEKS; });
@@ -1113,12 +1114,17 @@ const BIRDS = {
   dragonfly:   { name: 'Dragonfly',   desc: 'Heat Sense: brand lanes stay lit to you.',   r: 9,  g: 1300, flap: -372, fall: 'spiral', insect: 'dragonfly', body: '#e2452b', belly: '#ffb347', wing: '#ffecc8', wingTip: '#8a3a12', beak: '#2b1208', eye: '#ffb02e', solo: true, card: { k: 1.55, cx: 66 } },
   phoenix:     { name: 'Phoenix',     desc: 'Rebirth: once a week, it rises from a lost last heart.',       r: 14, g: 1390, flap: -420, fall: 'spiral', phoenix: true, glow: true, glowRGB: '255,138,50', body: '#e8452a', belly: '#ffb347', wing: '#ff7a2a', wingTip: '#ffd23a', beak: '#f6c244', eye: '#2a0f08', head: '#ff5a2e', tail: '#ff9d1a', wingK: 1.15, solo: true, verse: '“For a just man falleth seven times, and riseth up again…” Proverbs 24:16', card: { k: 0.8, cx: 70, cy: 50 } },
   firefly:     { name: 'Firefly',     desc: 'Lights the way: 3 helpers, 2 on Hard, 1 on Impossible.', r: 10, g: 1280, flap: -365, fall: 'leaf', insect: 'firefly', body: '#3b2a1a', belly: '#e6ff6e', wing: '#e1eeff', wingTip: '#3b2a1a', beak: '#2a1d12', eye: '#ffffff', solo: true, card: { k: 1.3, cx: 60 } },
-  babydragon:  { name: 'Baby Dragon', desc: 'Ember Puff: every 15 s it burns away the next flying brand.', r: 15, g: 1360, flap: -405, fall: 'bounce', creature: 'dragonet', body: '#63b872', belly: '#f3dca0', wing: '#ff9a3c', wingTip: '#c25a1a', beak: '#f3dca0', eye: '#1a1208', solo: true, card: { k: 0.76, cx: 62, cy: 54 } }
+  babydragon:  { name: 'Baby Dragon', desc: 'Ember Puff: every 15 s it burns away the next flying brand.', r: 15, g: 1360, flap: -405, fall: 'bounce', creature: 'dragonet', body: '#63b872', belly: '#f3dca0', wing: '#ff9a3c', wingTip: '#c25a1a', beak: '#f3dca0', eye: '#1a1208', solo: true, card: { k: 0.76, cx: 62, cy: 54 } },
+  // Level 3 characters: earned in Level 3, solo only like the Level 2 ones
+  owl:         { name: 'Owl',         desc: 'Night Sight: your lantern shines 30% wider in Level 3.', r: 14, g: 1400, flap: -400, fall: 'leaf', owl: true, body: '#8a6a47', belly: '#ecdcb9', wing: '#6a4d33', wingTip: '#3f2c1b', beak: '#e0a43a', eye: '#ffcf3a', solo: true, verse: '\u201cYea, the darkness hideth not from thee; but the night shineth as the day\u2026\u201d Psalm 139:12', card: { k: 1.2, cx: 56, cy: 46 } },
+  cherub:      { name: 'Cherub',      desc: 'Radiant: its lantern never shrinks, and the light wounds the Great Darkness 50% more.', r: 13, g: 1350, flap: -398, fall: 'spiral', cherub: true, glow: true, glowRGB: '255,236,160', body: '#fbf3df', belly: '#ffffff', wing: '#f4ead2', wingTip: '#d9c48a', beak: '#f2b8a0', eye: '#4a3320', head: '#f2cd6a', solo: true, verse: '\u201cAnd he rode upon a cherub, and did fly: yea, he did fly upon the wings of the wind.\u201d Psalm 18:10', card: { k: 1.2, cx: 56, cy: 46 } }
 };
-const ORDER = ['dove', 'sparrow', 'raven', 'eagle', 'butterfly', 'bee', 'ladybug', 'hummingbird', 'golden', 'dragonfly', 'firefly', 'phoenix', 'babydragon'];
+const ORDER = ['dove', 'sparrow', 'raven', 'eagle', 'butterfly', 'bee', 'ladybug', 'hummingbird', 'golden', 'dragonfly', 'firefly', 'phoenix', 'babydragon', 'owl', 'cherub'];
 // how the extra birds are earned; lifetime numbers live in `ach`
 // Level 2 keeps its own week records (wotf-l2-wd); a week counts as cleared at 8
 const l2Cleared = w => { let a = null; try { a = store.get('l2-wd', []); } catch (e) { /* ignore */ } return Array.isArray(a) && (a[w - 1] || 0) >= 8; };
+// Level 3 keeps its own week records too (wotf-l3-wd)
+const l3Cleared = w => { let a = null; try { a = store.get('l3-wd', []); } catch (e) { /* ignore */ } return Array.isArray(a) && (a[w - 1] || 0) >= 8; };
 const UNLOCKS = {
   golden:      { need: 3,    text: 'Clear Week 3.',                                 prog: () => [1, 2, 3].filter(w => ms.wc[w]).length + '/3 weeks' },
   ladybug:     { need: 100,  text: 'Slip past 100 lightning bolts by a hair.',      prog: () => Math.min(100, ach.close || 0) + '/100' },
@@ -1128,7 +1134,9 @@ const UNLOCKS = {
   dragonfly:   { need: 1,    text: 'Clear Week 2 of Level 2, The Fire.',            prog: () => (l2Cleared(2) ? 1 : 0) + '/1' },
   firefly:     { need: 1,    text: 'Clear Week 3 of Level 2, The Fire.',            prog: () => (l2Cleared(3) ? 1 : 0) + '/1' },
   phoenix:     { need: 1,    text: 'Clear Week 5 of Level 2, The Fire.',            prog: () => (l2Cleared(5) ? 1 : 0) + '/1' },
-  babydragon:  { need: 1,    text: 'Beat the dragon at the end of Level 2.',        prog: () => (l2Cleared(6) ? 1 : 0) + '/1' }
+  babydragon:  { need: 1,    text: 'Beat the dragon at the end of Level 2.',        prog: () => (l2Cleared(6) ? 1 : 0) + '/1' },
+  owl:         { need: 1,    text: 'Clear Week 3 of Level 3, The Darkness.',        prog: () => (l3Cleared(3) ? 1 : 0) + '/1' },
+  cherub:      { need: 1,    text: 'Beat the Great Darkness at the end of Level 3.', prog: () => (l3Cleared(6) ? 1 : 0) + '/1' }
 };
 const soloOnly = k => !!(BIRDS[k] && BIRDS[k].solo);
 
@@ -1149,7 +1157,9 @@ const SKINS = {
   dragonfly:   [{ n: 'Classic' }, { n: 'Azure', h: 190 }, { n: 'Emerald', h: 120 }, { n: 'Violet', h: -60, glow: '200,140,255' }],
   firefly:     [{ n: 'Classic' }, { n: 'Amber', h: -32 }, { n: 'Ice', h: 118 }, { n: 'Rose', h: -105, glow: '255,150,200' }],
   phoenix:     [{ n: 'Classic' }, { n: 'Blue Flame', h: 195 }, { n: 'Green Flame', h: 120 }, { n: 'Moonfire', h: 255, s: 0.9, l: 0.08, glow: '190,160,255' }],
-  babydragon:  [{ n: 'Classic' }, { n: 'Ember', h: -95 }, { n: 'Frost', h: 75 }, { n: 'Violet', h: 145, glow: '190,140,255' }]
+  babydragon:  [{ n: 'Classic' }, { n: 'Ember', h: -95 }, { n: 'Frost', h: 75 }, { n: 'Violet', h: 145, glow: '190,140,255' }],
+  owl:         [{ n: 'Classic' }, { n: 'Snowy', s: 0.12, l: 0.3 }, { n: 'Barn', h: -18, s: 1.2, l: 0.04 }, { n: 'Midnight', h: 205, s: 0.9, l: -0.08, glow: '150,170,255' }],
+  cherub:      [{ n: 'Classic' }, { n: 'Dawn', tint: '#ffc9a8', ta: 0.55, h: -20 }, { n: 'Sky', tint: '#a9d4ff', ta: 0.55, h: 150 }, { n: 'Starlight', tint: '#d9c9ff', ta: 0.6, h: 200, glow: '200,180,255' }]
 };
 const NLOOK = 4;
 // how a look is earned in solo (the stats are kept per character in ach.cs)
@@ -1231,6 +1241,8 @@ function checkUnlocks() {
   if (l2Cleared(3)) grantUnlock('firefly');
   if (l2Cleared(5)) grantUnlock('phoenix');
   if (l2Cleared(6)) grantUnlock('babydragon');
+  if (l3Cleared(3)) grantUnlock('owl');
+  if (l3Cleared(6)) grantUnlock('cherub');
   if (ms.wc[3]) grantUnlock('golden');
   if ((ms.pills || 0) >= UNLOCKS.bee.need) grantUnlock('bee');
   if ((ach.close || 0) >= UNLOCKS.ladybug.need) grantUnlock('ladybug');
@@ -1608,6 +1620,115 @@ function drawDragonet(c, key, x, y, rot, wing, k, sprig, alpha, fx) {
   c.restore();
 }
 
+// The Owl: round and soft, big flat face, two huge eyes, ear tufts, a short fanned tail
+function drawOwl(c, key, x, y, rot, wing, k, sprig, alpha, fx) {
+  const B = BIRDS[key], r = B.r * k;
+  const bu = fx && fx.burn ? fx.burn : 0, fl = !!(fx && fx.flash);
+  const cl = col => fl ? '#ffffff' : (bu > 0 ? mix(lk(col), '#15110d', Math.min(1, bu) * 0.88) : lk(col));
+  const tri = (x1, y1, x2, y2, x3, y3) => { c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.lineTo(x3, y3); c.closePath(); c.fill(); };
+  c.save(); c.translate(x, y); c.rotate(rot);
+  c.globalAlpha = alpha == null ? 1 : alpha;
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  // tail
+  c.fillStyle = cl(B.wing);
+  c.beginPath(); c.moveTo(-r * 0.6, r * 0.05); c.lineTo(-r * 1.75, -r * 0.2); c.lineTo(-r * 1.8, r * 0.3); c.lineTo(-r * 1.55, r * 0.75); c.lineTo(-r * 0.5, r * 0.65); c.closePath(); c.fill();
+  c.strokeStyle = cl(B.wingTip); c.lineWidth = r * 0.07;
+  c.beginPath(); c.moveTo(-r * 1.0, r * 0.1); c.lineTo(-r * 1.7, r * 0.05); c.moveTo(-r * 0.95, r * 0.4); c.lineTo(-r * 1.6, r * 0.52); c.stroke();
+  // far wing
+  c.save(); c.translate(-r * 0.15, -r * 0.3); c.rotate(-0.35 - wing * 0.8);
+  c.fillStyle = cl(B.wingTip);
+  c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(-r * 0.5, -r * 1.3, -r * 1.5, -r * 1.2); c.quadraticCurveTo(-r * 1.3, -r * 0.4, -r * 1.0, r * 0.05); c.closePath(); c.fill();
+  c.restore();
+  // body and belly
+  c.fillStyle = cl(B.body); c.beginPath(); c.ellipse(0, r * 0.12, r * 1.0, r * 0.92, 0, 0, TAU); c.fill();
+  c.fillStyle = cl(B.belly); c.beginPath(); c.ellipse(r * 0.3, r * 0.3, r * 0.62, r * 0.66, 0, 0, TAU); c.fill();
+  c.strokeStyle = cl(B.wingTip); c.lineWidth = r * 0.06;
+  c.beginPath(); for (let i = 0; i < 3; i++) { const cy = r * (0.02 + i * 0.3); c.moveTo(r * 0.0, cy); c.lineTo(r * 0.28, cy + r * 0.12); c.lineTo(r * 0.56, cy); } c.stroke();
+  // near wing
+  c.save(); c.translate(-r * 0.05, -r * 0.3); c.rotate(-0.15 - wing * 1.05);
+  c.fillStyle = cl(B.wing); c.strokeStyle = cl(B.wingTip); c.lineWidth = r * 0.07;
+  c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(-r * 0.6, -r * 1.55, -r * 1.9, -r * 1.4); c.quadraticCurveTo(-r * 1.75, -r * 0.55, -r * 1.5, r * 0.05); c.quadraticCurveTo(-r * 0.8, r * 0.5, 0, r * 0.35); c.closePath(); c.fill(); c.stroke();
+  c.beginPath(); c.moveTo(-r * 0.3, -r * 0.1); c.lineTo(-r * 1.5, -r * 0.9); c.moveTo(-r * 0.3, r * 0.15); c.lineTo(-r * 1.4, -r * 0.25); c.stroke();
+  c.restore();
+  // head: ear tufts, a pale face disc, two big eyes, a small hooked beak
+  const hx = r * 0.62, hy = -r * 0.62;
+  c.fillStyle = cl(B.body);
+  tri(hx - r * 0.5, hy - r * 0.35, hx - r * 0.62, hy - r * 0.98, hx - r * 0.1, hy - r * 0.62);
+  tri(hx + r * 0.1, hy - r * 0.62, hx + r * 0.5, hy - r * 0.98, hx + r * 0.62, hy - r * 0.3);
+  c.beginPath(); c.arc(hx, hy, r * 0.74, 0, TAU); c.fill();
+  c.fillStyle = cl(B.belly); c.beginPath(); c.ellipse(hx, hy + r * 0.04, r * 0.62, r * 0.55, 0, 0, TAU); c.fill();
+  c.strokeStyle = cl(B.wingTip); c.lineWidth = r * 0.05; c.beginPath(); c.arc(hx, hy + r * 0.04, r * 0.62, Math.PI * 0.08, Math.PI * 0.92); c.stroke();
+  const ex = [hx - r * 0.27, hx + r * 0.27];
+  if (bu > 0.4) {
+    c.strokeStyle = '#efe6d2'; c.lineWidth = r * 0.1; const d = r * 0.13;
+    c.beginPath(); ex.forEach(e => { c.moveTo(e - d, hy - d); c.lineTo(e + d, hy + d); c.moveTo(e + d, hy - d); c.lineTo(e - d, hy + d); }); c.stroke();
+  } else {
+    ex.forEach(e => {
+      c.fillStyle = fl ? '#ffffff' : cl(B.eye); c.strokeStyle = cl(B.wingTip); c.lineWidth = r * 0.04;
+      c.beginPath(); c.arc(e, hy, r * 0.25, 0, TAU); c.fill(); c.stroke();
+      c.fillStyle = fl ? '#ffffff' : '#15110d'; c.beginPath(); c.arc(e + r * 0.03, hy, r * 0.12, 0, TAU); c.fill();
+      c.fillStyle = '#ffffff'; c.beginPath(); c.arc(e - r * 0.02, hy - r * 0.07, r * 0.04, 0, TAU); c.fill();
+    });
+  }
+  c.fillStyle = cl(B.beak); tri(hx - r * 0.1, hy + r * 0.12, hx + r * 0.1, hy + r * 0.12, hx + r * 0.02, hy + r * 0.4);
+  if (sprig) drawSprig(c, hx + r * 0.5, hy + r * 0.45, r);
+  c.restore();
+}
+// The Cherub: a small flying child of light in a pale robe, a halo, and two large feathered wings
+function drawCherub(c, key, x, y, rot, wing, k, sprig, alpha, fx) {
+  const B = BIRDS[key], r = B.r * k;
+  const bu = fx && fx.burn ? fx.burn : 0, fl = !!(fx && fx.flash);
+  const cl = col => fl ? '#ffffff' : (bu > 0 ? mix(lk(col), '#15110d', Math.min(1, bu) * 0.88) : lk(col));
+  c.save(); c.translate(x, y); c.rotate(rot);
+  c.globalAlpha = alpha == null ? 1 : alpha;
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  if (B.glow && bu < 0.4 && !fl) {
+    const g = c.createRadialGradient(0, 0, r * 0.4, 0, 0, r * 2.8);
+    g.addColorStop(0, 'rgba(' + B.glowRGB + ',.5)'); g.addColorStop(1, 'rgba(' + B.glowRGB + ',0)');
+    c.fillStyle = g; c.beginPath(); c.arc(0, 0, r * 2.8, 0, TAU); c.fill();
+  }
+  const wings = (scale, ang, col, edge) => {
+    c.save(); c.translate(-r * 0.15, -r * 0.35); c.rotate(ang);
+    c.fillStyle = cl(col); c.strokeStyle = cl(edge); c.lineWidth = r * 0.06;
+    c.beginPath(); c.moveTo(0, 0);
+    c.quadraticCurveTo(-r * 0.4 * scale, -r * 1.7 * scale, -r * 1.5 * scale, -r * 1.9 * scale);
+    c.quadraticCurveTo(-r * 1.55 * scale, -r * 1.4 * scale, -r * 1.85 * scale, -r * 1.2 * scale);
+    c.quadraticCurveTo(-r * 1.75 * scale, -r * 0.8 * scale, -r * 2.05 * scale, -r * 0.55 * scale);
+    c.quadraticCurveTo(-r * 1.4 * scale, -r * 0.2 * scale, -r * 0.9 * scale, r * 0.1);
+    c.quadraticCurveTo(-r * 0.4 * scale, r * 0.35, 0, r * 0.25); c.closePath(); c.fill(); c.stroke();
+    c.beginPath(); c.moveTo(-r * 0.2, -r * 0.1); c.quadraticCurveTo(-r * 0.9 * scale, -r * 0.9 * scale, -r * 1.55 * scale, -r * 1.3 * scale);
+    c.moveTo(-r * 0.2, r * 0.02); c.quadraticCurveTo(-r * 1.0 * scale, -r * 0.4 * scale, -r * 1.7 * scale, -r * 0.7 * scale); c.stroke();
+    c.restore();
+  };
+  wings(0.9, 0.15 - wing * 0.95, B.wing, B.wingTip);   // far wing, then the near one
+  // trailing legs and feet
+  c.fillStyle = cl('#f2cdb4'); c.beginPath(); c.ellipse(-r * 1.1, r * 0.5, r * 0.3, r * 0.14, 0.5, 0, TAU); c.ellipse(-r * 0.95, r * 0.7, r * 0.28, r * 0.13, 0.7, 0, TAU); c.fill();
+  // robe
+  c.fillStyle = cl(B.body); c.strokeStyle = cl(B.wingTip); c.lineWidth = r * 0.05;
+  c.beginPath(); c.moveTo(r * 0.55, -r * 0.3); c.quadraticCurveTo(r * 0.7, r * 0.3, r * 0.25, r * 0.7); c.lineTo(-r * 1.05, r * 0.62); c.quadraticCurveTo(-r * 0.9, -r * 0.1, -r * 0.1, -r * 0.5); c.closePath(); c.fill(); c.stroke();
+  c.strokeStyle = cl('#e5d6a8'); c.lineWidth = r * 0.04; c.beginPath(); c.moveTo(-r * 0.1, r * 0.1); c.lineTo(-r * 0.85, r * 0.3); c.moveTo(r * 0.1, r * 0.3); c.lineTo(-r * 0.6, r * 0.52); c.stroke();
+  // arm reaching forward
+  c.strokeStyle = cl('#f2cdb4'); c.lineWidth = r * 0.22; c.beginPath(); c.moveTo(r * 0.35, -r * 0.12); c.quadraticCurveTo(r * 0.75, -r * 0.05, r * 1.0, -r * 0.3); c.stroke();
+  wings(1.0, -0.1 - wing * 1.05, B.wing, B.wingTip);
+  // head, hair, halo, face
+  const hx = r * 0.5, hy = -r * 0.85;
+  c.fillStyle = cl('#f4d5bc'); c.beginPath(); c.arc(hx, hy, r * 0.52, 0, TAU); c.fill();
+  c.fillStyle = cl(B.head); c.beginPath(); c.arc(hx - r * 0.05, hy - r * 0.12, r * 0.55, Math.PI * 0.95, Math.PI * 2.1); c.closePath(); c.fill();
+  [[-0.38, -0.05], [-0.1, -0.52], [0.25, -0.5], [-0.5, 0.2]].forEach(p => { c.beginPath(); c.arc(hx + r * p[0], hy + r * p[1], r * 0.17, 0, TAU); c.fill(); });
+  if (bu > 0.4) {
+    c.strokeStyle = '#efe6d2'; c.lineWidth = r * 0.08; const ex = hx + r * 0.2, d = r * 0.1;
+    c.beginPath(); c.moveTo(ex - d, hy - d); c.lineTo(ex + d, hy + d); c.moveTo(ex + d, hy - d); c.lineTo(ex - d, hy + d); c.stroke();
+  } else {
+    c.fillStyle = fl ? '#ffffff' : cl(B.eye); c.beginPath(); c.arc(hx + r * 0.22, hy + r * 0.0, r * 0.07, 0, TAU); c.fill();
+    c.fillStyle = cl('#f2a08c'); c.globalAlpha *= 0.6; c.beginPath(); c.arc(hx + r * 0.3, hy + r * 0.22, r * 0.1, 0, TAU); c.fill(); c.globalAlpha = alpha == null ? 1 : alpha;
+  }
+  if (!fl && bu < 0.4) {
+    c.strokeStyle = 'rgba(255,240,170,.95)'; c.lineWidth = r * 0.1; c.beginPath(); c.ellipse(hx - r * 0.02, hy - r * 0.78, r * 0.42, r * 0.12, -0.08, 0, TAU); c.stroke();
+  }
+  if (sprig) drawSprig(c, hx + r * 0.9, hy + r * 0.5, r);
+  c.restore();
+}
+
 // fx: { burn: 0..1 charred look, flash: true for a white-hot frame }
 function drawBird(c, key, x, y, rot, wing, k, sprig, alpha, fx, look) {
   look = look | 0; LOOKSK = look > 0 && SKINS[key] ? SKINS[key][look] || null : null; LOOKID = key + ':' + look + ':';
@@ -1620,6 +1741,8 @@ function drawBird(c, key, x, y, rot, wing, k, sprig, alpha, fx, look) {
   if (BIRDS[key].buzz) { drawHummer(c, key, x, y, rot, wing, k, sprig, alpha, fx); return; }
   if (BIRDS[key].phoenix) { drawPhoenix(c, key, x, y, rot, wing, k, sprig, alpha, fx); return; }
   if (BIRDS[key].creature) { drawDragonet(c, key, x, y, rot, wing, k, sprig, alpha, fx); return; }
+  if (BIRDS[key].owl) { drawOwl(c, key, x, y, rot, wing, k, sprig, alpha, fx); return; }
+  if (BIRDS[key].cherub) { drawCherub(c, key, x, y, rot, wing, k, sprig, alpha, fx); return; }
   const B = BIRDS[key], r = B.r * k;
   const bu = fx && fx.burn ? fx.burn : 0, fl = !!(fx && fx.flash);
   const cl = col => fl ? '#ffffff' : (bu > 0 ? mix(lk(col), '#15110d', Math.min(1, bu) * 0.88) : lk(col));
@@ -1790,13 +1913,13 @@ let daily = null;   // today's daily flight, when you are in it
 let practice = 0;   // a replay of a week you already cleared: no medals, records or saved progress change
 function markWeek(w, d) { if (w >= 1 && w <= 6 && d > (wd[w - 1] || 0)) { wd[w - 1] = d; store.set(sk('wd'), wd); } }
 /* ---------- levels ----------
-   Level 1 is The Flood, Level 2 is The Fire. A later level opens per difficulty: beat a level on Normal and the next one opens on Normal;
+   Level 1 is The Flood, Level 2 is The Fire, Level 3 is The Darkness. A later level opens per difficulty: beat a level on Normal and the next one opens on Normal;
    beat it on Hard and it opens on Normal and Hard; beat it on Impossible and every difficulty opens. Solo and team flights both count. */
 const DRANK = { normal: 1, hard: 2, impossible: 3 };
-const MAXLV = 2;
+const MAXLV = 3;
 let lvu = store.get('lvu', null);
 if (!lvu || typeof lvu !== 'object') {
-  lvu = { '2': { normal: false, hard: false, impossible: false } };
+  lvu = { '2': { normal: false, hard: false, impossible: false }, '3': { normal: false, hard: false, impossible: false } };
   if (+store.get('journeys', 0) >= 1) lvu['2'].normal = true;   // finished Level 1 before levels existed: Level 2 opens on Normal
   store.set('lvu', lvu);
 }
@@ -1855,7 +1978,7 @@ const PUFF_CD = 15;
 // They only draw hints, so hitboxes and hazards are exactly what they are for every other bird. They read the room's difficulty in team play.
 let ffBlinkT = 6, ffFlash = 0, ffGuide = null, ffGuideT = 0;
 const FF_CD = 12, FF_FLASH = 1.3;
-const ffTier = () => (charKey === 'firefly' && lvl === 2) ? ({ normal: 3, hard: 2, impossible: 1 }[curDiff()] || 1) : 0;
+const ffTier = () => (charKey === 'firefly' && lvl >= 2) ? ({ normal: 3, hard: 2, impossible: 1 }[curDiff()] || 1) : 0;
 let lives = LIVES, iT = 0, hurtT = 0, hurtKind = '', oopsTimer = 0, lastOops = '', cq = [], lastSpace = 0, panelAt = 0;
 let dpr = 1, lastTs = 0, inited = false;
 // The canvas is redrawn in full every frame, so a sharp (high pixel density) screen costs a lot. If a phone cannot keep up, drop one step at a time (never below 1.5) and remember it.
@@ -1898,7 +2021,15 @@ const SCN2 = [null,
   { name: 'The blood moon',       sky: ['#12040a', '#4d1620', '#260812', '#8f2a30', '#3c0f10', '#e0654a'], water: ['#701208', '#ee4a1a', '#450a05', '#c8300e'], rainN: 0, rainFloor: 0, slant: 0, rw: 1, rim: 0 },
   { name: 'The sky on fire',      sky: ['#0a0305', '#2e0f12', '#170608', '#5b1a16', '#2b0b08', '#b8452a'], water: ['#7a1408', '#f25a1c', '#4a0b05', '#d03a0e'], rainN: 0, rainFloor: 0, slant: 0, rw: 1, rim: 0 },
   { name: 'The dragon\'s sky',    sky: ['#0c0306', '#3a0d10', '#1d0709', '#7a1e18', '#340d0a', '#ff8a3a'], water: ['#801608', '#ff6a20', '#500c05', '#dc400e'], rainN: 0, rainFloor: 0, slant: 0, rw: 1, rim: 0 }];
-const scn = () => (lvl === 2 ? SCN2 : SCN)[clamp(week, 1, NWEEKS)];
+// Level 3: the dark. The sky never really brightens; the "water" is a bottomless pit (surface and glow, then the lower layer)
+const SCN3 = [null,
+  { name: 'Darkness over Egypt',   sky: ['#07050f', '#2a2342', '#120d22', '#4a3a62', '#1c1430', '#6a5470'], water: ['#0c0818', '#2a2050', '#07050f', '#1c1540'], rainN: 0, rainFloor: 0, slant: 0, rw: 1, rim: 0 },
+  { name: 'Gideon\'s lamps',       sky: ['#06070f', '#1d2748', '#0c1022', '#34406a', '#141a34', '#54608a'], water: ['#080b18', '#1e2858', '#05070f', '#162048'], rainN: 0, rainFloor: 0, slant: 0, rw: 1, rim: 0 },
+  { name: 'Midnight in the prison', sky: ['#0a0612', '#2f2040', '#150c20', '#52345c', '#220f28', '#7a4a60'], water: ['#0e0818', '#33204e', '#080410', '#26164a'], rainN: 0, rainFloor: 0, slant: 0, rw: 1, rim: 0 },
+  { name: 'The valley of the shadow', sky: ['#04060a', '#16262c', '#080d12', '#2a444c', '#0e1a20', '#3f6068'], water: ['#051015', '#143a46', '#03080c', '#0e2c38'], rainN: 0, rainFloor: 0, slant: 0, rw: 1, rim: 0 },
+  { name: 'The sixth hour',        sky: ['#020106', '#0e0a1c', '#05030b', '#1a1230', '#08050f', '#2a1d3c'], water: ['#05030c', '#1a1236', '#020106', '#120c2a'], rainN: 0, rainFloor: 0, slant: 0, rw: 1, rim: 0 },
+  { name: 'The deep',              sky: ['#030308', '#171233', '#080618', '#2b2058', '#0e0a24', '#4a3a80'], water: ['#06041a', '#221a5c', '#030210', '#181048'], rainN: 0, rainFloor: 0, slant: 0, rw: 1, rim: 0 }];
+const scn = () => (lvl === 3 ? SCN3 : lvl === 2 ? SCN2 : SCN)[clamp(week, 1, NWEEKS)];
 const stt = () => (reduceMotion ? 0 : t);
    // scenery movement stands still when the player asked for reduced motion
 let rbSaid = false;
@@ -1910,8 +2041,8 @@ const dayScale = () => Math.max(0.45, Math.pow(0.88, week - 1));
 // Each week is a set percentage harder than the week before it: +5%, +7%, +15%, +7%, +15% (Week 6 is about 1.59x Week 1),
 // shared out between scroll speed, tighter spacing and lightning.
 // Inside a week the ramp is the same shape as Week 1, so every week starts a little easier than the last one ended.
-const WK_STEP = [0, 0, 0.05, 0.07, 0.15, 0.07, 0.15, 0.07];   // index = week; the step is on top of the week before
-const wkM = wk => { let m = 1; const w = (wk === undefined ? week : wk) + (lvl === 2 ? 1 : 0); for (let i = 2; i <= w && i < WK_STEP.length; i++) m *= 1 + WK_STEP[i]; return m; };
+const WK_STEP = [0, 0, 0.05, 0.07, 0.15, 0.07, 0.15, 0.07, 0.07];   // the last step only Level 3, Week 6 reaches   // index = week; the step is on top of the week before
+const wkM = wk => { let m = 1; const w = (wk === undefined ? week : wk) + (lvl === 3 ? 2 : lvl === 2 ? 1 : 0); for (let i = 2; i <= w && i < WK_STEP.length; i++) m *= 1 + WK_STEP[i]; return m; };
 const spdAt = (p, wk) => lerp(125, 165, p) * Math.pow(wkM(wk), 0.4);
 const spacingAt = (p, wk) => lerp(250, 200, p) / Math.pow(wkM(wk), 0.35);
 // team play and the daily flight both build the sky from the DISTANCE flown, so the obstacles come in the same order for everyone
@@ -2085,6 +2216,14 @@ const WEEKM = [
   { root: -2, sc: DBL,  prog: [0, 1, 0, 5],  wave: 'square',   bpm: 1.25, x: ['stab', 'pad', 'gallop'] },             // week 5: the storm at full strength
   { root: -3, sc: LYD,  prog: [0, 4, 5, 3],  wave: 'triangle', bpm: 1.31, x: ['pad', 'arp16', 'oct'] }               // week 6: soaring, nearly home
 ];
+const WEEKM3 = [   // Level 3: slow and hollow, with a low drone and now and then a small bell, a light in the dark ('drone', 'bell')
+  { root: -8,  sc: PHR, prog: [0, 5, 3, 4], wave: 'triangle', bpm: 0.88, x: ['drone', 'bell'] },
+  { root: -3,  sc: DOR, prog: [0, 3, 0, 4], wave: 'triangle', bpm: 0.95, x: ['drone', 'bell', 'pulse'] },
+  { root: -9,  sc: HMN, prog: [0, 3, 4, 0], wave: 'sawtooth', bpm: 1.00, x: ['drone', 'bell', 'stab'] },
+  { root: -6,  sc: LOC, prog: [0, 1, 5, 4], wave: 'sawtooth', bpm: 1.05, x: ['drone', 'pulse', 'gallop'] },
+  { root: -10, sc: DBL, prog: [0, 1, 0, 5], wave: 'square',   bpm: 1.10, x: ['drone', 'stab', 'gallop', 'pulse'] },
+  { root: -7,  sc: PHR, prog: [0, 4, 5, 3], wave: 'sawtooth', bpm: 1.15, x: ['drone', 'pad', 'pulse', 'gallop', 'bell'] }
+];
 const WEEKM2 = [   // Level 2: lower and slower, with a soft techno bass under everything ('tbass')
   { root: -5, sc: DOR, prog: [0, 3, 0, 4], wave: 'triangle', bpm: 0.92, x: ['tbass'] },
   { root: -6, sc: PHR, prog: [0, 1, 0, 5], wave: 'triangle', bpm: 0.98, x: ['tbass', 'hook'] },
@@ -2093,6 +2232,8 @@ const WEEKM2 = [   // Level 2: lower and slower, with a soft techno bass under e
   { root: -8, sc: DBL, prog: [0, 1, 0, 5], wave: 'square', bpm: 1.12, x: ['tbass', 'stab', 'gallop'] },
   { root: -6, sc: PHR, prog: [0, 4, 5, 3], wave: 'sawtooth', bpm: 1.16, x: ['tbass', 'pad', 'pulse', 'gallop'] }
 ];
+THEMES.rest3 = { bpm: 54, root: 55, sc: MAJ, prog: [0, 3, 4, 0], bass: 1, arp: 1, drum: 0, lead: 1, wave: 'sine', x: ['bell'] };
+THEMES.boss3 = { bpm: 108, root: 45, sc: PHR, prog: [0, 1, 0, 5], bass: 2, arp: 3, drum: 3, lead: 3, wave: 'sawtooth', x: ['drone', 'stab', 'pulse', 'gallop', 'bell'] };
 THEMES.rest2 = { bpm: 60, root: 52, sc: DOR, prog: [0, 3, 4, 0], bass: 1, arp: 1, drum: 0, lead: 1, wave: 'sine' };
 THEMES.boss = { bpm: 116, root: 47, sc: PHR, prog: [0, 1, 0, 5], bass: 2, arp: 3, drum: 3, lead: 3, wave: 'sawtooth', x: ['tbass', 'stab', 'pulse', 'gallop'] };
 const BASS = [null,
@@ -2173,10 +2314,10 @@ function mpad(freq, t0, dur, vol) {
 }
 const themeCache = {};
 function themeFor(key) {
-  const m = /^([wf])(\d+)d(\d)$/.exec(key);
+  const m = /^([wfg])(\d+)d(\d)$/.exec(key);
   if (!m) return THEMES[key] || THEMES.menu;
   if (themeCache[key]) return themeCache[key];
-  const tab = m[1] === 'f' ? WEEKM2 : WEEKM, base = THEMES['d' + m[3]], wm = tab[Math.min(tab.length, +m[2]) - 1] || tab[0];
+  const tab = m[1] === 'g' ? WEEKM3 : m[1] === 'f' ? WEEKM2 : WEEKM, base = THEMES['d' + m[3]], wm = tab[Math.min(tab.length, +m[2]) - 1] || tab[0];
   return (themeCache[key] = Object.assign({}, base, { root: base.root + wm.root, sc: wm.sc || base.sc, prog: wm.prog || base.prog, wave: wm.wave || base.wave, bpm: base.bpm * wm.bpm, x: wm.x }));
 }
 function musicStep(step, t0, th, sd) {
@@ -2204,6 +2345,8 @@ function musicStep(step, t0, th, sd) {
       if (s % 4 === 0) mv(mtoF(th.root - 12), t0, sd * 2, 'sine', 0.11, false);
       if (s % 4 === 2) mv(mtoF(note(ct(0)) - 12), t0, sd * 1.6, 'sine', 0.07, false);
     }
+    if (xs.indexOf('drone') >= 0 && s === 0) mpad(mtoF(th.root - 12), t0, sd * 15, 0.075);   // a low drone under the whole bar
+    if (xs.indexOf('bell') >= 0 && (s === 6 || s === 14) && (bar % 2 === 0 || s === 14)) mv(mtoF(note(14 + ct(s === 6 ? 2 : 1))), t0, sd * 3.2, 'sine', 0.045, true);   // a small bell: light in the dark
     if (xs.indexOf('pulse') >= 0) {   // lub-dub, lub-dub
       if (s === 0 || s === 8) mthump(mtoF(th.root), t0, 0.24);
       if (s === 2 || s === 10) mthump(mtoF(th.root + 5), t0, 0.15);
@@ -2227,8 +2370,8 @@ function musicStep(step, t0, th, sd) {
   if (D.h.indexOf(s) >= 0) mdrum('h', t0);
 }
 function wantTheme() {
-  if (state === 'finale' || state === 'depart' || state === 'dry') return lvl === 2 ? 'rest2' : 'rest';
-  if (state === 'play' || state === 'dying' || state === 'spectate') return lvl === 2 && boss ? 'boss' : (lvl === 2 ? 'f' : 'w') + week + 'd' + Math.min(dayIdx, 6);
+  if (state === 'finale' || state === 'depart' || state === 'dry') return lvl === 3 ? 'rest3' : lvl === 2 ? 'rest2' : 'rest';
+  if (state === 'play' || state === 'dying' || state === 'spectate') return lvl >= 2 && boss ? (lvl === 3 ? 'boss3' : 'boss') : (lvl === 3 ? 'g' : lvl === 2 ? 'f' : 'w') + week + 'd' + Math.min(dayIdx, 6);
   return 'menu';
 }
 function musicForce() {
@@ -2358,7 +2501,7 @@ function buildTicks() {
 function syncHud(force) {
   const d = Math.min(NDAYS, dayIdx + 1);
   if (force || d !== hudDay) { hudDay = d; dayN.textContent = d; }
-  const ph = (lvl === 2 ? 'L2 \u00b7 ' : '') + 'Week ' + week + ' of ' + NWEEKS + ' \u00b7 ' + phaseName();
+  const ph = (lvl >= 2 ? 'L' + lvl + ' \u00b7 ' : '') + 'Week ' + week + ' of ' + NWEEKS + ' \u00b7 ' + phaseName();
   if (force || ph !== hudPhase) { hudPhase = ph; phaseEl.textContent = ph; }
   bar.style.width = (prog() * 100).toFixed(2) + '%';
 }
@@ -2487,7 +2630,7 @@ function updateCpHud() {
   const e = eff();
   cpb.classList.toggle('set', !!cp);
   cpb.classList.toggle('warn', e === 'impossible');
-  cpbT.textContent = e === 'normal' ? (cp ? (cp.boss ? 'Checkpoint \u00b7 Dragon' : 'Checkpoint \u00b7 Day ' + (cp.dayIdx + 1)) : 'Checkpoint on Day ' + (CP_DAY + 1)) : e === 'hard' ? 'Hard \u00b7 no checkpoint' : 'Impossible';
+  cpbT.textContent = e === 'normal' ? (cp ? (cp.boss ? 'Checkpoint \u00b7 ' + (lvl === 3 ? 'Darkness' : 'Dragon') : 'Checkpoint \u00b7 Day ' + (cp.dayIdx + 1)) : 'Checkpoint on Day ' + (CP_DAY + 1)) : e === 'hard' ? 'Hard \u00b7 no checkpoint' : 'Impossible';
 }
 function autoCheckpoint() {
   if (cp || eff() !== 'normal' || dayIdx !== CP_DAY) return;
@@ -2817,7 +2960,7 @@ function particle(o) {
   parts.push(q);
 }
 function splash(x, y, n) {
-  for (let i = 0; i < (n || 16); i++) particle({ x: x + rand(-6, 6), y: y, vx: rand(-90, 90), vy: -rand(120, 280), g: 760, size: rand(1.6, 3.4), color: lvl === 2 ? '#ffb347' : '#dcecf4', life: rand(0.5, 0.9) });
+  for (let i = 0; i < (n || 16); i++) particle({ x: x + rand(-6, 6), y: y, vx: rand(-90, 90), vy: -rand(120, 280), g: 760, size: rand(1.6, 3.4), color: lvl === 3 ? '#b9a6ff' : lvl === 2 ? '#ffb347' : '#dcecf4', life: rand(0.5, 0.9) });
 }
 function ripple(x, twice) {
   particle({ type: 'ring', x: x, y: WATER + 2, size: 4, grow: 70, life: 0.8, color: '#e8f1f5' });
@@ -2900,7 +3043,7 @@ function pushTree(x) {
 }
 function pushFog(x) {
   hazards.push({ type: 'fog', x: x, w: wrand(300, 420), id: hid++, lead: false });
-  tipOnce('fog', 'Fog hides what is ahead until it is close.');
+  tipOnce('fog', lvl === 3 ? 'Thick darkness hides the bodies of what is ahead, but pale outlines and warnings still show through.' : 'Fog hides what is ahead until it is close.');
 }
 // how much a gust is pulling on the bird right now: -1 up .. +1 down, softening at the edges of the zone
 function windPush() {
@@ -2926,11 +3069,11 @@ function pushCreature(type, x, sp) {
 const pillarEnv = ht => ht < 0 ? 0 : ht < 0.22 ? easeOut(ht / 0.22) : ht < 1.9 ? 1 : ht < 2.2 ? 1 - smooth((ht - 1.9) / 0.3) : 0;
 function pushPillar(x) {
   hazards.push({ type: 'pillar', x: x, w: 40, H: wrand(120, 255), ht: -1, cur: 0, arr: 9, id: hid++, lead: true });
-  tipOnce('pillar', 'Lava bubbles and a faint column shows where a pillar of fire will burst out. Fly over it.');
+  tipOnce('pillar', lvl === 3 ? 'A pale outline shows where a shadow spire will rise. Fly over it.' : 'Lava bubbles and a faint column shows where a pillar of fire will burst out. Fly over it.');
 }
 function pushCPillar(x) {
   hazards.push({ type: 'cpillar', x: x, w: 40, L: wrand(110, 270), ht: -1, cur: 0, arr: 9, id: hid++, lead: true });
-  tipOnce('cpillar', 'A glowing vent in the sky: fire will pour down from it. Fly under it.');
+  tipOnce('cpillar', lvl === 3 ? 'A pale outline in the sky: a shadow spire will drop from it. Fly under it.' : 'A glowing vent in the sky: fire will pour down from it. Fly under it.');
 }
 function pushFGate(x, ep) {
   const gap = lerp(215, 182, ep) - 12 * (wkM() - 1);
@@ -2940,7 +3083,7 @@ function pushFGate(x, ep) {
   c = clamp(c, minC, maxC); prevC = c;
   hazards.push({ type: 'cpillar', x: x, w: 40, L: c - gap / 2, ht: -1, cur: 0, arr: 9, early: 1.25, id: hid++, lead: true });
   hazards.push({ type: 'pillar', x: x, w: 40, H: WATER - (c + gap / 2), ht: -1, cur: 0, arr: 9, early: 1.25, id: hid++, lead: false });
-  tipOnce('fgate', 'Fire from above and below at the same spot: fly through the gap between them.');
+  tipOnce('fgate', lvl === 3 ? 'Spires from above and below at the same spot: fly through the gap between them.' : 'Fire from above and below at the same spot: fly through the gap between them.');
 }
 function pushBrand(x, sp, y, lead) {
   const bv = 55 + 22 * (week - 1) + wrand(0, 40);   // how much faster than the world it flies
@@ -2953,7 +3096,7 @@ function pushBrands(x, sp) {
     const y2 = y1 < 270 ? wrand(y1 + 190, WATER - 90) : wrand(100, Math.max(100, y1 - 190));
     pushBrand(x + 70, sp, y2, false);
   }
-  tipOnce('brand', 'Flying fire brands come in faster than the world. An arrow shows where, before they appear.');
+  tipOnce('brand', lvl === 3 ? 'Bats come in faster than the world. An arrow shows where, before they appear.' : 'Flying fire brands come in faster than the world. An arrow shows where, before they appear.');
 }
 function chooseEnc2() {
   const ep = det() ? shProgAt(encCum) : prog(), w = week;
@@ -2968,8 +3111,8 @@ function chooseEnc2() {
 }
 function fireBurst(h) {
   const cx = h.x + h.w / 2, down = h.type === 'cpillar';
-  noiseFx(0.55, 0.05, 'lowpass', 700, 140, 0, 0.04); tone(90, 0.5, 'sawtooth', 0.04, 0, 48);
-  for (let i = 0; i < 10; i++) particle({ x: cx + rand(-10, 10), y: down ? 0 : WATER, vx: rand(-50, 50), vy: (down ? 1 : -1) * rand(40, 150), g: down ? 120 : 300, size: rand(1.5, 3), color: i % 2 ? '#ffb347' : '#ff6a2b', life: rand(0.5, 0.9) });
+  noiseFx(0.55, 0.05, 'lowpass', 700, 140, 0, 0.04); tone(lvl === 3 ? 70 : 90, 0.5, lvl === 3 ? 'sine' : 'sawtooth', 0.04, 0, 48);
+  for (let i = 0; i < 10; i++) particle({ x: cx + rand(-10, 10), y: down ? 0 : WATER, vx: rand(-50, 50), vy: (down ? 1 : -1) * rand(40, 150), g: down ? 120 : 300, size: rand(1.5, 3), color: lvl === 3 ? (i % 2 ? '#cbb8ff' : '#7a5cff') : (i % 2 ? '#ffb347' : '#ff6a2b'), life: rand(0.5, 0.9) });
 }
 function chooseEnc(d) {
   const opts = [['rock', 3], ['hang', 3], ['gate', 3]];
@@ -3043,7 +3186,7 @@ function spawnEncounter() {
   const spacing = spacingAt(ep, week) + wrand(-18, 22);
   encCum += spacing;
   spawnDist = Math.min(0, spawnDist) + spacing; lastSpace = spacing;
-  const kind = lvl === 2 ? chooseEnc2() : chooseEnc(d);
+  const kind = lvl >= 2 ? chooseEnc2() : chooseEnc(d);
   lastEnc = kind;
   if (kind === 'rock') pushRock(x, true);
   else if (kind === 'hang') pushHang(x, true);
@@ -3061,6 +3204,7 @@ function spawnEncounter() {
   else pushCreature(kind, x, sp);
   if (leavesOn()) maybeLeaf(kind, x, spacing, ep);   // before the fog is added, so the obstacle just pushed is the last one in the list
   if (week >= 6 && lvl === 1) { const fr = wR(); fogCool--; if (fr < 0.1 + 0.1 * ep && fogCool <= 0) { pushFog(x - 140); fogCool = 5; } }   // fog rolls over the next few obstacles
+  if (lvl === 3 && week >= 3) { const fr = wR(); fogCool--; if (fr < 0.1 + 0.1 * ep && fogCool <= 0) { pushFog(x - 140); fogCool = 5; } }   // Level 3: thick darkness rolls over the next few obstacles
   if (orbDue) {
     orbDue = false;
     orbs.push({ x: x - spacing * 0.5, y: 150 + pR() * 260, type: nextPower(), bob: pR() * 6, got: false });
@@ -3204,7 +3348,7 @@ function newStrike(warn, avoid) {
   for (let i = 0; i < 10; i++) cand.push(srand(125, 395));
   for (const y of cand) {
     if (avoid.some(v => Math.abs(v - y) < 120)) continue;
-    const s = { x: x, y: y, t: 0, warn: warn, state: 'warn', pts: null, blink: -1, ast: lvl === 2 };
+    const s = { x: x, y: y, t: 0, warn: warn, state: 'warn', pts: null, blink: -1, ast: lvl >= 2 };
     if (fairOk([s])) return s;
   }
   return null;
@@ -3225,7 +3369,7 @@ function fairFixStrikes() {
 function spawnStrike() {
   const d = edif(), p = det() ? shProgAt(encCum) : prog(), M = wkM();
   strikeT = srand(7, 11) * (1 - 0.4 * p) / Math.pow(M, 0.25) * (lvl === 2 && week === 1 ? 1.5 : 1);
-  const n = (lvl === 2 ? (week >= 4 && sR() < 0.2 + 0.3 * (M - 1)) : (d > 0.6 && sR() < 0.3 + 0.35 * (M - 1) + 0.1 * p)) ? 2 : 1;
+  const n = (lvl >= 2 ? (week >= 4 && sR() < 0.2 + 0.3 * (M - 1)) : (d > 0.6 && sR() < 0.3 + 0.35 * (M - 1) + 0.1 * p)) ? 2 : 1;
   const ys = [];
   for (let i = 0; i < n; i++) {
     const s = newStrike(lerp(1.5, 1.2, p), ys);
@@ -3327,7 +3471,7 @@ const OOPS_BY = {
 function hideOops() { clearTimeout(oopsTimer); oopsEl.classList.remove('on'); }
 function showOops(kind, ms) {
   ms = ms || 2500;
-  const by = (lvl === 2 && OOPS2[kind]) || OOPS_BY[kind] || [];
+  const by = (lvl === 3 && OOPS3[kind]) || (lvl === 2 && OOPS2[kind]) || OOPS_BY[kind] || [];
   const pool = OOPS_ANY.concat(by, by);
   let m, g = 0;
   do { m = pool[Math.floor(Math.random() * pool.length)]; g++; } while (m === lastOops && g < 10);
@@ -3392,6 +3536,22 @@ const CAUSES2 = {
   brand:   ['A flying brand. The arrow was kind.', 'Hot log, fast delivery.'],
   dragon:  ['The dragon wins this round.', 'You flew too close to the fire.']
 };
+const CAUSES3 = {
+  water:   ['The pit does not give directions.', 'Down there, even the lantern gave up.'],
+  strike:  ['A shadow bolt. It did warn you.', 'That pale ring was not decoration.', 'Lights out. Literally.'],
+  pillar:  ['Spires do not move. You did.', 'That spire had a pale outline for a reason.'],
+  cpillar: ['Shadows from above. Duck next time.', 'Mind the ceiling.'],
+  brand:   ['A bat. Its arrow was kind.', 'Bat: 1. Bird: 0.'],
+  dragon:  ['The Great Darkness wins this round.', 'You flew into the shadow lane.']
+};
+const OOPS3 = {
+  strike:  ['Shadow bolt! The pale ring was the warning.', 'Lights out for a second.'],
+  water:   ['The pit is not a landing spot.', 'Not that way, little bird.'],
+  pillar:  ['Fly over it. A pale outline shows first.', 'Spires do not move. You did.'],
+  cpillar: ['Fly under it. A pale outline shows first.', 'Shadows from above. Duck.'],
+  brand:   ['The arrow is your friend.', 'Bats are fast. Watch for the arrow.'],
+  dragon:  ['The Great Darkness is not impressed.', 'Stay out of the shadow lane!']
+};
 const OOPS2 = {
   strike:  ['Hit by an asteroid! That line was a warning.', 'Space rock: 1. You: 0.'],
   water:   ['Lava is not water, little bird.', 'Not the cooling-off you wanted.'],
@@ -3419,10 +3579,10 @@ const WEEK_INTRO = [null,
 ];
 function setHintWeek(resume) {
   hint.classList.remove('onlight');
-  const wi = (lvl === 2 ? WEEK_INTRO2 : WEEK_INTRO)[clamp(week, 1, NWEEKS)];
-  $('#hintB').textContent = resume ? 'Week ' + week + ', Day ' + (dayIdx + 1) : week > 1 ? 'Week ' + week + ' \u00b7 ' + scn().name : lvl === 2 ? 'Level 2 \u00b7 The Fire' : 'Tap to flap';
+  const wi = (lvl === 3 ? WEEK_INTRO3 : lvl === 2 ? WEEK_INTRO2 : WEEK_INTRO)[clamp(week, 1, NWEEKS)];
+  $('#hintB').textContent = resume ? 'Week ' + week + ', Day ' + (dayIdx + 1) : week > 1 ? 'Week ' + week + ' \u00b7 ' + scn().name : lvl === 3 ? 'Level 3 \u00b7 The Darkness' : lvl === 2 ? 'Level 2 \u00b7 The Fire' : 'Tap to flap';
   const hT = $('#hintT'); if (!hT.dataset.orig) hT.dataset.orig = hT.textContent;
-  hT.textContent = lvl === 2 ? 'Fire is the new danger. Cracks glow before a pillar bursts out, a mark in the sky means an asteroid, and flying brands show an arrow first.' : hT.dataset.orig;
+  hT.textContent = lvl === 3 ? 'Darkness is the new danger. A pale outline shows where a spire will rise, a mark in the sky means a shadow bolt, and bats show an arrow first. Your lantern shrinks each week.' : lvl === 2 ? 'Fire is the new danger. Cracks glow before a pillar bursts out, a mark in the sky means an asteroid, and flying brands show an arrow first.' : hT.dataset.orig;
   const v = $('#hintV'); v.textContent = ''; v.append(wi.v);
   const c = document.createElement('cite'); c.textContent = wi.r; v.append(c);
   $('#hintT').hidden = !!mp || week > 1 || !!resume;   // the power-up tip is for the first week; later weeks open with their verse
@@ -3454,7 +3614,25 @@ const ENDS2 = [null,
   { title: 'The fire fell.', verse: 'Then the fire of the LORD fell, and consumed the burnt sacrifice, and the wood, and the stones, and the dust…', ref: '1 Kings 18:38', tint: ['#1a0c0a', '#6e3020', '#f0a860'] },
   { title: 'The dragon is cast out.', verse: 'And they overcame him by the blood of the Lamb, and by the word of their testimony; and they loved not their lives unto the death.', ref: 'Revelation 12:11', tint: ['#241a2a', '#9a6a7a', '#ffd9a0'] }
 ];
-const ENDX = () => (lvl === 2 ? ENDS2 : ENDS);
+/* Level 3, The Darkness. Each week opens on a verse that fits what is coming (KJV), and each rest stop is a Bible story where light came into the dark. */
+const WEEK_INTRO3 = [null,
+  { v: '…that there may be darkness over the land of Egypt, even darkness which may be felt.', r: 'Exodus 10:21' },
+  { v: 'And he divided the three hundred men into three companies, and he put a trumpet in every man’s hand, with empty pitchers, and lamps within the pitchers.', r: 'Judges 7:16' },
+  { v: 'And at midnight Paul and Silas prayed, and sang praises unto God: and the prisoners heard them.', r: 'Acts 16:25' },
+  { v: 'Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.', r: 'Psalm 23:4' },
+  { v: 'Now from the sixth hour there was darkness over all the land unto the ninth hour.', r: 'Matthew 27:45' },
+  { v: '…and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters.', r: 'Genesis 1:2' }
+];
+const ENDS3 = [null,
+  { title: 'Light in their dwellings.', verse: 'They saw not one another, neither rose any from his place for three days: but all the children of Israel had light in their dwellings.', ref: 'Exodus 10:23', tint: ['#0a0716', '#3a2a58', '#c89a6a'] },
+  { title: 'Lamps in the pitchers.', verse: 'And the three companies blew the trumpets, and brake the pitchers, and held the lamps in their left hands, and the trumpets in their right hands to blow withal: and they cried, The sword of the LORD, and of Gideon.', ref: 'Judges 7:20', tint: ['#05070f', '#1d2a52', '#4a5c8c'], night: true },
+  { title: 'Midnight songs.', verse: 'And suddenly there was a great earthquake, so that the foundations of the prison were shaken: and immediately all the doors were opened, and every one’s bands were loosed.', ref: 'Acts 16:26', tint: ['#08050f', '#2a1a40', '#6a4060'], night: true },
+  { title: 'A lamp unto my feet.', verse: 'Thy word is a lamp unto my feet, and a light unto my path.', ref: 'Psalm 119:105', tint: ['#06100f', '#17343a', '#5a8a86'] },
+  { title: 'A great light.', verse: 'The people that walked in darkness have seen a great light: they that dwell in the land of the shadow of death, upon them hath the light shined.', ref: 'Isaiah 9:2', tint: ['#0c0a1c', '#4a3c6a', '#f4d79a'] },
+  { title: 'The light shines.', verse: 'And the light shineth in darkness; and the darkness comprehended it not.', ref: 'John 1:5', tint: ['#1a1436', '#6a5a9a', '#ffe3a8'] }
+];
+const NEW_HAZ3 = [null, null, 'bats, and shadow bolts from the sky', 'thick darkness that hides the bodies of what is ahead', 'bats and shadow bolts in pairs, and a dimmer lantern', 'the lantern shrinks again, with everything closer together', 'every hazard at full speed, and the Great Darkness waiting at the end'];
+const ENDX = () => (lvl === 3 ? ENDS3 : lvl === 2 ? ENDS2 : ENDS);
 const NEW_HAZ2 = [null, null, 'flying fire brands', 'brands in thicker, and the fire gates narrow', 'the blood moon, and asteroids in pairs', 'brands in pairs', 'every hazard at full speed, and the dragon waiting at the end'];
 
 function die(kind) {
@@ -3536,12 +3714,12 @@ function showOver() {
   markWeek(week, day);
   saveProgress(); $('#overHome').hidden = false;
   if (td > best) { best = td; store.set(sk('best3'), best); }
-  const pool = (lvl === 2 && CAUSES2[causeKind]) || CAUSES[causeKind] || CAUSES.water;
+  const pool = (lvl === 3 && CAUSES3[causeKind]) || (lvl === 2 && CAUSES2[causeKind]) || CAUSES[causeKind] || CAUSES.water;
   let qi; do { qi = Math.floor(Math.random() * pool.length); } while (pool.length > 1 && qi === lastQuip[causeKind]);
   lastQuip[causeKind] = qi;
   let vi; do { vi = Math.floor(Math.random() * VERSES.length); } while (vi === lastVerse);
   lastVerse = vi;
-  $('#overEye').textContent = lvl === 2 ? 'Burned' : 'Splash';
+  $('#overEye').textContent = lvl === 3 ? 'Lights out' : lvl === 2 ? 'Burned' : 'Splash';
   $('#oBestL').textContent = 'Best day';
   $('#overT').textContent = pool[qi];
   $('#oWeek').textContent = week; $('#oDay').textContent = day; $('#oBest').textContent = best; $('#oTime').textContent = mmss(runTime);
@@ -3556,8 +3734,8 @@ function showOver() {
   if (!mp) {
     ci.hidden = false;
     if (cp) {
-      ci.textContent = cp.boss ? 'Your checkpoint at the dragon holds. Resume there as many times as you need.' : 'Your Day ' + (cp.dayIdx + 1) + ' checkpoint holds. Resume there as many times as you need.';
-      $('#again').textContent = cp.boss ? 'Face the dragon again' : 'Resume Day ' + (cp.dayIdx + 1);
+      ci.textContent = cp.boss ? 'Your checkpoint at ' + (lvl === 3 ? 'the Great Darkness' : 'the dragon') + ' holds. Resume there as many times as you need.' : 'Your Day ' + (cp.dayIdx + 1) + ' checkpoint holds. Resume there as many times as you need.';
+      $('#again').textContent = cp.boss ? (lvl === 3 ? 'Face the Darkness again' : 'Face the dragon again') : 'Resume Day ' + (cp.dayIdx + 1);
     } else if (e === 'normal') {
       ci.textContent = 'You fell before the Day ' + (CP_DAY + 1) + ' checkpoint, so this week starts again from Day 1.';
     } else if (e === 'hard') {
@@ -3761,17 +3939,18 @@ function showRest() {
     fillWk($('#winStats'), wkItems(f.stats, true));
     fillUnlocks($('#winUnlock'));
     $('#winLede').textContent = daily ? 'Daily flight done in ' + mmss(runTime - weekT0) + '.' + (dailyStreak() > 1 ? ' ' + dailyStreak() + ' days in a row.' : '') + ' A new sky arrives tomorrow.' : practice ? 'Practice flight done. Noah was waiting again. Your journey records are as you left them.' : 'Noah was waiting with his arm out. You carried the olive leaf all the way.' + (mp && newRecord ? ' New team record!' : '');
-    const l2 = lvl === 2;
-    $('#winEye').textContent = l2 ? 'Level 2 of 5 complete' : 'Week 6 of 6 complete';
-    $('#winTitle').textContent = l2 ? 'The dragon is cast out.' : 'Welcome home.';
-    $('#winVerse').textContent = l2 ? 'And the great dragon was cast out, that old serpent, called the Devil, and Satan, which deceiveth the whole world: he was cast out into the earth, and his angels were cast out with him.' : 'And the dove came in to him in the evening; and, lo, in her mouth was an olive leaf pluckt off: so Noah knew that the waters were abated from off the earth.';
-    $('#winRef').textContent = l2 ? 'Revelation 12:9' : 'Genesis 8:11';
-    if (l2) $('#winLede').textContent = 'You flew through the fire, outlasted the dragon, and came out the other side. Level 3, the darkness, is still on its way.' + (mp && newRecord ? ' New team record!' : '');
+    const l2 = lvl >= 2, l3 = lvl === 3;
+    $('#winEye').textContent = l3 ? 'Level 3 of 5 complete' : l2 ? 'Level 2 of 5 complete' : 'Week 6 of 6 complete';
+    $('#winTitle').textContent = l3 ? 'The light shines.' : l2 ? 'The dragon is cast out.' : 'Welcome home.';
+    $('#winVerse').textContent = l3 ? 'And the light shineth in darkness; and the darkness comprehended it not.' : l2 ? 'And the great dragon was cast out, that old serpent, called the Devil, and Satan, which deceiveth the whole world: he was cast out into the earth, and his angels were cast out with him.' : 'And the dove came in to him in the evening; and, lo, in her mouth was an olive leaf pluckt off: so Noah knew that the waters were abated from off the earth.';
+    $('#winRef').textContent = l3 ? 'John 1:5' : l2 ? 'Revelation 12:9' : 'Genesis 8:11';
+    if (l3) $('#winLede').textContent = 'You flew through the dark, gathered the light, and the Great Darkness could not hold you. Level 4, the heights, is still on its way.' + (mp && newRecord ? ' New team record!' : '');
+    else if (l2) $('#winLede').textContent = 'You flew through the fire, outlasted the dragon, and came out the other side. Level 3, the darkness, is open if you want it.' + (mp && newRecord ? ' New team record!' : '');
     $('#again2').textContent = mp ? 'Back to lobby' : daily ? 'Fly it again' : practice ? 'Practice again' : 'Play again';
     $('#swap2').textContent = mp ? 'Leave room' : 'Change bird';
     shareInfo = practice ? null : { time: mmss(runTime), medals: medalSummary().m, team: !!mp };
-    $('#shareWin').hidden = !shareInfo || lvl === 2;
-    $('#dryWin').hidden = !!(mp || practice || daily || lvl === 2);
+    $('#shareWin').hidden = !shareInfo || lvl >= 2;
+    $('#dryWin').hidden = !!(mp || practice || daily || lvl >= 2);
     setPanels('win'); delayEnable(winP);
     try { $('#again2').focus({ preventScroll: true }); } catch (e) { /* ignore */ }
     return;
@@ -3782,7 +3961,7 @@ function showRest() {
   $('#restTitle').textContent = RE.title;
   $('#restVerse').textContent = rv[0]; $('#restRef').textContent = rv[1];
   const nextLen = Math.round(45 * Math.max(0.45, Math.pow(0.88, week)));
-  $('#nextInfo').textContent = daily ? 'Daily flight done in ' + mmss(runTime - weekT0) + '.' + (dailyStreak() > 1 ? ' ' + dailyStreak() + ' days in a row.' : '') + ' A new sky arrives tomorrow.' : practice ? 'Practice flight done. Your saved progress is exactly as you left it.' : lvl === 2 ? 'Next, Week ' + (week + 1) + ': days run about ' + nextLen + ' seconds and the fire burns hotter.' + (NEW_HAZ2[week + 1] ? ' New this week: ' + NEW_HAZ2[week + 1] + '.' : '') : 'Next, Week ' + (week + 1) + ': days run about ' + nextLen + ' seconds, the waves climb higher and the storm hits harder.' + (NEW_HAZ[week + 1] ? ' New this week: ' + NEW_HAZ[week + 1] + '.' : '');
+  $('#nextInfo').textContent = daily ? 'Daily flight done in ' + mmss(runTime - weekT0) + '.' + (dailyStreak() > 1 ? ' ' + dailyStreak() + ' days in a row.' : '') + ' A new sky arrives tomorrow.' : practice ? 'Practice flight done. Your saved progress is exactly as you left it.' : lvl === 3 ? 'Next, Week ' + (week + 1) + ': days run about ' + nextLen + ' seconds and the dark gets deeper.' + (NEW_HAZ3[week + 1] ? ' New this week: ' + NEW_HAZ3[week + 1] + '.' : '') : lvl === 2 ? 'Next, Week ' + (week + 1) + ': days run about ' + nextLen + ' seconds and the fire burns hotter.' + (NEW_HAZ2[week + 1] ? ' New this week: ' + NEW_HAZ2[week + 1] + '.' : '') : 'Next, Week ' + (week + 1) + ': days run about ' + nextLen + ' seconds, the waves climb higher and the storm hits harder.' + (NEW_HAZ[week + 1] ? ' New this week: ' + NEW_HAZ[week + 1] + '.' : '');
   $('#tapNote').textContent = (mp && !mp.isHost) ? 'Waiting for the host to fly on.' : practice ? 'Rest as long as you like. Tap to go Home.' : 'Rest as long as you like. Tap to fly on.';
   $('#endRun').textContent = mp ? 'Leave room' : daily ? 'Fly it again' : practice ? 'Practice again' : 'Save and go Home';
   fillUnlocks($('#unlock'));
@@ -3799,6 +3978,7 @@ function updateFinale(dt) {
   bird.rot = pos[2] ? 0 : clamp((ny - f.py) / Math.max(dt, 0.001) * 0.0014, -0.4, 0.5);
   bird.x = pos[0]; bird.y = ny; f.py = ny;
   bird.phase += dt * 13;
+  if (lvl === 3) { updateFinale3(f, T, end, dt); return; }
   if (lvl === 2) { updateFinale2(f, T, end, dt); return; }
 
   if (end) {
@@ -4283,7 +4463,7 @@ function bossHud(show, pct) {
   const e = $('#bossBar');
   if (e.hidden === show) e.hidden = !show;
   hud.classList.toggle('boss', show);   // the dragon's bar takes the place of the week label
-  if (show) $('#bossFill').style.width = clamp(pct, 0, 100).toFixed(1) + '%';
+  if (show) { $('#bossName').textContent = lvl === 3 ? 'The Great Darkness' : 'The great red dragon'; $('#bossFill').style.width = clamp(pct, 0, 100).toFixed(1) + '%'; }
 }
 function startBoss() {
   boss = { t: 0, hp: 100, atk: null, cool: 0.5, balls: [], lights: [], lightT: 5.6, hx: W + 240, hy: 150, last: '', said: 0, flashT: 0, n: 0 };
@@ -4292,7 +4472,7 @@ function startBoss() {
     cp = { dayIdx: NDAYS - 1, u: 1, runTime: runTime, weekT0: weekT0, saved: weekSaved, picks: weekPicks, leaves: wkLeaves, lnext: leafNext, boss: true };
     updateCpHud();
   }
-  setCap('Behold, a great red dragon.', 3000);   // Revelation 12:3
+  setCap(lvl === 3 ? 'Darkness was upon the face of the deep.' : 'Behold, a great red dragon.', 3000);   // Revelation 12:3 / Genesis 1:2
   tone(90, 1.4, 'sawtooth', 0.08, 0, 45); noiseFx(1.3, 0.08, 'lowpass', 700, 120, 0, 0.1);
   if (!reduceMotion) shake = Math.max(shake, 6);
   musicForce();
@@ -4330,14 +4510,14 @@ function bossStep(dt, pick) {
   if (a && a.k === 'breath') ty = a.lanes[a.idx] - 8 * BS;
   b.hy += (ty - b.hy) * Math.min(1, dt * (a ? 4 : 1.5));
   if (b.t > 4) b.hp -= dt * 100 / (BOSS_DUR - 4);
-  if (!b.said && b.hp < 50) { b.said = 1; setCap('Michael and his angels fought against the dragon.', 3400); tone(196, 0.5, 'triangle', 0.06); tone(294, 0.7, 'triangle', 0.06, 0.14); }   // Revelation 12:7
+  if (!b.said && b.hp < 50) { b.said = 1; setCap(lvl === 3 ? 'And God said, Let there be light.' : 'Michael and his angels fought against the dragon.', 3400); tone(196, 0.5, 'triangle', 0.06); tone(294, 0.7, 'triangle', 0.06, 0.14); }   // Revelation 12:7
   // the light: gather it to wound him faster
   b.lightT -= dt;
-  if (b.t > 4.5 && b.lightT <= 0 && b.hp > 12) { b.lightT = 5.2 + Math.random() * 1.6; b.lights.push({ x: W + 30, y: rand(150, WATER - 90), bob: 0, got: false }); tipOnce('bosslight', 'Gather the light to wound the dragon faster.'); }
+  if (b.t > 4.5 && b.lightT <= 0 && b.hp > 12) { b.lightT = 5.2 + Math.random() * 1.6; b.lights.push({ x: W + 30, y: rand(150, WATER - 90), bob: 0, got: false }); tipOnce('bosslight', lvl === 3 ? 'Gather the light to push the darkness back faster.' : 'Gather the light to wound the dragon faster.'); }
   for (const l of b.lights) {
     l.x -= curSp * dt; l.bob += dt;
     if (pick && !l.got && Math.hypot(l.x - bird.x, l.y + Math.sin(l.bob * 3) * 5 - bird.y) < 20 + hitR() + (BIRDS[charKey].mag || 0)) {
-      l.got = true; b.hp -= 6; b.flashT = 0.35;
+      l.got = true; b.hp -= (lvl === 3 && charKey === 'cherub') ? 9 : 6; b.flashT = 0.35;
       tone(880, 0.12, 'sine', 0.06); tone(1320, 0.2, 'sine', 0.05, 0.08); tone(1760, 0.25, 'sine', 0.04, 0.16);
       for (let i = 0; i < 12; i++) particle({ x: l.x, y: l.y, vx: rand(-120, 120), vy: rand(-120, 120), size: rand(1.4, 3), color: '#fff0b0', life: rand(0.4, 0.8) });
     }
@@ -4381,7 +4561,7 @@ function bossStep(dt, pick) {
 }
 function bossWin() {
   const b = boss;
-  for (let i = 0; i < 30; i++) particle({ x: b.hx - 30 + rand(-40, 60), y: b.hy + rand(-30, 40), vx: rand(-160, 160), vy: rand(-160, 60), g: 200, size: rand(2, 5), color: Math.random() < 0.5 ? '#ffb347' : '#ff6a30', life: rand(0.5, 1.1) });
+  for (let i = 0; i < 30; i++) particle({ x: b.hx - 30 + rand(-40, 60), y: b.hy + rand(-30, 40), vx: rand(-160, 160), vy: rand(-160, 60), g: 200, size: rand(2, 5), color: lvl === 3 ? (Math.random() < 0.5 ? '#fff0b0' : '#cbb8ff') : (Math.random() < 0.5 ? '#ffb347' : '#ff6a30'), life: rand(0.5, 1.1) });
   tone(160, 0.9, 'sawtooth', 0.07, 0, 40); noiseFx(1.0, 0.08, 'lowpass', 1200, 90, 0, 0.03);
   boss = null; strikes = []; bossHud(false);
   startFinale();
@@ -4396,7 +4576,7 @@ function bossHurts(hr) {
   return false;
 }
 function drawBoss() {
-  const b = boss, a = b.atk, tm = stt(), sc = BS;
+  const b = boss, a = b.atk, tm = stt(), sc = BS, D3 = lvl === 3;
   for (const l of b.lights) {   // the light
     const y = l.y + Math.sin(l.bob * 3) * 5;
     const g = ctx.createRadialGradient(l.x, y, 1, l.x, y, 26);
@@ -4409,9 +4589,10 @@ function drawBoss() {
   }
   for (const q of b.balls) {   // fireballs
     const g = ctx.createRadialGradient(q.x, q.y, 1, q.x, q.y, 22);
-    g.addColorStop(0, 'rgba(255,240,180,1)'); g.addColorStop(0.4, 'rgba(255,140,50,.85)'); g.addColorStop(1, 'rgba(220,50,20,0)');
+    if (D3) { g.addColorStop(0, 'rgba(244,236,255,1)'); g.addColorStop(0.4, 'rgba(150,100,255,.85)'); g.addColorStop(1, 'rgba(60,20,140,0)'); }
+    else { g.addColorStop(0, 'rgba(255,240,180,1)'); g.addColorStop(0.4, 'rgba(255,140,50,.85)'); g.addColorStop(1, 'rgba(220,50,20,0)'); }
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(q.x, q.y, 22, 0, TAU); ctx.fill();
-    ctx.fillStyle = 'rgba(255,120,40,.6)';
+    ctx.fillStyle = D3 ? 'rgba(150,110,255,.55)' : 'rgba(255,120,40,.6)';
     for (let i = 1; i < 5; i++) { ctx.beginPath(); ctx.ellipse(q.x + i * 11, q.y + Math.sin(tm * 14 + i) * 2, 10 - i * 1.6, 7 - i, 0, 0, TAU); ctx.fill(); }
   }
   let open = 0.15;
@@ -4420,9 +4601,9 @@ function drawBoss() {
       if (it.sp || a.t < it.at) continue;
       const k = (a.t - it.at) / it.tele, on = Math.floor(a.t * 8) % 2 === 0;
       ctx.save();
-      ctx.setLineDash([6, 8]); ctx.strokeStyle = 'rgba(255,120,60,' + (0.2 + 0.2 * k).toFixed(2) + ')'; ctx.lineWidth = 2;
+      ctx.setLineDash([6, 8]); ctx.strokeStyle = (D3 ? 'rgba(200,170,255,' : 'rgba(255,120,60,') + (0.2 + 0.2 * k).toFixed(2) + ')'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(W - 26, it.y); ctx.lineTo(BIRD_X + 20, it.y); ctx.stroke(); ctx.setLineDash([]);
-      if (on) { ctx.lineJoin = 'round'; ctx.fillStyle = '#ff7a3a'; ctx.strokeStyle = '#2a1006'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(W - 6, it.y - 13); ctx.lineTo(W - 30, it.y); ctx.lineTo(W - 6, it.y + 13); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+      if (on) { ctx.lineJoin = 'round'; ctx.fillStyle = D3 ? '#b99bff' : '#ff7a3a'; ctx.strokeStyle = D3 ? '#120a2a' : '#2a1006'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(W - 6, it.y - 13); ctx.lineTo(W - 30, it.y); ctx.lineTo(W - 6, it.y + 13); ctx.closePath(); ctx.fill(); ctx.stroke(); }
       ctx.restore();
     }
     open = 0.5;
@@ -4432,23 +4613,24 @@ function drawBoss() {
     if (a.t < a.tele) {
       const k = a.t / a.tele, on = k > 0.7 ? Math.floor(a.t * 12) % 2 === 0 : true;
       ctx.save();
-      ctx.fillStyle = 'rgba(255,90,40,' + ((0.05 + 0.16 * k) * (on ? 1 : 0.4)).toFixed(3) + ')';
+      ctx.fillStyle = (D3 ? 'rgba(160,110,255,' : 'rgba(255,90,40,') + ((0.05 + 0.16 * k) * (on ? 1 : 0.4)).toFixed(3) + ')';
       ctx.fillRect(0, ly - LANE_H / 2, mx, LANE_H);
-      ctx.setLineDash([8, 7]); ctx.strokeStyle = 'rgba(255,150,70,' + (0.35 + 0.45 * k).toFixed(2) + ')'; ctx.lineWidth = 2;
+      ctx.setLineDash([8, 7]); ctx.strokeStyle = (D3 ? 'rgba(214,190,255,' : 'rgba(255,150,70,') + (0.35 + 0.45 * k).toFixed(2) + ')'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(0, ly - LANE_H / 2); ctx.lineTo(mx, ly - LANE_H / 2); ctx.moveTo(0, ly + LANE_H / 2); ctx.lineTo(mx, ly + LANE_H / 2); ctx.stroke();
       ctx.restore();
       open = k;
     } else if (a.t < a.tele + a.fire + 0.15) {
       const T = a.t - a.tele, env = Math.min(1, T / 0.1) * Math.min(1, (a.fire + 0.15 - T) / 0.15), h = LANE_H * env;
       const g = ctx.createLinearGradient(0, ly - h / 2, 0, ly + h / 2);
-      g.addColorStop(0, 'rgba(220,60,20,.0)'); g.addColorStop(0.2, 'rgba(255,110,40,.9)'); g.addColorStop(0.5, 'rgba(255,240,190,1)'); g.addColorStop(0.8, 'rgba(255,110,40,.9)'); g.addColorStop(1, 'rgba(220,60,20,0)');
+      if (D3) { g.addColorStop(0, 'rgba(200,170,255,0)'); g.addColorStop(0.2, 'rgba(206,176,255,.95)'); g.addColorStop(0.5, 'rgba(12,5,32,1)'); g.addColorStop(0.8, 'rgba(206,176,255,.95)'); g.addColorStop(1, 'rgba(200,170,255,0)'); }
+      else { g.addColorStop(0, 'rgba(220,60,20,.0)'); g.addColorStop(0.2, 'rgba(255,110,40,.9)'); g.addColorStop(0.5, 'rgba(255,240,190,1)'); g.addColorStop(0.8, 'rgba(255,110,40,.9)'); g.addColorStop(1, 'rgba(220,60,20,0)'); }
       ctx.fillStyle = g; ctx.fillRect(0, ly - h / 2 - 4, mx, h + 8);
-      ctx.fillStyle = 'rgba(255,200,100,.7)';
+      ctx.fillStyle = D3 ? 'rgba(226,210,255,.55)' : 'rgba(255,200,100,.7)';
       for (let i = 0; i < 16; i++) { const x = mx - (i + ((tm * 12) % 1)) * (mx / 16), r = (5 + 5 * Math.sin(tm * 30 + i * 1.7)) * env; ctx.beginPath(); ctx.ellipse(x, ly + Math.sin(tm * 20 + i) * 4, 14, Math.max(1, r), 0, 0, TAU); ctx.fill(); }
       open = 1;
     }
   }
-  drawDragon(b.hx, b.hy, { scale: sc, wing: b.t * 3.4, open: open });
+  if (D3) drawGreatDarkness(b.hx, b.hy, { scale: sc, open: open }); else drawDragon(b.hx, b.hy, { scale: sc, wing: b.t * 3.4, open: open });
   if (b.flashT > 0) { ctx.fillStyle = 'rgba(255,248,210,' + (0.18 * b.flashT / 0.35).toFixed(3) + ')'; ctx.fillRect(0, 0, W, H); }
 }
 function updateHazards(dt, sp) {
@@ -4479,7 +4661,7 @@ function updateHazards(dt, sp) {
       if (h.ht < 0 && h.arr <= (h.early || 0.8)) { h.ht = 0; fireBurst(h); }
       if (h.ht >= 0) h.ht += dt;
       h.cur = (h.type === 'pillar' ? h.H : h.L) * pillarEnv(h.ht);
-      if (h.cur > 20 && Math.random() < dt * 30) particle({ x: h.x + h.w / 2 + rand(-12, 12), y: h.type === 'pillar' ? WATER - h.cur + rand(0, 14) : h.cur - rand(0, 14), vx: rand(-40, 40), vy: (h.type === 'pillar' ? -1 : 1) * rand(10, 80), g: h.type === 'pillar' ? 120 : -40, size: rand(1.3, 2.8), color: '#ffb347', life: 0.6 });
+      if (h.cur > 20 && Math.random() < dt * 30) particle({ x: h.x + h.w / 2 + rand(-12, 12), y: h.type === 'pillar' ? WATER - h.cur + rand(0, 14) : h.cur - rand(0, 14), vx: rand(-40, 40), vy: (h.type === 'pillar' ? -1 : 1) * rand(10, 80), g: h.type === 'pillar' ? 120 : -40, size: rand(1.3, 2.8), color: lvl === 3 ? '#cbb8ff' : '#ffb347', life: 0.6 });
     } else if (h.type === 'brand') {
       h.x -= h.bv * dt;   // on top of the scroll
     } else if (h.type === 'hang' || h.type === 'rock') {
@@ -4524,7 +4706,7 @@ function advanceClock(d) {
       }
     }
     dayT -= L; dayIdx++;
-    if (dayIdx >= NDAYS) { dayIdx = NDAYS - 1; dayT = dayLens[NDAYS - 1]; elapsed = total; if (lvl === 2 && week >= NWEEKS) { startBoss(); return true; } startFinale(); return false; }
+    if (dayIdx >= NDAYS) { dayIdx = NDAYS - 1; dayT = dayLens[NDAYS - 1]; elapsed = total; if (lvl >= 2 && week >= NWEEKS) { startBoss(); return true; } startFinale(); return false; }
     onNewDay();
     autoCheckpoint();
   }
@@ -4714,7 +4896,7 @@ function update(dt) {
   const wind = state === 'finale' && fin && fin.kind === 'rest' && fin.wk === 3 ? 1 + 5 * clamp((fin.t - 1) / 4, 0, 1) : 1;
   for (const c of clouds) { c.x -= c.sp * dt * slow * wind; if (c.x < -150) c.x = W + 150; }
   const slant = scn().slant;
-  if (lvl === 2) for (const e of embers) { e.y -= e.v * dt; e.x += Math.sin(t * 1.3 + e.ph) * 6 * dt - 8 * dt; if (e.y < -6 || e.x < -6) { e.y = WATER + rand(0, 20); e.x = rand(0, W + 30); } }
+  if (lvl >= 2) { const up = lvl === 3 ? 0.3 : 1; for (const e of embers) { e.y -= e.v * dt * up; e.x += Math.sin(t * 1.3 + e.ph) * 6 * dt - 8 * dt; if (e.y < -6 || e.x < -6) { e.y = lvl === 3 ? rand(0, WATER) : WATER + rand(0, 20); e.x = rand(0, W + 30); } } }
   for (const d of rain) { d.y += d.v * dt; d.x -= d.v * slant * dt; if (d.y > WATER || d.x < -20) { d.y = rand(-60, -5); d.x = rand(0, W + 80); } }
   if (lvl === 1 && !reduceMotion && (pS < 0.4 || week === 5) && week < 6 && state !== 'finale' && state !== 'dry') {
     nextBolt -= dt;
@@ -4783,16 +4965,17 @@ function drawSky() {
   }
   sx = lerp(sx, W * 0.8, fS); sy = lerp(sy, WATER - 150, fS);
   a = lerp(a, clamp((p - 0.35) / 0.65, 0, 1) * (1 - nS), fS);
+  if (lvl === 3) a *= 0.55;   // a pale, weak glow: the dark does not really lift
   if (a > 0.02) {
     const rg = ctx.createRadialGradient(sx, sy, 10, sx, sy, 240);
-    rg.addColorStop(0, 'rgba(' + (lvl === 2 ? '255,150,90' : '255,240,190') + ',' + (0.8 * a).toFixed(3) + ')');
-    rg.addColorStop(1, 'rgba(' + (lvl === 2 ? '255,150,90' : '255,240,190') + ',0)');
+    rg.addColorStop(0, 'rgba(' + (lvl === 3 ? '190,170,255' : lvl === 2 ? '255,150,90' : '255,240,190') + ',' + (0.8 * a).toFixed(3) + ')');
+    rg.addColorStop(1, 'rgba(' + (lvl === 3 ? '190,170,255' : lvl === 2 ? '255,150,90' : '255,240,190') + ',0)');
     ctx.fillStyle = rg;
     ctx.fillRect(-20, -20, W + 40, H + 40);
-    ctx.fillStyle = (lvl === 2 ? 'rgba(255,200,160,' : 'rgba(255,248,214,') + (0.95 * a).toFixed(3) + ')';
+    ctx.fillStyle = (lvl === 3 ? 'rgba(226,216,255,' : lvl === 2 ? 'rgba(255,200,160,' : 'rgba(255,248,214,') + (0.95 * a).toFixed(3) + ')';
     ctx.beginPath(); ctx.arc(sx, sy, 26, 0, TAU); ctx.fill();
   }
-  if (fin && ((fin.kind === 'rest' && ENDX()[fin.wk]) || (fin.kind === 'end' && lvl === 2)) && fS > 0.01) {   // each rest stop has its own sky: dusk, a rainy slate, night, lavender, dawn
+  if (fin && ((fin.kind === 'rest' && ENDX()[fin.wk]) || (fin.kind === 'end' && lvl >= 2)) && fS > 0.01) {   // each rest stop has its own sky: dusk, a rainy slate, night, lavender, dawn
     const tn = ENDX()[fin.kind === 'end' ? 6 : fin.wk].tint, tg = ctx.createLinearGradient(0, 0, 0, WATER);
     tn.forEach((c, i) => tg.addColorStop(i / (tn.length - 1), c));
     ctx.globalAlpha = 0.92 * fS; ctx.fillStyle = tg; ctx.fillRect(-20, -20, W + 40, WATER + 22); ctx.globalAlpha = 1;
@@ -4800,7 +4983,7 @@ function drawSky() {
 }
 const PUFFS = [[-34, 8, 20], [-12, -6, 26], [16, -2, 24], [40, 8, 17], [0, 12, 24]];
 function drawClouds() {
-  ctx.fillStyle = lvl === 2 ? mix('#2a1210', '#7a5048', pS) : mix('#1a2133', '#ffffff', pS);
+  ctx.fillStyle = lvl === 3 ? mix('#0a0714', '#3a3258', pS) : lvl === 2 ? mix('#2a1210', '#7a5048', pS) : mix('#1a2133', '#ffffff', pS);
   const cm = fin && fin.kind === 'rest' && fin.wk === 3 ? 1 - smooth(clamp((fin.t - 1) / 6, 0, 1)) * fS : 1;   // the wind clears them away
   for (const c of clouds) {
     ctx.globalAlpha = c.a * cm;
@@ -4812,7 +4995,7 @@ function drawClouds() {
 }
 function drawNight() {
   if (nS < 0.01) return;
-  ctx.fillStyle = (lvl === 2 ? 'rgba(26,6,8,' : 'rgba(4,8,26,') + (0.52 * nS).toFixed(3) + ')';
+  ctx.fillStyle = (lvl === 3 ? 'rgba(4,2,14,' : lvl === 2 ? 'rgba(26,6,8,' : 'rgba(4,8,26,') + (0.52 * nS).toFixed(3) + ')';
   ctx.fillRect(-20, -20, W + 40, H + 40);
   const sa = nS * (0.3 + 0.7 * pS);
   ctx.fillStyle = '#fff';
@@ -4833,7 +5016,7 @@ function drawNight() {
   }
   const m = clamp((uNow() - 0.55) / 0.4, 0, 1), mx = lerp(W * 0.88, W * 0.12, m), my = 150 - 90 * Math.sin(Math.PI * m);
   ctx.globalAlpha = lvl === 2 && week >= 4 ? 0 : nS * (0.35 + 0.65 * pS);   // Level 2 from Week 4 has the blood moon instead (drawn with the scenery)
-  ctx.fillStyle = lvl === 2 ? '#e8b890' : '#f3efd9';
+  ctx.fillStyle = lvl === 3 ? '#d8d2f0' : lvl === 2 ? '#e8b890' : '#f3efd9';
   ctx.beginPath(); ctx.arc(mx, my, 15, 0, TAU); ctx.fill();
   ctx.fillStyle = 'rgba(40,50,80,.25)';
   ctx.beginPath(); ctx.arc(mx - 4, my - 3, 3.5, 0, TAU); ctx.arc(mx + 5, my + 4, 2.5, 0, TAU); ctx.fill();
@@ -4861,6 +5044,7 @@ function tornado(x, top, base, wTop, sway, a, k) {
 }
 const wrapX = (x, span) => ((x % span) + span) % span - 120;
 function drawScene() {
+  if (lvl === 3) { drawSceneL3(); return; }
   if (lvl === 2) { drawSceneL2(); return; }
   if (week < 2 || state === 'finale' || state === 'dry') return;
   const st = stt(), p = prog(), dark = 1 - pS * 0.55;
@@ -4913,6 +5097,12 @@ function drawScene() {
 }
 const DEB = []; for (let i = 0; i < 7; i++) DEB.push({ x: i * 58 + (i * 37) % 31, ph: i * 1.7, kind: i % 3, sp: 16 + (i % 3) * 7, y: (i % 4) * 13 });
 function drawSceneFront() {
+  if (lvl === 3) {   // pale motes of light drifting in the dark
+    ctx.fillStyle = 'rgba(205,190,255,.5)'; ctx.beginPath();
+    for (let i = 0; i < embers.length; i += 2) { const e = embers[i], k = e.s * 0.8 * (0.8 + 0.2 * Math.sin(t * 3 + e.ph)); ctx.moveTo(e.x + k, e.y); ctx.arc(e.x, e.y, k, 0, TAU); }
+    ctx.fill();
+    return;
+  }
   if (lvl === 2) {   // embers drifting up, and ash coming down in the later weeks
     ctx.fillStyle = 'rgba(255,170,70,.75)'; ctx.beginPath();
     for (const e of embers) { const k = e.s * (0.8 + 0.2 * Math.sin(t * 5 + e.ph)); ctx.moveTo(e.x + k, e.y); ctx.arc(e.x, e.y, k, 0, TAU); }
@@ -5175,8 +5365,408 @@ function updateFinale2(f, T, end, dt) {
   if (T > 7.0 && T < 8.4) { f.cf += dt * 30; const n = Math.floor(f.cf); f.cf -= n; if (n > 0) confetti(n); }
   if (T > 8.4 && !f.shown) showRest();
 }
+/* ---------- Level 3 drawing: the darkness ----------
+   The dark is drawn over the scenery and the bodies of the hazards, but NEVER over the warnings: every pale outline, arrow and ring is drawn after it, so the dark
+   changes how much detail you see, never whether you are told. The lantern around the bird shrinks every week. The pit at the bottom keeps a bright edge. */
+const DARK_A = [0, 0.5, 0.56, 0.62, 0.66, 0.7, 0.7];   // how dark it is away from the lantern, by week
+const LAN_R = [0, 218, 198, 178, 158, 142, 128];        // the lantern's radius in px, by week
+function lanternR() {
+  let wk = clamp(week, 1, NWEEKS);
+  if (charKey === 'cherub') wk = 1;   // Radiant: the Cherub's lantern never shrinks
+  let r = LAN_R[wk];
+  const d = curDiff(); r *= d === 'hard' ? 0.94 : d === 'impossible' ? 0.88 : 1;
+  if (charKey === 'owl') r *= 1.3;    // Night Sight
+  if (ffTier() >= 1) r *= 1.25;       // the Firefly's Lantern Light
+  if (boss) r = Math.max(r, 200);     // the fight is lit well enough to see the lane
+  return r;
+}
+function drawDarkness() {
+  if (state === 'finale' || state === 'dry' || state === 'menu' || state === 'depart') return;
+  const R = lanternR() * (reduceMotion ? 1 : 1 + 0.018 * Math.sin(t * 6.3) + 0.01 * Math.sin(t * 11.1));
+  const A = DARK_A[clamp(week, 1, NWEEKS)] * (boss ? 0.75 : 1);
+  const cx = bird.x, cy = bird.y;
+  const g = ctx.createRadialGradient(cx, cy, R * 0.28, cx, cy, R);
+  g.addColorStop(0, 'rgba(3,1,12,0)'); g.addColorStop(0.55, 'rgba(3,1,12,' + (A * 0.35).toFixed(3) + ')'); g.addColorStop(1, 'rgba(3,1,12,' + A.toFixed(3) + ')');
+  ctx.fillStyle = g; ctx.fillRect(-20, -20, W + 40, H + 40);
+  const w = ctx.createRadialGradient(cx, cy, 2, cx, cy, R * 0.55);
+  w.addColorStop(0, 'rgba(255,226,150,.17)'); w.addColorStop(1, 'rgba(255,226,150,0)');
+  ctx.fillStyle = w; ctx.beginPath(); ctx.arc(cx, cy, R * 0.55, 0, TAU); ctx.fill();
+}
+function drawPit() {
+  const WC = scn().water, tm = stt();
+  const gg = ctx.createLinearGradient(0, WATER - 60, 0, WATER);
+  gg.addColorStop(0, 'rgba(150,120,255,0)'); gg.addColorStop(1, 'rgba(150,120,255,' + (0.16 + 0.04 * Math.sin(tm * 1.6)).toFixed(3) + ')');
+  ctx.fillStyle = gg; ctx.fillRect(-20, WATER - 60, W + 40, 62);
+  waveLayer(WATER, 2.4, 34, 0.55, 0, mix(WC[0], WC[1], 0.35 + 0.4 * pS));
+  waveLayer(WATER + 9, 2, 26, -0.8, 2, mix(WC[2], WC[3], 0.3 + 0.5 * pS));
+  ctx.strokeStyle = 'rgba(205,185,255,.55)'; ctx.lineWidth = 1.7; ctx.beginPath();   // a pale edge so the floor of the dark always reads
+  for (let x = -20; x <= W + 20; x += 6) { const y = WATER + Math.sin(x / 34 + tm * 0.55) * 2.4; if (x === -20) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(190,170,255,.4)'; ctx.lineWidth = 1.2;   // slow ripples, as if something far below were breathing
+  for (let i = 0; i < 6; i++) {
+    const ph = (tm * 0.3 + i * 0.17) % 1, x = wrapX(i * 71 - tm * 9 + 30, W + 160);
+    ctx.globalAlpha = (1 - ph) * 0.7; ctx.beginPath(); ctx.ellipse(x, WATER + 13 + (i % 3) * 9, 6 + ph * 20, 1.6 + ph * 2.4, 0, 0, TAU); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  const g = ctx.createLinearGradient(0, WATER, 0, H);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.5)');
+  ctx.fillStyle = g; ctx.fillRect(-20, WATER, W + 40, H - WATER + 20);
+}
+// a crystal spire of shadow: base on the line yb, reaching len px toward the tip (sgn -1 = up from the ground, +1 = down from the sky). The crown teeth stay at or above the hit area.
+function spirePath(cx, w, yb, len, sgn) {
+  const Y = f => yb + sgn * f;
+  ctx.beginPath();
+  ctx.moveTo(cx - w * 0.56, Y(-8));
+  ctx.lineTo(cx - w * 0.47, Y(len * 0.55));
+  ctx.lineTo(cx - w * 0.36, Y(len - 4));
+  ctx.lineTo(cx - w * 0.2, Y(len + 6));
+  ctx.lineTo(cx - w * 0.05, Y(len - 2));
+  ctx.lineTo(cx + w * 0.12, Y(len + 7));
+  ctx.lineTo(cx + w * 0.36, Y(len - 4));
+  ctx.lineTo(cx + w * 0.47, Y(len * 0.55));
+  ctx.lineTo(cx + w * 0.56, Y(-8));
+  ctx.closePath();
+}
+function spireBody(cx, w, yb, len, sgn) {
+  const tip = yb + sgn * len;
+  const gl = ctx.createRadialGradient(cx, tip, 2, cx, tip, 60);
+  gl.addColorStop(0, 'rgba(180,150,255,.4)'); gl.addColorStop(1, 'rgba(120,80,255,0)');
+  ctx.fillStyle = gl; ctx.fillRect(cx - 70, tip - 60, 140, 120);
+  const fg = ctx.createLinearGradient(cx - w * 0.55, 0, cx + w * 0.55, 0);
+  fg.addColorStop(0, '#6a58a8'); fg.addColorStop(0.5, '#3c2d70'); fg.addColorStop(1, '#1d1440');
+  spirePath(cx, w, yb, len, sgn); ctx.fillStyle = fg; ctx.fill();
+  ctx.strokeStyle = 'rgba(210,190,255,.28)'; ctx.lineWidth = 1; ctx.beginPath();
+  ctx.moveTo(cx - w * 0.1, yb + sgn * len * 0.15); ctx.lineTo(cx - w * 0.02, yb + sgn * len * 0.5); ctx.lineTo(cx - w * 0.14, yb + sgn * len * 0.8);
+  ctx.stroke();
+}
+// pass 0: the body, before the dark. pass 1: the pale outline before it rises, and the pale rim once it is up, after the dark.
+function drawSpire(h, pass) {
+  const cx = h.x + h.w / 2;
+  if (pass === 0) { if (h.cur > 3) spireBody(cx, h.w, WATER, h.cur, -1); return; }
+  if (h.ht < 0) {
+    const k = fireNear(h);
+    ctx.save();
+    ctx.setLineDash([5, 6]); ctx.lineWidth = 1.6;
+    ctx.strokeStyle = 'rgba(214,196,255,' + (0.3 + 0.5 * k).toFixed(3) + ')';
+    ctx.fillStyle = 'rgba(170,140,255,' + (0.05 + 0.12 * k).toFixed(3) + ')';
+    ctx.beginPath(); ctx.rect(cx - h.w * 0.4, WATER - h.H, h.w * 0.8, h.H); ctx.fill(); ctx.stroke();
+    if (ffTier() >= 1) { ctx.setLineDash([]); ctx.strokeStyle = 'rgba(225,255,140,.85)'; ctx.lineWidth = 2; ctx.stroke(); }   // Lantern Light
+    ctx.setLineDash([]);
+    ctx.strokeStyle = 'rgba(214,196,255,' + (0.8 * k).toFixed(3) + ')'; ctx.lineWidth = 2;
+    for (let r = 0; r < 3; r++) { const ph = (stt() * 1.5 + r / 3 + h.id * 0.17) % 1; ctx.globalAlpha = (1 - ph) * k; ctx.beginPath(); ctx.ellipse(cx, WATER + 3, 8 + ph * 30 * k, 2.5 + ph * 6, 0, 0, TAU); ctx.stroke(); }
+    ctx.restore();
+  } else if (h.cur > 3) {
+    spirePath(cx, h.w, WATER, h.cur, -1); ctx.strokeStyle = 'rgba(218,204,255,.8)'; ctx.lineWidth = 1.8; ctx.lineJoin = 'round'; ctx.stroke();
+  }
+}
+function drawHSpire(h, pass) {
+  const cx = h.x + h.w / 2, k = fireNear(h);
+  if (pass === 0) {
+    ctx.fillStyle = '#150e2a';   // the lip in the sky the spire drops from
+    ctx.beginPath(); ctx.moveTo(cx - h.w * 0.7, -4); ctx.lineTo(cx + h.w * 0.7, -4); ctx.lineTo(cx + h.w * 0.45, 12); ctx.lineTo(cx - h.w * 0.45, 12); ctx.closePath(); ctx.fill();
+    if (h.cur > 3) spireBody(cx, h.w, 0, h.cur, 1);
+    return;
+  }
+  if (h.ht < 0) {
+    ctx.save();
+    ctx.setLineDash([5, 6]); ctx.lineWidth = 1.6;
+    ctx.strokeStyle = 'rgba(214,196,255,' + (0.3 + 0.5 * k).toFixed(3) + ')';
+    ctx.fillStyle = 'rgba(170,140,255,' + (0.05 + 0.12 * k).toFixed(3) + ')';
+    ctx.beginPath(); ctx.rect(cx - h.w * 0.4, 0, h.w * 0.8, h.L); ctx.fill(); ctx.stroke();
+    if (ffTier() >= 1) { ctx.setLineDash([]); ctx.strokeStyle = 'rgba(225,255,140,.85)'; ctx.lineWidth = 2; ctx.stroke(); }   // Lantern Light
+    ctx.restore();
+  } else if (h.cur > 3) {
+    spirePath(cx, h.w, 0, h.cur, 1); ctx.strokeStyle = 'rgba(218,204,255,.8)'; ctx.lineWidth = 1.8; ctx.lineJoin = 'round'; ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(214,196,255,' + Math.min(1, 0.35 + 0.65 * k * (0.75 + 0.25 * Math.sin(stt() * 9 + h.id))).toFixed(3) + ')';   // the slit in the lip brightens as it nears
+  ctx.fillRect(cx - h.w * 0.32, 6, h.w * 0.64, 5);
+}
+// a bat flying left (head at the left edge of the hit area). part 0 = body and head, part 1 = the two wings.
+function batPath(x, y, w, f, part) {
+  const cx = x + w * 0.5, hx = x + 8, sx = cx - 2, tail = [x + w - 3, y + 2];
+  ctx.beginPath();
+  if (part === 0) {
+    ctx.moveTo(cx + w * 0.3, y); ctx.ellipse(cx, y, w * 0.3, 6.4, 0, 0, TAU);
+    ctx.moveTo(hx + 7, y - 2); ctx.arc(hx, y - 2, 7, 0, TAU);
+    ctx.moveTo(hx - 6, y - 7); ctx.lineTo(hx - 4, y - 16); ctx.lineTo(hx + 1, y - 8);
+    ctx.moveTo(hx + 1, y - 8); ctx.lineTo(hx + 6, y - 16); ctx.lineTo(hx + 8, y - 6);
+    return;
+  }
+  const wing = (ff, sc) => {
+    const tx = cx + w * 0.3 * sc, ty = y - 4 - 18 * ff * sc;
+    ctx.moveTo(sx, y - 2); ctx.lineTo(tx, ty);
+    let px = tx, py = ty;
+    for (let i = 1; i <= 3; i++) {
+      const ex = tx + (tail[0] - tx) * i / 3, ey = ty + (tail[1] - ty) * i / 3;
+      ctx.quadraticCurveTo((px + ex) / 2 - 3, (py + ey) / 2 + (ff >= 0 ? 6 : -6), ex, ey); px = ex; py = ey;
+    }
+    ctx.closePath();
+  };
+  wing(f, 1); wing(-f * 0.7, 0.8);
+}
+// pass 0: the body before the dark. pass 1: the pale outline, the glowing eyes and the incoming-lane arrow, after it.
+function drawBat(h, pass) {
+  const x = h.x, y = h.y, f = Math.sin(stt() * 13 + h.ph);
+  if (pass === 0) {
+    if (x > W + 30) return;
+    ctx.save(); ctx.lineJoin = 'round';
+    batPath(x, y, h.w, f, 1); ctx.fillStyle = '#35285e'; ctx.fill();
+    batPath(x, y, h.w, f, 0); ctx.fillStyle = '#241a44'; ctx.fill();
+    ctx.restore();
+    return;
+  }
+  const hs = charKey === 'dragonfly' && x > bird.x + 10;   // Heat Sense: the lane stays lit right up to you
+  if (hs && x <= W - 14) {
+    ctx.save(); ctx.setLineDash([5, 7]); ctx.strokeStyle = 'rgba(214,190,255,.6)'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(bird.x + 18, y); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+  }
+  if (x > W - 14) {   // still off the right edge: an arrow and a faint lane say where it will come in
+    const on = Math.floor(t * 8) % 2 === 0;
+    ctx.save();
+    ctx.setLineDash([6, 8]); ctx.strokeStyle = hs ? 'rgba(214,190,255,.65)' : ffTier() >= 1 ? 'rgba(225,255,140,.75)' : 'rgba(200,170,255,.42)'; ctx.lineWidth = hs || ffTier() >= 1 ? 2.5 : 2;
+    ctx.beginPath(); ctx.moveTo(W - 26, y); ctx.lineTo(BIRD_X + 20, y); ctx.stroke(); ctx.setLineDash([]);
+    if (on) {
+      ctx.lineJoin = 'round'; ctx.fillStyle = '#b99bff'; ctx.strokeStyle = '#120a2a'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(W - 6, y - 13); ctx.lineTo(W - 30, y); ctx.lineTo(W - 6, y + 13); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  if (x > W + 30) return;
+  ctx.save(); ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(218,204,255,.75)'; ctx.lineWidth = 1.4;
+  batPath(x, y, h.w, f, 1); ctx.stroke(); batPath(x, y, h.w, f, 0); ctx.stroke();
+  const ex = x + 8, ey = y - 4, gl = ctx.createRadialGradient(ex + 2, ey, 0.5, ex + 2, ey, 9);
+  gl.addColorStop(0, 'rgba(255,236,140,.95)'); gl.addColorStop(1, 'rgba(255,200,80,0)');
+  ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(ex + 2, ey, 9, 0, TAU); ctx.fill();
+  ctx.fillStyle = '#fff4b0'; ctx.beginPath(); ctx.arc(ex, ey, 1.7, 0, TAU); ctx.arc(ex + 5, ey, 1.7, 0, TAU); ctx.fill();
+  ctx.restore();
+}
+// the shadow bolt: the same ring, mark and column as the asteroid it replaces in this level, in violet light
+function drawShadowBolt(s) {
+  if (s.state === 'warn') {
+    const k = s.t / s.warn, on = Math.floor(s.t / 0.12) % 2 === 0;
+    ctx.save();
+    ctx.setLineDash([4, 6]); ctx.strokeStyle = 'rgba(200,170,255,' + (0.25 + 0.25 * k).toFixed(2) + ')'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(s.x, 0); ctx.lineTo(s.x, s.y - 20); ctx.stroke();
+    ctx.setLineDash([5, 5]); ctx.strokeStyle = 'rgba(214,190,255,' + (0.35 + 0.4 * k).toFixed(2) + ')';
+    ctx.beginPath(); ctx.arc(s.x, s.y, 40, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(150,110,255,' + (0.07 + 0.13 * k).toFixed(3) + ')';
+    ctx.beginPath(); ctx.arc(s.x, s.y, 40, 0, TAU); ctx.fill();
+    if (ffTier() >= 1) { ctx.setLineDash([]); ctx.strokeStyle = 'rgba(225,255,140,.85)'; ctx.lineWidth = 2; ctx.stroke(); }   // Lantern Light
+    const rr = 5 + 7 * k, g = ctx.createRadialGradient(s.x, 10, 1, s.x, 10, rr * 3);
+    g.addColorStop(0, 'rgba(226,210,255,.9)'); g.addColorStop(1, 'rgba(130,90,255,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(s.x, 10, rr * 3, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#120a28'; ctx.beginPath(); ctx.arc(s.x, 10, rr, 0, TAU); ctx.fill();
+    if (on) {
+      ctx.lineJoin = 'round';
+      ctx.fillStyle = '#b99bff'; ctx.strokeStyle = '#120a2a'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(s.x, s.y - 17); ctx.lineTo(s.x + 16, s.y + 12); ctx.lineTo(s.x - 16, s.y + 12); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#120a2a'; ctx.fillRect(s.x - 1.8, s.y - 7, 3.6, 10); ctx.beginPath(); ctx.arc(s.x, s.y + 7.5, 2.1, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  } else if (s.pts) {
+    const a = 1 - s.t / 0.45, fy = s.y * easeOut(Math.min(1, s.t / 0.12));
+    ctx.save();
+    const tg = ctx.createLinearGradient(0, -20, 0, fy);
+    tg.addColorStop(0, 'rgba(150,110,255,0)'); tg.addColorStop(1, 'rgba(236,226,255,' + (0.9 * a).toFixed(3) + ')');
+    ctx.strokeStyle = tg; ctx.lineWidth = 12; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(s.x, -20); ctx.lineTo(s.x, fy); ctx.stroke();
+    if (s.t < 0.14) { ctx.fillStyle = '#0c0620'; ctx.beginPath(); ctx.arc(s.x, fy, 12, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(226,210,255,.9)'; ctx.lineWidth = 2; ctx.stroke(); }
+    const e = clamp((s.t - 0.08) / 0.3, 0, 1);
+    const g = ctx.createRadialGradient(s.x, s.y, 2, s.x, s.y, 54);
+    g.addColorStop(0, 'rgba(244,238,255,' + (0.85 * a).toFixed(3) + ')'); g.addColorStop(0.5, 'rgba(150,110,255,' + (0.5 * a).toFixed(3) + ')'); g.addColorStop(1, 'rgba(90,50,200,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(s.x, s.y, 54, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(214,190,255,' + (0.85 * a).toFixed(3) + ')'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(s.x, s.y, 14 + 34 * e, 0, TAU); ctx.stroke();
+    ctx.restore();
+  }
+}
+// The Great Darkness: a vast billowing shadow with a pale rim and two cold eyes. Its front edge is at (hx, hy); the mass trails off to the right. o: scale, open (0..1: eyes and maw wake), alpha
+function drawGreatDarkness(hx, hy, o) {
+  o = o || {};
+  const sc = o.scale || 1, open = clamp(o.open || 0, 0, 1), tm = stt();
+  ctx.save(); ctx.translate(hx, hy); ctx.scale(sc, sc);
+  if (o.alpha !== undefined) ctx.globalAlpha = o.alpha;
+  const B = [];
+  for (let i = 0; i < 16; i++) B.push([ (i === 0 ? 0 : 14 + (i * 23) % 120) + Math.sin(tm * 0.9 + i) * 5, (i === 0 ? 0 : Math.sin(i * 2.399) * (66 + (i % 3) * 16)) + Math.cos(tm * 0.7 + i * 1.3) * 6, i === 0 ? 36 : 26 + (i % 5) * 7 ]);
+  ctx.fillStyle = 'rgba(190,160,255,.45)'; ctx.beginPath();   // pale rim first, so the dark body reads against a dark sky
+  B.forEach(q => { ctx.moveTo(q[0] + q[2] + 4, q[1]); ctx.arc(q[0], q[1], q[2] + 4, 0, TAU); }); ctx.fill();
+  ctx.fillStyle = '#080414'; ctx.beginPath();
+  B.forEach(q => { ctx.moveTo(q[0] + q[2], q[1]); ctx.arc(q[0], q[1], q[2], 0, TAU); }); ctx.fill();
+  ctx.strokeStyle = 'rgba(96,64,170,.5)'; ctx.lineWidth = 2; ctx.beginPath();   // slow swirls inside
+  for (let i = 0; i < 5; i++) { const q = B[i * 3 + 1]; ctx.moveTo(q[0] + q[2] * 0.6, q[1]); ctx.arc(q[0], q[1], q[2] * 0.6, tm * 0.8 + i, tm * 0.8 + i + 2.2); }
+  ctx.stroke();
+  const eg = 0.55 + 0.45 * open;   // two cold eyes at the front
+  [[-14, -13], [4, -13]].forEach(e => {
+    const g = ctx.createRadialGradient(e[0], e[1], 1, e[0], e[1], 16);
+    g.addColorStop(0, 'rgba(244,236,255,' + (0.9 * eg).toFixed(3) + ')'); g.addColorStop(1, 'rgba(160,120,255,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(e[0], e[1], 16, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(250,246,255,' + eg.toFixed(3) + ')'; ctx.beginPath(); ctx.ellipse(e[0], e[1], 6.5, 3.6 + 3 * open, 0.25, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#080414'; ctx.beginPath(); ctx.ellipse(e[0] - 1.5, e[1], 1.6, 3 + 2.5 * open, 0, 0, TAU); ctx.fill();
+  });
+  if (open > 0.05) {   // the maw wakes before it speaks
+    ctx.strokeStyle = 'rgba(226,210,255,' + (0.85 * open).toFixed(3) + ')'; ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.ellipse(-12, 14, 15, 4 + 11 * open, 0, 0, TAU); ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawSceneL3() {
+  if (state === 'finale' || state === 'dry') return;
+  const st = stt(), wk = clamp(week, 1, NWEEKS), dark = 1 - pS * 0.25;
+  const ridge = (off, h, base, col, ph) => {
+    ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(-20, WATER + 12);
+    for (let x = -20; x <= W + 20; x += 8) {
+      const a = (x + off) / W * TAU, v = 0.5 + 0.28 * Math.sin(a * 2 + ph) + 0.2 * Math.sin(a * 3 + ph * 1.7) + 0.12 * Math.sin(a * 5 + ph * 0.6);
+      ctx.lineTo(x, base - h * v);
+    }
+    ctx.lineTo(W + 20, WATER + 12); ctx.closePath(); ctx.fill();
+  };
+  if (wk === 5) {   // the sixth hour: a black sun with a pale ring
+    const mx = W * 0.3, my = 150 + Math.sin(st * 0.2) * 3;
+    const cg = ctx.createRadialGradient(mx, my, 20, mx, my, 120);
+    cg.addColorStop(0, 'rgba(190,160,255,.4)'); cg.addColorStop(1, 'rgba(190,160,255,0)');
+    ctx.fillStyle = cg; ctx.fillRect(mx - 130, my - 130, 260, 260);
+    ctx.fillStyle = '#020104'; ctx.beginPath(); ctx.arc(mx, my, 30, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(224,210,255,.55)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(mx, my, 33, 0, TAU); ctx.stroke();
+  }
+  ridge(st * 4, wk === 4 ? 200 : 120, WATER - 4, 'rgba(36,24,70,' + (0.6 * dark + 0.1).toFixed(3) + ')', 0.7);
+  if (wk === 1) {   // pyramids in the dark
+    ctx.fillStyle = 'rgba(20,12,38,.92)';
+    const px = wrapX(W * 0.78 - st * 3, W + 280) + 50;
+    ctx.beginPath(); ctx.moveTo(px - 70, WATER); ctx.lineTo(px, WATER - 92); ctx.lineTo(px + 70, WATER); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(px + 50, WATER); ctx.lineTo(px + 100, WATER - 54); ctx.lineTo(px + 150, WATER); ctx.closePath(); ctx.fill();
+  } else if (wk === 2) {   // a sleeping camp on the hills: little lamps, each one flickering
+    for (let i = 0; i < 14; i++) {
+      const x = wrapX(i * 47 - st * 6, W + 200) + 60, y = WATER - 22 - (i % 5) * 10;
+      ctx.fillStyle = 'rgba(255,214,130,' + (0.35 + 0.3 * Math.sin(st * 5 + i * 1.9)).toFixed(3) + ')';
+      ctx.beginPath(); ctx.arc(x, y, 1.9, 0, TAU); ctx.fill();
+    }
+  } else if (wk === 3) {   // a prison tower with one lit window
+    const tx = wrapX(W * 0.8 - st * 3, W + 260) + 50;
+    ctx.fillStyle = 'rgba(24,16,40,.95)'; ctx.fillRect(tx - 24, WATER - 150, 48, 150);
+    ctx.fillRect(tx - 30, WATER - 160, 60, 12);
+    ctx.fillStyle = 'rgba(255,210,130,' + (0.6 + 0.15 * Math.sin(st * 3)).toFixed(3) + ')'; ctx.fillRect(tx - 5, WATER - 118, 10, 14);
+    ctx.strokeStyle = 'rgba(24,16,40,1)'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(tx - 1.7, WATER - 118); ctx.lineTo(tx - 1.7, WATER - 104); ctx.moveTo(tx + 1.7, WATER - 118); ctx.lineTo(tx + 1.7, WATER - 104); ctx.stroke();
+  } else if (wk === 4) {   // steep walls of the valley
+    ridge(st * 6, 250, WATER + 24, 'rgba(8,16,22,' + (0.8 * dark + 0.1).toFixed(3) + ')', 1.9);
+  }
+  ridge(st * 10, wk === 4 ? 130 : 80, WATER - 1, 'rgba(14,8,32,' + (0.72 * dark + 0.12).toFixed(3) + ')', 2.9);
+  if (wk === 6 && !boss) {   // far off, the Great Darkness gathers
+    const x = wrapX(W * 0.95 - st * 8, W + 240) + 60, y = 110 + 10 * Math.sin(st * 0.6);
+    drawGreatDarkness(x, y, { scale: 0.42, alpha: 0.5 });
+  }
+}
+// the rest stops of Level 3 are Bible stories where light came into the dark; the end of the level is the Great Darkness dissolving into dawn
+function drawDarkRest() {
+  const f = fin, gx = f.gx, wk = f.wk, T = f.t, end = f.kind === 'end', ax = gx + 150, sg = (a, b) => clamp((T - a) / (b - a), 0, 1), bx = gx + 12;
+  const gl = ctx.createRadialGradient(ax - 60, WATER - 60, 10, ax - 60, WATER - 60, 280);
+  gl.addColorStop(0, 'rgba(255,226,150,' + (end ? 0.3 : 0.4).toFixed(2) + ')'); gl.addColorStop(1, 'rgba(255,226,150,0)');
+  ctx.fillStyle = gl; ctx.fillRect(0, WATER - 340, W, 360);
+  const flame = (x, y, s, a) => {
+    const g = ctx.createRadialGradient(x, y - 4 * s, 1, x, y - 4 * s, 22 * s);
+    g.addColorStop(0, 'rgba(255,240,190,' + (0.9 * a).toFixed(3) + ')'); g.addColorStop(1, 'rgba(255,190,80,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y - 4 * s, 22 * s, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,214,110,' + a.toFixed(3) + ')';
+    ctx.beginPath(); ctx.moveTo(x, y - 13 * s); ctx.quadraticCurveTo(x + 6 * s, y - 4 * s, x, y + 2 * s); ctx.quadraticCurveTo(x - 6 * s, y - 4 * s, x, y - 13 * s); ctx.fill();
+  };
+  if (end) {
+    const d = sg(0.4, 6.4);   // the Great Darkness thins out and drifts away
+    if (d < 1) drawGreatDarkness(lerp(W - 80, W + 60, d), lerp(160, 110, d), { scale: lerp(0.95, 1.25, d), alpha: (1 - d) * 0.95, open: 0 });
+    const sun = smooth(sg(2.5, 9)), sy = WATER - 30 - 90 * sun;
+    const rg = ctx.createRadialGradient(ax - 90, sy, 6, ax - 90, sy, 250);
+    rg.addColorStop(0, 'rgba(255,236,170,' + (0.9 * sun).toFixed(3) + ')'); rg.addColorStop(1, 'rgba(255,210,130,0)');
+    ctx.fillStyle = rg; ctx.fillRect(0, 60, W, WATER - 60);
+    ctx.strokeStyle = 'rgba(255,236,170,' + (0.16 * sun).toFixed(3) + ')'; ctx.lineWidth = 6; ctx.beginPath();
+    for (let i = 0; i < 9; i++) { const a = Math.PI + (i + 0.5) * Math.PI / 9; ctx.moveTo(ax - 90, sy); ctx.lineTo(ax - 90 + Math.cos(a) * 340, sy + Math.sin(a) * 340); }
+    ctx.stroke();
+  } else if (wk === 1) {   // a house in Goshen with light in the window and at the door
+    const r = smooth(sg(0.8, 3.0));
+    ctx.fillStyle = '#241a3a'; ctx.fillRect(bx - 44, WATER - 74, 88, 80);
+    ctx.fillStyle = '#1a1230'; ctx.beginPath(); ctx.moveTo(bx - 52, WATER - 74); ctx.lineTo(bx, WATER - 112); ctx.lineTo(bx + 52, WATER - 74); ctx.closePath(); ctx.fill();
+    const lg = ctx.createRadialGradient(bx, WATER - 36, 4, bx, WATER - 36, 130);
+    lg.addColorStop(0, 'rgba(255,214,130,' + (0.55 * r).toFixed(3) + ')'); lg.addColorStop(1, 'rgba(255,214,130,0)');
+    ctx.fillStyle = lg; ctx.fillRect(bx - 140, WATER - 170, 280, 190);
+    ctx.fillStyle = 'rgba(255,226,150,' + (0.95 * r).toFixed(3) + ')'; ctx.fillRect(bx - 30, WATER - 58, 22, 22); ctx.fillRect(bx + 8, WATER - 46, 20, 52);
+  } else if (wk === 2) {   // Gideon's three hundred: pitchers broken, lamps shining
+    for (let i = 0; i < 3; i++) {
+      const px = bx - 38 + i * 38, br = smooth(sg(2.2 + i * 0.35, 2.8 + i * 0.35));
+      if (br < 1) {
+        ctx.fillStyle = '#7a5236'; ctx.beginPath(); ctx.ellipse(px, WATER - 18, 14, 18, 0, 0, TAU); ctx.fill();
+        ctx.fillRect(px - 6, WATER - 44, 12, 10); ctx.fillStyle = '#5a3a26'; ctx.fillRect(px - 8, WATER - 46, 16, 4);
+        ctx.fillStyle = 'rgba(255,214,130,' + (0.35 * (1 - br)).toFixed(3) + ')'; ctx.beginPath(); ctx.ellipse(px, WATER - 46, 7, 3, 0, 0, TAU); ctx.fill();
+      }
+      if (br > 0) {
+        ctx.fillStyle = '#7a5236';
+        for (let k = 0; k < 4; k++) { const a = k * 1.6 + i; ctx.beginPath(); ctx.moveTo(px + Math.cos(a) * 12 * br, WATER - 4 - Math.abs(Math.sin(a)) * 6 * br); ctx.lineTo(px + Math.cos(a) * 12 * br + 6, WATER - 2); ctx.lineTo(px + Math.cos(a) * 12 * br - 2, WATER - 1); ctx.fill(); }
+        flame(px, WATER - 40 - 8 * Math.sin(stt() * 6 + i), 1.2, br);
+      }
+    }
+  } else if (wk === 3) {   // the prison shakes and the doors open
+    const shake3 = T > 1.8 && T < 3.6 ? Math.sin(T * 44) * 2.6 * (1 - sg(1.8, 3.6)) : 0, o = smooth(sg(3.0, 4.4));
+    ctx.save(); ctx.translate(shake3, 0);
+    ctx.fillStyle = '#2b2038'; ctx.fillRect(bx - 58, WATER - 124, 116, 130);
+    ctx.fillStyle = '#15101f'; ctx.fillRect(bx - 22, WATER - 60, 44, 66);
+    const lg = ctx.createLinearGradient(0, WATER - 60, 0, WATER + 6);
+    lg.addColorStop(0, 'rgba(255,232,170,' + (0.95 * o).toFixed(3) + ')'); lg.addColorStop(1, 'rgba(255,214,130,' + (0.75 * o).toFixed(3) + ')');
+    ctx.fillStyle = lg; ctx.fillRect(bx - 22, WATER - 60, 44, 66);
+    ctx.fillStyle = '#3a2c4c'; const lw = 22 * (1 - o); ctx.fillRect(bx - 22, WATER - 60, lw, 66); ctx.fillRect(bx + 22 - lw, WATER - 60, lw, 66);
+    ctx.fillStyle = '#15101f'; ctx.fillRect(bx - 14, WATER - 104, 28, 24);
+    ctx.strokeStyle = '#3a2c4c'; ctx.lineWidth = 2; ctx.beginPath(); for (let i = -1; i <= 1; i++) { ctx.moveTo(bx + i * 8, WATER - 104); ctx.lineTo(bx + i * 8, WATER - 80); } ctx.stroke();
+    ctx.restore();
+    if (o > 0) { const sg2 = ctx.createRadialGradient(bx, WATER - 30, 4, bx, WATER - 30, 120); sg2.addColorStop(0, 'rgba(255,226,150,' + (0.4 * o).toFixed(3) + ')'); sg2.addColorStop(1, 'rgba(255,226,150,0)'); ctx.fillStyle = sg2; ctx.fillRect(bx - 130, WATER - 160, 260, 190); }
+  } else if (wk === 4) {   // an oil lamp on a stone, and the path lights up
+    const r = smooth(sg(0.8, 3.4));
+    const pg = ctx.createRadialGradient(bx, WATER - 4, 4, bx, WATER - 4, 40 + 110 * r);
+    pg.addColorStop(0, 'rgba(255,226,150,' + (0.5 * r).toFixed(3) + ')'); pg.addColorStop(1, 'rgba(255,226,150,0)');
+    ctx.fillStyle = pg; ctx.fillRect(bx - 160, WATER - 160, 320, 170);
+    ctx.fillStyle = '#4a3e5c'; ctx.beginPath(); ctx.ellipse(bx, WATER - 4, 26, 9, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#8a6038'; ctx.beginPath(); ctx.ellipse(bx, WATER - 16, 16, 8, 0, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(bx - 14, WATER - 18); ctx.lineTo(bx - 26, WATER - 22); ctx.lineTo(bx - 14, WATER - 13); ctx.fill();
+    ctx.strokeStyle = '#8a6038'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(bx + 17, WATER - 16, 6, -1.4, 1.4); ctx.stroke();
+    flame(bx - 25, WATER - 22, 1.1, r);
+    ctx.fillStyle = 'rgba(255,226,150,' + (0.5 * r).toFixed(3) + ')';
+    for (let i = 0; i < 5; i++) { const dx = -50 - i * 26; ctx.beginPath(); ctx.ellipse(bx + dx, WATER + 1, 8, 2.2, 0, 0, TAU); ctx.globalAlpha = r * smooth(clamp(r * 2.2 - i * 0.3, 0, 1)); ctx.fill(); ctx.globalAlpha = 1; }
+  } else if (wk === 5) {   // a great light breaks through the dark
+    const r = smooth(sg(0.6, 4.2));
+    const bg = ctx.createLinearGradient(0, 0, 0, WATER);
+    bg.addColorStop(0, 'rgba(255,240,190,' + (0.0).toFixed(3) + ')'); bg.addColorStop(1, 'rgba(255,232,160,' + (0.55 * r).toFixed(3) + ')');
+    ctx.fillStyle = bg; ctx.beginPath(); ctx.moveTo(bx - 8, -10); ctx.lineTo(bx + 8, -10); ctx.lineTo(bx + 120, WATER); ctx.lineTo(bx - 120, WATER); ctx.closePath(); ctx.fill();
+    const gg = ctx.createRadialGradient(bx, WATER - 10, 6, bx, WATER - 10, 150);
+    gg.addColorStop(0, 'rgba(255,240,190,' + (0.7 * r).toFixed(3) + ')'); gg.addColorStop(1, 'rgba(255,226,150,0)');
+    ctx.fillStyle = gg; ctx.fillRect(bx - 160, WATER - 170, 320, 180);
+    ctx.fillStyle = 'rgba(255,248,214,' + (0.8 * r).toFixed(3) + ')';
+    for (let i = 0; i < 12; i++) { const p = (stt() * 0.3 + i * 0.083) % 1; ctx.beginPath(); ctx.arc(bx + Math.sin(i * 3.1) * 70 * p, WATER - p * 330, 1.6, 0, TAU); ctx.fill(); }
+  }
+  ctx.fillStyle = '#15102a'; ctx.beginPath();   // the mound the birds sit on: its roof slopes the way the ark's does
+  ctx.moveTo(ax - 130, WATER + 16); ctx.quadraticCurveTo(ax - 100, WATER - 40, ax - 70, WATER - 64);
+  ctx.lineTo(ax, WATER - 98); ctx.lineTo(ax + 70, WATER - 64); ctx.quadraticCurveTo(ax + 100, WATER - 40, ax + 130, WATER + 16); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,226,150,.55)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ax - 70, WATER - 64); ctx.lineTo(ax, WATER - 98); ctx.lineTo(ax + 70, WATER - 64); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,226,150,' + (0.16 + 0.08 * Math.sin(t * 3)).toFixed(3) + ')';
+  ctx.beginPath(); ctx.ellipse(ax - 50, WATER - 36, 16, 3, 0, 0, TAU); ctx.ellipse(ax + 44, WATER - 24, 20, 3, 0, 0, TAU); ctx.fill();
+}
+function updateFinale3(f, T, end, dt) {
+  f.rain = 0;
+  const ev = f.ev, wk = f.wk;
+  if (end) {
+    if (T > 0.7 && !ev.a) { ev.a = 1; setCap('The Great Darkness breaks.', 2400); tone(110, 1.2, 'sine', 0.07, 0, 50); noiseFx(0.9, 0.06, 'lowpass', 900, 80, 0, 0.05); }
+    if (T > 3.8 && !ev.b) { ev.b = 1; setCap('The light shineth in darkness.', 2200); [392, 494, 587].forEach((q, i) => tone(q, 1.2, 'sine', 0.03, i * 0.12)); }
+    if (T > 5.8 && !ev.c) { ev.c = 1; f.lit = true; fanfare(); setCap('And the darkness comprehended it not.', 4200); }
+    if (T > 5.8 && T < 10) { f.cf += dt * 60; const n = Math.floor(f.cf); f.cf -= n; if (n > 0) confetti(n); }
+    if (T > 9.2 && !f.shown) showRest();
+    return;
+  }
+  if (wk === 1 && T > 2.0 && !ev.a) { ev.a = 1; setCap('Light in their dwellings.', 2600); tone(330, 1.2, 'sine', 0.04, 0, 392); }
+  if (wk === 2 && T > 2.2 && !ev.a) { ev.a = 1; setCap('Three hundred lamps.', 2600); noiseFx(0.7, 0.05, 'highpass', 2200, 3600, 0, 0.1); [784, 988, 1175].forEach((q, i) => tone(q, 0.5, 'triangle', 0.04, i * 0.18)); }
+  if (wk === 3 && T > 1.8 && !ev.a) { ev.a = 1; setCap('At midnight, they sang. Every door was opened.', 3400); tone(60, 1.4, 'sine', 0.14, 0, 36); noiseFx(1.6, 0.06, 'lowpass', 500, 90, 0, 0.1); if (!reduceMotion) shake = Math.max(shake, 4); }
+  if (wk === 4 && T > 1.4 && !ev.a) { ev.a = 1; setCap('A lamp unto my feet.', 2600); tone(523, 0.9, 'sine', 0.04); tone(784, 1.2, 'sine', 0.035, 0.18); }
+  if (wk === 5 && T > 1.2 && !ev.a) { ev.a = 1; setCap('The people that walked in darkness have seen a great light.', 3600); [262, 330, 392, 523].forEach((q, i) => tone(q, 1.8, 'sine', 0.035, i * 0.2)); }
+  if (T > 6.8 && !ev.d) { ev.d = 1; setCap('Rest, little bird.', 2400); tone(523, 0.5, 'sine', 0.05); tone(784, 0.6, 'sine', 0.05, 0.15); }
+  if (T > 7.0 && !ev.e) { ev.e = 1; f.lit = true; tone(659, 0.3, 'triangle', 0.05); tone(988, 0.5, 'triangle', 0.05, 0.12); }
+  if (T > 7.0 && T < 8.4) { f.cf += dt * 30; const n = Math.floor(f.cf); f.cf -= n; if (n > 0) confetti(n); }
+  if (T > 8.4 && !f.shown) showRest();
+}
 function drawFinaleScenery() {
   if (!fin) return;
+  if (lvl === 3) { drawDarkRest(); return; }
   if (lvl === 2) { drawFireRest(); return; }
   if (fin.kind === 'rest' && ENDS[fin.wk]) { drawRestScene(fin.gx, fin.t, fin.wk); return; }
   const gx = fin.gx, peak = WATER - 135;
@@ -5639,7 +6229,7 @@ function drawFog() {
     if (h.type !== 'fog') continue;
     const x0 = Math.max(h.x, -10), x1 = Math.min(h.x + h.w, W + 10);
     if (x1 <= x0) continue;
-    ctx.fillStyle = mix('#232b3d', '#dbe4ef', pS);
+    ctx.fillStyle = lvl === 3 ? '#05030d' : mix('#232b3d', '#dbe4ef', pS);
     for (let sx = Math.floor(x0 / 10) * 10; sx < x1; sx += 10) {
       const edge = clamp(Math.min(sx - h.x, h.x + h.w - sx) / 50, 0, 1), dx = sx - BIRD_X;
       const a = 0.58 * smooth(edge) * smooth(clamp((dx - 60) / 110, 0, 1));
@@ -5787,6 +6377,7 @@ function waveLayer(y0, amp, len, spd, off, color) {
   ctx.fillStyle = color; ctx.fill();
 }
 function drawWater() {
+  if (lvl === 3) { drawPit(); return; }
   if (lvl === 2) { drawLava(); return; }
   const WC = scn().water, wv = week === 3 ? 1.35 : week === 5 ? 1.7 : 1;
   waveLayer(WATER, 4 * wv, 22, 1.4, 0, mix(WC[0], WC[1], pS));
@@ -5941,7 +6532,7 @@ function drawGuide() {
   ctx.restore();
 }
 function drawStrike(s) {
-  if (s.ast) { drawAsteroid(s); return; }
+  if (s.ast) { if (lvl === 3) drawShadowBolt(s); else drawAsteroid(s); return; }
   if (s.state === 'warn') {
     const on = Math.floor(s.t / 0.12) % 2 === 0, k = s.t / s.warn;
     ctx.save();
@@ -5999,13 +6590,19 @@ function draw() {
     else if (h.type === 'gust') drawGust(h);
     else if (h.type === 'debris') drawDebris(h);
     else if (h.type === 'tree') drawTree(h);
-    else if (h.type === 'pillar') drawPillar(h);
-    else if (h.type === 'cpillar') drawCPillar(h);
-    else if (h.type === 'brand') { if (!h.burnt) drawBrand(h); }
+    else if (h.type === 'pillar') { if (lvl === 3) drawSpire(h, 0); else drawPillar(h); }
+    else if (h.type === 'cpillar') { if (lvl === 3) drawHSpire(h, 0); else drawCPillar(h); }
+    else if (h.type === 'brand') { if (!h.burnt) { if (lvl === 3) drawBat(h, 0); else drawBrand(h); } }
     else if (h.type === 'fog') continue;   // drawn on top of everything else, below
     else { drawTelegraph(h); if (h.launched) drawCreature(h); }
   }
+  if (lvl === 3) drawDarkness();
   drawFog();
+  if (lvl === 3) for (const h of hazards) {   // the pale outlines, warnings and arrows are drawn after the dark, so they always read
+    if (h.type === 'pillar') drawSpire(h, 1);
+    else if (h.type === 'cpillar') drawHSpire(h, 1);
+    else if (h.type === 'brand' && !h.burnt) drawBat(h, 1);
+  }
   for (const o of orbs) drawOrb(o);
   for (const l of leaves) drawLeaf(l);
   if (boss) drawBoss();
@@ -6014,10 +6611,10 @@ function draw() {
   drawPlayer();
   drawWater();
   drawSceneFront();
-  if (nS > 0.01) { ctx.fillStyle = (lvl === 2 ? 'rgba(26,6,8,' : 'rgba(4,8,26,') + (0.2 * nS).toFixed(3) + ')'; ctx.fillRect(-20, -20, W + 40, H + 40); }
+  if (nS > 0.01) { ctx.fillStyle = (lvl === 3 ? 'rgba(4,2,14,' : lvl === 2 ? 'rgba(26,6,8,' : 'rgba(4,8,26,') + (0.2 * nS).toFixed(3) + ')'; ctx.fillRect(-20, -20, W + 40, H + 40); }
   drawParticles();
   const sc = scn();
-  let ri = state === 'dry' || lvl === 2 ? 0 : Math.max(1 - pS, sc.rainFloor);
+  let ri = state === 'dry' || lvl >= 2 ? 0 : Math.max(1 - pS, sc.rainFloor);
   if (fin && fin.kind === 'rest') ri = fin.wk === 2 ? Math.max(ri, 0.95) * (1 - smooth(clamp((fin.t - 5.6) / 2.4, 0, 1))) : ri * (1 - smooth(clamp((fin.t - 0.8) / 3.5, 0, 1)));   // the rain eases off at a rest stop (Week 2: it stops on the fortieth day)
   if (ri > 0.02) {
     ctx.strokeStyle = 'rgba(200,215,235,' + (0.42 * ri).toFixed(3) + ')';
@@ -6472,10 +7069,10 @@ function teamArkNote() {
 /* ---------- progress code ----------
    Progress lives in each phone's browser (there are no accounts). The code is a copy of it as one line of text: copy it on one phone, paste it on
    another. Pasting only ever ADDS: it never lowers a number, takes a medal away, locks anything, or touches your name or your public player id. */
-const PC_NUM = ['best3', 'wins', 'journeys', 'teambest', 'l2-best3', 'l2-wins', 'l2-journeys', 'unl2'];
-const PC_MIN = ['jbest', 'teambestt', 'l2-jbest'];
-const PC_ARRMAX = ['wd', 'l2-wd'];
-const PC_ARRMIN = ['wbest', 'l2-wbest'];
+const PC_NUM = ['best3', 'wins', 'journeys', 'teambest', 'l2-best3', 'l2-wins', 'l2-journeys', 'unl2', 'l3-best3', 'l3-wins', 'l3-journeys'];
+const PC_MIN = ['jbest', 'teambestt', 'l2-jbest', 'l3-jbest'];
+const PC_ARRMAX = ['wd', 'l2-wd', 'l3-wd'];
+const PC_ARRMIN = ['wbest', 'l2-wbest', 'l3-wbest'];
 const PC_OBJ = ['unl', 'lvu', 'ms', 'md', 'mseen', 'ach', 'cs', 'look', 'tfin'];
 const PC_ALL = PC_NUM.concat(PC_MIN, PC_ARRMAX, PC_ARRMIN, PC_OBJ);
 const pcFnv = t => { let h = 0x811c9dc5; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h.toString(36); };
@@ -6507,7 +7104,7 @@ function pcMerge(d) {
   PC_ARRMAX.forEach(k => { if (!Array.isArray(d[k])) return; const l = store.get(k, null), o = Array.isArray(l) ? l.slice() : []; d[k].slice(0, 12).forEach((v, i) => { o[i] = Math.max(num(o[i]), num(v)); }); for (let i = 0; i < o.length; i++) o[i] = num(o[i]); store.set(k, o); });
   PC_ARRMIN.forEach(k => { if (!Array.isArray(d[k])) return; const l = store.get(k, null), o = Array.isArray(l) ? l.slice() : []; d[k].slice(0, 12).forEach((v, i) => { const a = num(v), b = num(o[i]); o[i] = a > 0 && (!b || a < b) ? a : b; }); for (let i = 0; i < o.length; i++) o[i] = num(o[i]); store.set(k, o); });
   if (isObj(d.unl)) { const o = store.get('unl', {}) || {}; ORDER.forEach(k => { if (d.unl[k] === true) o[k] = true; }); store.set('unl', o); }
-  if (isObj(d.lvu)) { const o = store.get('lvu', null); const r = isObj(o) ? o : {}; ['2'].forEach(n => { const a = isObj(d.lvu[n]) ? d.lvu[n] : null; if (!a) return; r[n] = isObj(r[n]) ? r[n] : { normal: false, hard: false, impossible: false }; ['normal', 'hard', 'impossible'].forEach(k => { if (a[k] === true) r[n][k] = true; }); }); store.set('lvu', r); }
+  if (isObj(d.lvu)) { const o = store.get('lvu', null); const r = isObj(o) ? o : {}; ['2', '3'].forEach(n => { const a = isObj(d.lvu[n]) ? d.lvu[n] : null; if (!a) return; r[n] = isObj(r[n]) ? r[n] : { normal: false, hard: false, impossible: false }; ['normal', 'hard', 'impossible'].forEach(k => { if (a[k] === true) r[n][k] = true; }); }); store.set('lvu', r); }
   if (isObj(d.ms)) {
     const o = Object.assign({}, MS0, store.get('ms', {}) || {});
     Object.keys(MS0).forEach(k => { if (typeof MS0[k] === 'number') o[k] = Math.max(num(o[k]), num(d.ms[k])); });

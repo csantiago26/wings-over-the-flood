@@ -1,5 +1,5 @@
 // Wings Over the Flood service worker: play offline, update when online.
-const V = 'wotf-41135d63';
+const V = 'wotf-5e1cf61d';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
